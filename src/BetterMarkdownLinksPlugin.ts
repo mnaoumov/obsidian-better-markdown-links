@@ -11,6 +11,8 @@ import { getCacheSafe } from "./MetadataCache.ts";
 
 type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?: string, alias?: string) => string;
 
+const SPECIAL_LINK_SYMBOLS_REGEXP = /[\\\x00\x08\x0B\x0C\x0E-\x1F ]/g;
+
 export default class BetterMarkdownLinksPlugin extends Plugin {
   private _settings!: BetterMarkdownLinksPluginSettings;
 
@@ -88,7 +90,9 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     if (this._settings.useAngleBrackets) {
       linkText = `<${linkText}>`;
     } else {
-      linkText = encodeURIComponent(linkText);
+      linkText = linkText.replace(SPECIAL_LINK_SYMBOLS_REGEXP, function (specialLinkSymbol) {
+        return encodeURIComponent(specialLinkSymbol);
+      });
     }
 
     if (file.extension.toLowerCase() === "md") {
