@@ -1,6 +1,7 @@
 export default class BetterMarkdownLinksPluginSettings {
   public useLeadingDot: boolean = true;
   public useAngleBrackets: boolean = true;
+  public automaticallyConvertNewLinks = true;
   public ignoreIncompatibleObsidianSettings: boolean = false;
 
   public static load(value: unknown): BetterMarkdownLinksPluginSettings {

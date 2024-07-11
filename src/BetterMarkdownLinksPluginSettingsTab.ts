@@ -43,6 +43,18 @@ export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettingT
       );
 
     new Setting(this.containerEl)
+      .setName("Automatically convert new links")
+      .setDesc("Automatically convert new links entered manually to the selected format")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(settings.automaticallyConvertNewLinks)
+          .onChange(async (value) => {
+            settings.automaticallyConvertNewLinks = value;
+            await this.plugin.saveSettings(settings);
+          })
+      );
+
+    new Setting(this.containerEl)
       .setName("Ignore incompatible Obsidian settings")
       .setDesc(createDocumentFragment(`Current plugin makes sense only if you have <code>Use [[Wikilinks]]</code> disabled and <code>New link format</code> set to <code>Relative path to file</code> in Obsidian settings.<br>
 If you enable current setting, it will override incompatible Obsidian settings and will work as expected.`))

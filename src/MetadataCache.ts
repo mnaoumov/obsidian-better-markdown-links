@@ -1,6 +1,7 @@
 import type {
   App,
   CachedMetadata,
+  LinkCache,
   TFile
 } from "obsidian";
 import { retryWithTimeout } from "./Async.ts";
@@ -33,4 +34,19 @@ export async function getCacheSafe(app: App, file: TFile): Promise<CachedMetadat
   });
 
   return cache!;
+}
+
+export function getAllLinks(cache: CachedMetadata): LinkCache[] {
+  const links: LinkCache[] = [];
+
+  if (cache.links) {
+    links.push(...cache.links);
+  }
+
+  if (cache.embeds) {
+    links.push(...cache.embeds);
+  }
+
+  links.sort((a, b) => a.position.start.offset - b.position.start.offset);
+  return links;
 }

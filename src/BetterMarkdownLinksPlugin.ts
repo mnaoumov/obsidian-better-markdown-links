@@ -7,7 +7,10 @@ import {
 import BetterMarkdownLinksPluginSettings from "./BetterMarkdownLinksPluginSettings.ts";
 import BetterMarkdownLinksPluginSettingsTab from "./BetterMarkdownLinksPluginSettingsTab.ts";
 import { around } from "monkey-around";
-import { getCacheSafe } from "./MetadataCache.ts";
+import {
+  getAllLinks,
+  getCacheSafe
+} from "./MetadataCache.ts";
 
 type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?: string, alias?: string) => string;
 
@@ -45,6 +48,8 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
       name: "Convert links in entire vault",
       callback: this.convertLinksInEntireVault.bind(this)
     });
+
+    this.registerEvent(this.app.metadataCache.on("changed", this.handleMetadataCacheChanged.bind(this)));
   }
 
   public async saveSettings(newSettings: BetterMarkdownLinksPluginSettings): Promise<void> {
@@ -126,19 +131,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
       let newContent = "";
       let lastIndex = 0;
 
-      const links: LinkCache[] = [];
-
-      if (cache.links) {
-        links.push(...cache.links);
-      }
-
-      if (cache.embeds) {
-        links.push(...cache.embeds);
-      }
-
-      links.sort((a, b) => a.position.start.offset - b.position.start.offset);
-
-      for (const link of links) {
+      for (const link of getAllLinks(cache)) {
         newContent += content.slice(lastIndex, link.position.start.offset);
         newContent += this.convertLink(link, file);
         lastIndex = link.position.end.offset;
@@ -199,5 +192,13 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     }
 
     return newLink.replace("![]", `[${link.displayText}]`);
+  }
+
+  private async handleMetadataCacheChanged(file: TFile): Promise<void> {
+    const cache = await getCacheSafe(this.app, file);
+    const links = getAllLinks(cache);
+    if (links.some(link => link.original !== this.convertLink(link, file))) {
+      await this.convertLinksInFile(file);
+    }
   }
 }
