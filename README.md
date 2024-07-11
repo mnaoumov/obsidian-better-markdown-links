@@ -22,6 +22,10 @@ This plugin ensures that relative paths are prepended with `./`, e.g., `[Title](
 
 This plugin adds the ability to convert all links in an individual note or the entire vault.
 
+## Automatic Link Conversion
+
+This plugin adds the ability to automatically convert all new links entered manually to the selected format.
+
 ## Installation
 
 - `Better Markdown Links` is not available in [the official Community Plugins repository](https://obsidian.md/plugins) yet.
