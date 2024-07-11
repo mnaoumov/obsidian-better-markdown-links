@@ -195,6 +195,9 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
   }
 
   private async handleMetadataCacheChanged(file: TFile): Promise<void> {
+    if (!this._settings.automaticallyConvertNewLinks) {
+      return;
+    }
     const cache = await getCacheSafe(this.app, file);
     const links = getAllLinks(cache);
     if (links.some(link => link.original !== this.convertLink(link, file))) {
