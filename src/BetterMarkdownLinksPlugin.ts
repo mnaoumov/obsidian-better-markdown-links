@@ -69,7 +69,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
       return true;
     }
 
-    const message = "Your Obsidian settings are incompatible with the \"Better Markdown Links\" plugin . Please disable \"Use [[Wikilinks]]\" and set \"New link format\" to \"Relative path to file\" in Obsidian settings.";
+    const message = "Your Obsidian settings are incompatible with the \"Better Markdown Links\" plugin. Please disable \"Use [[Wikilinks]]\" and set \"New link format\" to \"Relative path to file\" in Obsidian settings.";
     console.warn(message);
     new Notice(message);
     return false;
