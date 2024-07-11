@@ -87,7 +87,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
       return originalFn(file, sourcePath, subpath, alias);
     }
 
-    let linkText = file.path === sourcePath && subpath ? subpath : this.app.metadataCache.fileToLinktext(file, sourcePath, true) + (subpath || "");
+    let linkText = file.path === sourcePath && subpath ? subpath : this.app.metadataCache.fileToLinktext(file, sourcePath, false) + (subpath || "");
     if (this._settings.useLeadingDot && !linkText.startsWith(".") && !linkText.startsWith("#")) {
       linkText = "./" + linkText;
     }
