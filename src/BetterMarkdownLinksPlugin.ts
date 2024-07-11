@@ -117,20 +117,32 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     }
 
     const cache = await getCacheSafe(this.app, file);
-    const content = await this.app.vault.read(file);
-    let newContent = "";
-    let lastIndex = 0;
 
-    const links = (cache.links ?? []).concat(cache.embeds ?? []).sort((a, b) => a.position.start.offset - b.position.start.offset);
+    await this.app.vault.process(file, (content) => {
+      let newContent = "";
+      let lastIndex = 0;
 
-    for (const link of links) {
-      newContent += content.slice(lastIndex, link.position.start.offset);
-      newContent += this.convertLink(link, file);
-      lastIndex = link.position.end.offset;
-    }
+      const links: LinkCache[] = [];
 
-    newContent += content.slice(lastIndex);
-    await this.app.vault.modify(file, newContent);
+      if (cache.links) {
+        links.push(...cache.links);
+      }
+
+      if (cache.embeds) {
+        links.push(...cache.embeds);
+      }
+
+      links.sort((a, b) => a.position.start.offset - b.position.start.offset);
+
+      for (const link of links) {
+        newContent += content.slice(lastIndex, link.position.start.offset);
+        newContent += this.convertLink(link, file);
+        lastIndex = link.position.end.offset;
+      }
+
+      newContent += content.slice(lastIndex);
+      return newContent;
+    });
   }
 
   private async convertLinksInEntireVault(): Promise<void> {
