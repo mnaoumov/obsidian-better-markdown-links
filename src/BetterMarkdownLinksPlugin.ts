@@ -49,7 +49,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
       callback: this.convertLinksInEntireVault.bind(this)
     });
 
-    this.registerEvent(this.app.metadataCache.on("changed", this.handleMetadataCacheChanged.bind(this)));
+    this.registerEvent(this.app.metadataCache.on("changed", () => void this.handleMetadataCacheChanged));
   }
 
   public async saveSettings(newSettings: BetterMarkdownLinksPluginSettings): Promise<void> {
