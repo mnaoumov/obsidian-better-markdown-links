@@ -58,7 +58,5 @@ If you enable current setting, it will override incompatible Obsidian settings a
 }
 
 function createDocumentFragment(html: string): DocumentFragment {
-  const template = createEl("template");
-  template.innerHTML = html;
-  return template.content;
+  return document.createRange().createContextualFragment(html);
 }
