@@ -14,7 +14,6 @@ export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettingT
 
   public override display(): void {
     this.containerEl.empty();
-    this.containerEl.createEl("h2", { text: "Better Markdown Links" });
 
     const settings = this.plugin.settings;
 

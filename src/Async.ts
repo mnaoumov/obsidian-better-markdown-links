@@ -13,14 +13,8 @@ export async function retryWithTimeout(asyncFn: () => Promise<boolean>, options 
       }
 
       console.debug(`Retry completed unsuccessfully. Trying again in ${options.retryDelayInMilliseconds} milliseconds`);
-      await delay(options.retryDelayInMilliseconds);
+      await sleep(options.retryDelayInMilliseconds);
     }
-  });
-}
-
-async function delay(milliseconds: number): Promise<void> {
-  await new Promise((resolve) => {
-    setTimeout(resolve, milliseconds);
   });
 }
 
@@ -28,7 +22,7 @@ async function runWithTimeout<R>(timeoutInMilliseconds: number, asyncFn: () => P
   return await Promise.race([asyncFn(), timeout()]);
 
   async function timeout(): Promise<never> {
-    await delay(timeoutInMilliseconds);
+    await sleep(timeoutInMilliseconds);
     throw new Error(`Timed out in ${timeoutInMilliseconds} milliseconds`);
   }
 }
