@@ -89,7 +89,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
 
   private generateMarkdownLink(file: TFile, sourcePath: string, subpath: string | undefined, alias: string | undefined, originalFn: GenerateMarkdownLinkFn): string {
     if (!this.checkObsidianSettingsCompatibility()) {
-      return originalFn(file, sourcePath, subpath, alias);
+      return originalFn.call(this.app.fileManager, file, sourcePath, subpath, alias);
     }
 
     let linkText = file.path === sourcePath && subpath
