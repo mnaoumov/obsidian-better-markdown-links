@@ -4,15 +4,20 @@ export default class BetterMarkdownLinksPluginSettings {
   public automaticallyConvertNewLinks = true;
   public ignoreIncompatibleObsidianSettings: boolean = false;
 
-  public static load(value: unknown): BetterMarkdownLinksPluginSettings {
-    if (!value) {
-      return new BetterMarkdownLinksPluginSettings();
-    }
-
-    return value as BetterMarkdownLinksPluginSettings;
+  public static load(data: unknown): BetterMarkdownLinksPluginSettings {
+    return BetterMarkdownLinksPluginSettings.clone(data as BetterMarkdownLinksPluginSettings);
   }
 
   public static clone(settings?: BetterMarkdownLinksPluginSettings): BetterMarkdownLinksPluginSettings {
-    return Object.assign(new BetterMarkdownLinksPluginSettings(), settings);
+    const target = new BetterMarkdownLinksPluginSettings();
+    if (settings) {
+      for (const key of Object.keys(target) as Array<keyof BetterMarkdownLinksPluginSettings>) {
+        if (key in settings && typeof settings[key] === typeof target[key]) {
+          target[key] = settings[key];
+        }
+      }
+    }
+
+    return target;
   }
 }
