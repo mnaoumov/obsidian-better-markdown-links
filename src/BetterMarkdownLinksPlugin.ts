@@ -12,6 +12,10 @@ import {
   getCacheSafe
 } from "./MetadataCache.ts";
 import { convertToSync } from "./Async.ts";
+import {
+  relative,
+  sep
+} from "node:path";
 
 type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?: string, alias?: string) => string;
 
@@ -88,7 +92,9 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
       return originalFn(file, sourcePath, subpath, alias);
     }
 
-    let linkText = file.path === sourcePath && subpath ? subpath : this.app.metadataCache.fileToLinktext(file, sourcePath, false) + (subpath || "");
+    let linkText = file.path === sourcePath && subpath
+      ? subpath
+      : relative(sourcePath, file.path).replaceAll(sep, "/") + (subpath || "");
     if (this._settings.useLeadingDot && !linkText.startsWith(".") && !linkText.startsWith("#")) {
       linkText = "./" + linkText;
     }
