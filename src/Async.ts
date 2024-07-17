@@ -26,3 +26,7 @@ async function runWithTimeout<R>(timeoutInMilliseconds: number, asyncFn: () => P
     throw new Error(`Timed out in ${timeoutInMilliseconds} milliseconds`);
   }
 }
+
+export function convertToSync(promise: Promise<unknown>): void {
+  promise.catch(console.error);
+}

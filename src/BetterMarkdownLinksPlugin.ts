@@ -11,6 +11,7 @@ import {
   getAllLinks,
   getCacheSafe
 } from "./MetadataCache.ts";
+import { convertToSync } from "./Async.ts";
 
 type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?: string, alias?: string) => string;
 
@@ -49,7 +50,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
       callback: this.convertLinksInEntireVault.bind(this)
     });
 
-    this.registerEvent(this.app.metadataCache.on("changed", () => void this.handleMetadataCacheChanged));
+    this.registerEvent(this.app.metadataCache.on("changed", (file) => convertToSync(this.handleMetadataCacheChanged(file))));
   }
 
   public async saveSettings(newSettings: BetterMarkdownLinksPluginSettings): Promise<void> {
@@ -114,7 +115,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     }
 
     if (!checking) {
-      this.convertLinksInFile(activeFile).catch(console.error);
+      convertToSync(this.convertLinksInFile(activeFile));
     }
 
     return true;
