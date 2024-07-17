@@ -23,6 +23,7 @@ const SPECIAL_LINK_SYMBOLS_REGEXP = /[\\\x00\x08\x0B\x0C\x0E-\x1F ]/g;
 
 export default class BetterMarkdownLinksPlugin extends Plugin {
   private _settings!: BetterMarkdownLinksPluginSettings;
+  private warningNotice!: Notice;
 
   public get settings(): BetterMarkdownLinksPluginSettings {
     return BetterMarkdownLinksPluginSettings.clone(this._settings);
@@ -55,6 +56,9 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     });
 
     this.registerEvent(this.app.metadataCache.on("changed", (file) => convertToSync(this.handleMetadataCacheChanged(file))));
+
+    this.warningNotice = new Notice("");
+    this.warningNotice.hide();
   }
 
   public async saveSettings(newSettings: BetterMarkdownLinksPluginSettings): Promise<void> {
@@ -81,9 +85,12 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
       return true;
     }
 
-    const message = "Your Obsidian settings are incompatible with the \"Better Markdown Links\" plugin. Please disable \"Use [[Wikilinks]]\" and set \"New link format\" to \"Relative path to file\" in Obsidian settings.";
+    const message = "Your Obsidian settings are incompatible with the \"Better Markdown Links\" plugin. Please disable \"Use [[Wikilinks]]\" and set \"New link format\" to \"Relative path to file\" in Obsidian settings.\nAlternatively, you can enable the \"Ignore incompatible Obsidian settings\" option in the plugin settings.";
     console.warn(message);
-    new Notice(message);
+
+    if (this.warningNotice.noticeEl.style.opacity === "0") {
+      this.warningNotice = new Notice(message, 10000);
+    }
     return false;
   }
 
