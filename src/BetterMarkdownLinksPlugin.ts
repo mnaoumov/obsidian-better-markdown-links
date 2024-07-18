@@ -13,6 +13,7 @@ import {
 } from "./MetadataCache.ts";
 import { convertToSync } from "./Async.ts";
 import {
+  dirname,
   relative,
   sep
 } from "node:path";
@@ -101,7 +102,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
 
     let linkText = file.path === sourcePath && subpath
       ? subpath
-      : relative(sourcePath, file.path).replaceAll(sep, "/") + (subpath || "");
+      : relative(dirname(sourcePath), file.path).replaceAll(sep, "/") + (subpath || "");
     if (this._settings.useLeadingDot && !linkText.startsWith(".") && !linkText.startsWith("#")) {
       linkText = "./" + linkText;
     }
