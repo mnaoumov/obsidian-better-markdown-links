@@ -187,9 +187,15 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
   private convertLink(link: LinkCache, source: TFile): string {
     const [linkPath = "", originalSubpath] = link.link.split("#");
 
-    const linkFile = this.app.metadataCache.getFirstLinkpathDest(linkPath, source.path);
+    let linkFile = this.app.metadataCache.getFirstLinkpathDest(linkPath, source.path);
     if (!linkFile) {
-      return link.original;
+      if (linkPath.startsWith("../")) {
+        linkFile = this.app.metadataCache.getFirstLinkpathDest(linkPath.slice("../".length), source.path);
+      }
+
+      if (!linkFile) {
+        return link.original;
+      }
     }
 
     const subpath = originalSubpath ? "#" + originalSubpath : undefined;
