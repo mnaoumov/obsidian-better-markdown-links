@@ -14,9 +14,8 @@ import {
 import { convertToSync } from "./Async.ts";
 import {
   dirname,
-  relative,
-  sep
-} from "node:path";
+  relative
+} from "node:path/posix";
 
 type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?: string, alias?: string) => string;
 
@@ -102,7 +101,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
 
     let linkText = file.path === sourcePath && subpath
       ? subpath
-      : relative(dirname(sourcePath), file.path).replaceAll(sep, "/") + (subpath || "");
+      : relative(dirname(sourcePath), file.path) + (subpath || "");
     if (this._settings.useLeadingDot && !linkText.startsWith(".") && !linkText.startsWith("#")) {
       linkText = "./" + linkText;
     }
