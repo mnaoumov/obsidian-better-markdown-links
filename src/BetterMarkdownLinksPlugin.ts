@@ -219,6 +219,12 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     if (!this._settings.automaticallyConvertNewLinks) {
       return;
     }
+
+    const suggestionContainer = document.querySelector<HTMLDivElement>(".suggestion-container");
+    if (suggestionContainer && suggestionContainer.style.display !== "none") {
+      return;
+    }
+
     const cache = await getCacheSafe(this.app, file);
     const links = getAllLinks(cache);
     if (links.some(link => link.original !== this.convertLink(link, file))) {
