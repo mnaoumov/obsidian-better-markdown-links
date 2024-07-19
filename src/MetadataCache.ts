@@ -48,5 +48,14 @@ export function getAllLinks(cache: CachedMetadata): LinkCache[] {
   }
 
   links.sort((a, b) => a.position.start.offset - b.position.start.offset);
-  return links;
+
+  // BUG: https://forum.obsidian.md/t/bug-duplicated-links-in-metadatacache-inside-footnotes/85551
+  const uniqueLinks = links.filter((link, index) => {
+    if (index === 0) {
+      return true;
+    }
+    return link.position.start.offset !== links[index - 1]!.position.start.offset;
+  });
+
+  return uniqueLinks;
 }
