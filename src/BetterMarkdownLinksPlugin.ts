@@ -1,8 +1,8 @@
 import {
+  type LinkCache,
   Notice,
   Plugin,
-  type LinkCache,
-  type TFile
+  type TFile,
 } from "obsidian";
 import BetterMarkdownLinksPluginSettings from "./BetterMarkdownLinksPluginSettings.ts";
 import BetterMarkdownLinksPluginSettingsTab from "./BetterMarkdownLinksPluginSettingsTab.ts";
@@ -16,8 +16,15 @@ import {
   dirname,
   relative
 } from "node:path/posix";
+import type { LinkChangeUpdate } from "obsidian-typings";
 
 type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?: string, alias?: string) => string;
+
+type FileChange = {
+  startIndex: number;
+  endIndex: number;
+  newContent: string;
+};
 
 const SPECIAL_LINK_SYMBOLS_REGEXP = /[\\\x00\x08\x0B\x0C\x0E-\x1F ]/g;
 
@@ -59,6 +66,16 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
 
     this.warningNotice = new Notice("");
     this.warningNotice.hide();
+
+    this.app.fileManager.linkUpdaters["md"] = {
+      applyUpdates: this.applyUpdates.bind(this),
+      iterateReferences: (): void => { },
+      renameSubpath: async (): Promise<void> => { }
+    };
+
+    this.register(() => {
+      delete this.app.fileManager.linkUpdaters["md"];
+    });
   }
 
   public async saveSettings(newSettings: BetterMarkdownLinksPluginSettings): Promise<void> {
@@ -141,19 +158,11 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
 
     const cache = await getCacheSafe(this.app, file);
 
-    await this.app.vault.process(file, (content) => {
-      let newContent = "";
-      let lastIndex = 0;
-
-      for (const link of getAllLinks(cache)) {
-        newContent += content.slice(lastIndex, link.position.start.offset);
-        newContent += this.convertLink(link, file);
-        lastIndex = link.position.end.offset;
-      }
-
-      newContent += content.slice(lastIndex);
-      return newContent;
-    });
+    await this.editFile(file, getAllLinks(cache).map(link => ({
+      startIndex: link.position.start.offset,
+      endIndex: link.position.end.offset,
+      newContent: this.convertLink(link, file)
+    })));
   }
 
   private async convertLinksInEntireVault(): Promise<void> {
@@ -229,5 +238,58 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     if (links.some(link => link.original !== this.convertLink(link, file))) {
       await this.convertLinksInFile(file);
     }
+  }
+
+  private async applyUpdates(file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
+    await this.editFile(file, updates.map(update => ({
+      startIndex: update.reference.position.start.offset,
+      endIndex: update.reference.position.end.offset,
+      newContent: this.fixChange(update.change, file)
+    })));
+  }
+
+  /**
+   * BUG: https://forum.obsidian.md/t/update-internal-link-breaks-links-with-angle-brackets/85598
+   */
+  private fixChange(change: string, file: TFile): string {
+    const match = change.match(/^\[(.+?)\]\(([^<]+?) .+?>\)$/);
+    if (!match) {
+      return change;
+    }
+
+    const alias = match[1]!;
+    const escapedPath = match[2]!;
+    const [linkPath = "", subpath] = decodeURIComponent(escapedPath).split("#");
+    const linkedFile = this.app.metadataCache.getFirstLinkpathDest(linkPath, file.path);
+    if (!linkedFile) {
+      return change;
+    }
+
+    const realSubpath = subpath ? "#" + subpath : undefined;
+    return this.app.fileManager.generateMarkdownLink(linkedFile, file.path, realSubpath, alias);
+  }
+
+  private async editFile(file: TFile, changes: FileChange[]): Promise<void> {
+    changes.sort((a, b) => b.startIndex - a.startIndex);
+
+    for (let i = 1; i < changes.length; i++) {
+      if (changes[i - 1]!.endIndex >= changes[i]!.startIndex) {
+        throw new Error(`Overlapping changes:\n${JSON.stringify(changes[i - 1], null, 2)}\n${JSON.stringify(changes[i], null, 2)}`);
+      }
+    }
+
+    await this.app.vault.process(file, (content) => {
+      let newContent = "";
+      let lastIndex = 0;
+
+      for (const change of changes) {
+        newContent += content.slice(lastIndex, change.startIndex);
+        newContent += change.newContent;
+        lastIndex = change.endIndex;
+      }
+
+      newContent += content.slice(lastIndex);
+      return newContent;
+    });
   }
 }
