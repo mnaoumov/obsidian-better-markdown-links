@@ -55,7 +55,7 @@ export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettingT
 
     new Setting(this.containerEl)
       .setName("Automatically update links on rename or move")
-      .setDesc("Automatically update links when a file is renamed or moved to another directory")
+      .setDesc(createDocumentFragment("Automatically update links when a file is renamed or moved to another directory.<br>Consider installing <a href=\"obsidian://show-plugin?id=backlink-cache\">Backlink Cache</a> plugin to improve performance."))
       .addToggle((toggle) =>
         toggle
           .setValue(settings.automaticallyUpdateLinksOnRenameOrMove)

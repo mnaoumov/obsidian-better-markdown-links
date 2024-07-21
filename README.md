@@ -26,6 +26,12 @@ This plugin adds the ability to convert all links in an individual note or the e
 
 This plugin adds the ability to automatically convert all new links entered manually to the selected format.
 
+## Automatic handling rename/move
+
+This plugin adds the ability to automatically update links to the renamed or moved to another directory files.
+
+To improve performance, consider installing [Backlink Cache](https://obsidian.md/plugins?id=backlink-cache) plugin.
+
 ## Extend [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink]
 
 This plugin enhances the [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] function by adding two optional parameters: `isEmbed` and `isWikilink`. The extended function signature is as follows:
