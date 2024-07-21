@@ -90,13 +90,12 @@ export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, fil
 
   const alias = match[1]!;
   const escapedPath = match[2]!;
-  const [linkPath = "", originalSubpath] = decodeURIComponent(escapedPath).split("#");
+  const [linkPath = "", subpath] = splitSubpath(decodeURIComponent(escapedPath));
   const linkedFile = plugin.app.metadataCache.getFirstLinkpathDest(linkPath, file.path);
   if (!linkedFile) {
     return `${isEmbed ? "!" : ""}[${alias}](${escapedPath})`;
   }
 
-  const subpath = originalSubpath ? "#" + originalSubpath : undefined;
   return generateMarkdownLink(plugin, linkedFile, file.path, subpath, alias, isEmbed, false);
 }
 
@@ -112,7 +111,7 @@ export async function updateLinksInFile(plugin: BetterMarkdownLinksPlugin, file:
 export function extractLinkFile(app: App, link: ReferenceCache, oldPath: string): TFile | null {
   const PARENT_DIRECTORY = "../";
 
-  const [linkPath = ""] = link.link.split("#");
+  const [linkPath] = splitSubpath(link.link);
   let linkFile = app.metadataCache.getFirstLinkpathDest(linkPath, oldPath);
   if (!linkFile && linkPath.startsWith(PARENT_DIRECTORY)) {
     linkFile = app.metadataCache.getFirstLinkpathDest(linkPath.slice(PARENT_DIRECTORY.length), oldPath);
@@ -126,13 +125,19 @@ export function updateLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCac
     return link.original;
   }
   const isEmbed = link.original.startsWith("!");
-  const isWikilink = plugin.settings.automaticallyConvertNewLinks ? undefined :  link.original.includes("[[");
-  const originalSubpath = link.link.split("#")[1];
-  const subpath = originalSubpath ? "#" + originalSubpath : undefined;
+  const isWikilink = plugin.settings.automaticallyConvertNewLinks ? undefined : link.original.includes("[[");
+  const [_, subpath] = splitSubpath(link.link);
   return generateMarkdownLink(plugin, file, source.path, subpath, link.displayText, isEmbed, isWikilink);
 }
 
 export function convertLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCache, source: TFile, oldPath?: string): string {
   oldPath ??= source.path;
   return updateLink(plugin, link, extractLinkFile(plugin.app, link, oldPath), source);
+}
+
+function splitSubpath(link: string): [string, string | undefined] {
+  const SUBPATH_SEPARATOR = "#";
+  let [linkPath = "", subpath] = link.split(SUBPATH_SEPARATOR);
+  subpath = subpath ? "#" + subpath : undefined;
+  return [linkPath, subpath];
 }
