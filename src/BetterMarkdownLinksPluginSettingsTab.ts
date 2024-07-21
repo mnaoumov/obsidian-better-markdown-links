@@ -54,6 +54,18 @@ export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettingT
       );
 
     new Setting(this.containerEl)
+      .setName("Automatically update links on rename or move")
+      .setDesc("Automatically update links when a file is renamed or moved to another directory")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(settings.automaticallyUpdateLinksOnRenameOrMove)
+          .onChange(async (value) => {
+            settings.automaticallyUpdateLinksOnRenameOrMove = value;
+            await this.plugin.saveSettings(settings);
+          })
+      );
+
+    new Setting(this.containerEl)
       .setName("Ignore incompatible Obsidian settings")
       .setDesc(createDocumentFragment(`Current plugin makes sense only if you have <code>Use [[Wikilinks]]</code> disabled and <code>New link format</code> set to <code>Relative path to file</code> in Obsidian settings.<br>
 If you enable current setting, it will override incompatible Obsidian settings and will work as expected.`))

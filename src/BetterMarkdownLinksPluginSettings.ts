@@ -3,6 +3,7 @@ export default class BetterMarkdownLinksPluginSettings {
   public useAngleBrackets: boolean = true;
   public automaticallyConvertNewLinks = true;
   public ignoreIncompatibleObsidianSettings: boolean = false;
+  public automaticallyUpdateLinksOnRenameOrMove: boolean = true;
 
   public static load(data: unknown): BetterMarkdownLinksPluginSettings {
     return BetterMarkdownLinksPluginSettings.clone(data as BetterMarkdownLinksPluginSettings);

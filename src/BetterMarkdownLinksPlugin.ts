@@ -2,7 +2,8 @@ import {
   type LinkCache,
   Notice,
   Plugin,
-  type TFile,
+  type TAbstractFile,
+  TFile
 } from "obsidian";
 import BetterMarkdownLinksPluginSettings from "./BetterMarkdownLinksPluginSettings.ts";
 import BetterMarkdownLinksPluginSettingsTab from "./BetterMarkdownLinksPluginSettingsTab.ts";
@@ -11,12 +12,16 @@ import {
   getAllLinks,
   getCacheSafe
 } from "./MetadataCache.ts";
-import { convertToSync } from "./Async.ts";
+import {
+  convertToSync,
+  retryWithTimeout
+} from "./Async.ts";
 import {
   dirname,
   relative
 } from "node:path/posix";
 import type { LinkChangeUpdate } from "obsidian-typings";
+import { createTFile } from "obsidian-typings/implementations";
 
 type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?: string, alias?: string) => string;
 
@@ -25,6 +30,8 @@ type FileChange = {
   endIndex: number;
   newContent: string;
 };
+
+type MaybePromise<T> = T | Promise<T>;
 
 const SPECIAL_LINK_SYMBOLS_REGEXP = /[\\\x00\x08\x0B\x0C\x0E-\x1F ]/g;
 
@@ -58,6 +65,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     });
 
     this.registerEvent(this.app.metadataCache.on("changed", (file) => convertToSync(this.handleMetadataCacheChanged(file))));
+    this.registerEvent(this.app.vault.on("rename", (file, oldPath) => convertToSync(this.handleRename(file, oldPath))));
 
     this.warningNotice = new Notice("");
     this.warningNotice.hide();
@@ -166,9 +174,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
       return;
     }
 
-    const cache = await getCacheSafe(this.app, file);
-
-    await this.editFile(file, getAllLinks(cache).map(link => ({
+    await this.editFile(file, async () => getAllLinks(await getCacheSafe(this.app, file)).map(link => ({
       startIndex: link.position.start.offset,
       endIndex: link.position.end.offset,
       newContent: this.convertLink(link, file)
@@ -240,7 +246,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
   }
 
   private async applyUpdates(file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
-    await this.editFile(file, updates.map(update => ({
+    await this.editFile(file, () => updates.map(update => ({
       startIndex: update.reference.position.start.offset,
       endIndex: update.reference.position.end.offset,
       newContent: this.fixChange(update.change, file)
@@ -270,16 +276,25 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     return this.generateMarkdownLink(linkedFile, file.path, subpath, alias, isEmbed, false);
   }
 
-  private async editFile(file: TFile, changes: FileChange[]): Promise<void> {
-    changes.sort((a, b) => a.startIndex - b.startIndex);
+  private async editFile(file: TFile, changesFn: () => MaybePromise<FileChange[]>): Promise<void> {
+    await this.processWithRetry(file, async (content) => {
+      let changes = await changesFn();
+      changes.sort((a, b) => a.startIndex - b.startIndex);
 
-    for (let i = 1; i < changes.length; i++) {
-      if (changes[i - 1]!.endIndex >= changes[i]!.startIndex) {
-        throw new Error(`Overlapping changes:\n${JSON.stringify(changes[i - 1], null, 2)}\n${JSON.stringify(changes[i], null, 2)}`);
+      // BUG: https://forum.obsidian.md/t/bug-duplicated-links-in-metadatacache-inside-footnotes/85551
+      changes = changes.filter((change, index) => {
+        if (index === 0) {
+          return true;
+        }
+        return !this.deepEqual(change, changes[index - 1]);
+      });
+
+      for (let i = 1; i < changes.length; i++) {
+        if (changes[i - 1]!.endIndex >= changes[i]!.startIndex) {
+          throw new Error(`Overlapping changes:\n${JSON.stringify(changes[i - 1], null, 2)}\n${JSON.stringify(changes[i], null, 2)}`);
+        }
       }
-    }
 
-    await this.app.vault.process(file, (content) => {
       let newContent = "";
       let lastIndex = 0;
 
@@ -291,6 +306,111 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
 
       newContent += content.slice(lastIndex);
       return newContent;
+    });
+  }
+
+  private async handleRename(file: TAbstractFile, oldPath: string): Promise<void> {
+    if (!this._settings.automaticallyUpdateLinksOnRenameOrMove) {
+      return;
+    }
+
+    if (!(file instanceof TFile)) {
+      return;
+    }
+
+    const isMarkdown = file.extension.toLowerCase() === "md";
+
+    if (isMarkdown && file.parent?.path !== dirname(oldPath)) {
+      await this.updateLinksInFile(file, oldPath);
+    }
+
+    const oldFile = createTFile(this.app.vault, oldPath);
+
+    const backlinks = this.app.metadataCache.getBacklinksForFile(oldFile);
+
+    for (const parentNotePath of backlinks.keys()) {
+      const parentNote = parentNotePath === oldPath ? file : this.app.vault.getFileByPath(parentNotePath);
+      if (!parentNote) {
+        console.warn(`Parent note not found: ${parentNotePath}`);
+        continue;
+      }
+      const links = backlinks.get(parentNotePath) ?? [];
+      await this.editFile(parentNote, () => links.map(link => ({
+        startIndex: link.position.start.offset,
+        endIndex: link.position.end.offset,
+        newContent: this.updateLink(link, file, parentNote)
+      })));
+    }
+  }
+
+  private async updateLinksInFile(file: TFile, oldPath: string): Promise<void> {
+    await this.editFile(file, async () => getAllLinks(await getCacheSafe(this.app, file)).map(link => ({
+      startIndex: link.position.start.offset,
+      endIndex: link.position.end.offset,
+      newContent: this.updateLink(link, this.extractLinkFile(link, oldPath), file)
+    })));
+  }
+
+  private extractLinkFile(link: LinkCache, oldPath: string): TFile | null {
+    const [linkPath = ""] = link.link.split("#");
+    return this.app.metadataCache.getFirstLinkpathDest(linkPath, oldPath);
+  }
+
+  private updateLink(link: LinkCache, file: TFile | null, parentNote: TFile): string {
+    if (!file) {
+      return link.original;
+    }
+    const isEmbed = link.original.startsWith("!");
+    const isWikilink = link.original.includes("[[");
+    const originalSubpath = link.link.split("#")[1];
+    const subpath = originalSubpath ? "#" + originalSubpath : undefined;
+    return this.generateMarkdownLink(file, parentNote.path, subpath, link.displayText, isEmbed, isWikilink);
+  }
+
+  private deepEqual(a: unknown, b: unknown): boolean {
+    if (a === b) {
+      return true;
+    }
+
+    if (typeof a !== "object" || typeof b !== "object" || a === null || b === null || a === undefined || b === undefined) {
+      return false;
+    }
+
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+
+    if (keysA.length !== keysB.length) {
+      return false;
+    }
+
+    const aRecord = a as Record<string, unknown>;
+    const bRecord = b as Record<string, unknown>;
+
+    for (const key of keysA) {
+      if (!keysB.includes(key) || !this.deepEqual(aRecord[key], bRecord[key])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private async processWithRetry(file: TFile, processFn: (content: string) => MaybePromise<string>): Promise<void> {
+    await retryWithTimeout(async () => {
+      const oldContent = await this.app.vault.adapter.read(file.path);
+      const newContent = await processFn(oldContent);
+      let success = true;
+      await this.app.vault.process(file, (content) => {
+        if (content !== oldContent) {
+          console.warn(`Content of ${file.path} has changed since it was read. Retrying...`);
+          success = false;
+          return content;
+        }
+
+        return newContent;
+      });
+
+      return success;
     });
   }
 }
