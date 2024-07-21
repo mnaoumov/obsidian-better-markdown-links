@@ -124,7 +124,7 @@ export function updateLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCac
     return link.original;
   }
   const isEmbed = link.original.startsWith("!");
-  const isWikilink = link.original.includes("[[");
+  const isWikilink = plugin.settings.automaticallyConvertNewLinks ? undefined :  link.original.includes("[[");
   const originalSubpath = link.link.split("#")[1];
   const subpath = originalSubpath ? "#" + originalSubpath : undefined;
   return generateMarkdownLink(plugin, file, source.path, subpath, link.displayText, isEmbed, isWikilink);
