@@ -1,3 +1,5 @@
+import { Notice } from "obsidian";
+
 export async function retryWithTimeout(
   asyncFn: () => Promise<boolean>,
   {
@@ -35,5 +37,8 @@ async function runWithTimeout<R>(timeoutInMilliseconds: number, asyncFn: () => P
 }
 
 export function convertToSync(promise: Promise<unknown>): void {
-  promise.catch(console.error);
+  promise.catch((error) => {
+    console.error(error);
+    new Notice("An unhandled error occurred. Please check the console for more information.");
+  });
 }
