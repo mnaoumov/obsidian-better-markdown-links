@@ -31,6 +31,7 @@ const SPECIAL_LINK_SYMBOLS_REGEXP = /[\\\x00\x08\x0B\x0C\x0E-\x1F ]/g;
 export default class BetterMarkdownLinksPlugin extends Plugin {
   private _settings!: BetterMarkdownLinksPluginSettings;
   private warningNotice!: Notice;
+  private originalGenerateMarkdownLink!: GenerateMarkdownLinkFn;
 
   public get settings(): BetterMarkdownLinksPluginSettings {
     return BetterMarkdownLinksPluginSettings.clone(this._settings);
@@ -41,14 +42,12 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     this.addSettingTab(new BetterMarkdownLinksPluginSettingsTab(this));
     this.app.workspace.onLayoutReady(this.onLayoutReady.bind(this));
 
-    const uninstaller = around(this.app.fileManager, {
-      "generateMarkdownLink": (originalFn: GenerateMarkdownLinkFn): GenerateMarkdownLinkFn =>
-        (file: TFile, sourcePath: string, subpath?: string, alias?: string) => this.generateMarkdownLink(file, sourcePath, subpath, alias, originalFn)
-    });
-
-    this.register(() => {
-      uninstaller();
-    });
+    this.register(around(this.app.fileManager, {
+      "generateMarkdownLink": (originalGenerateMarkdownLink: GenerateMarkdownLinkFn): GenerateMarkdownLinkFn => {
+        this.originalGenerateMarkdownLink = originalGenerateMarkdownLink.bind(this.app.fileManager);
+        return this.generateMarkdownLink.bind(this);
+      }
+    }));
 
     this.addCommand({
       id: "convert-links-in-current-file",
@@ -111,9 +110,9 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     return false;
   }
 
-  private generateMarkdownLink(file: TFile, sourcePath: string, subpath: string | undefined, alias: string | undefined, originalFn: GenerateMarkdownLinkFn): string {
+  private generateMarkdownLink(file: TFile, sourcePath: string, subpath: string | undefined, alias: string | undefined): string {
     if (!this.checkObsidianSettingsCompatibility()) {
-      return originalFn.call(this.app.fileManager, file, sourcePath, subpath, alias);
+      return this.originalGenerateMarkdownLink(file, sourcePath, subpath, alias);
     }
 
     let linkText = file.path === sourcePath && subpath
