@@ -70,7 +70,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     this.warningNotice.hide();
 
     this.app.fileManager.linkUpdaters[MARKDOWN_FILE_EXTENSION] = {
-      applyUpdates: (file, updates) => applyLinkChangeUpdates(this, file, updates),
+      applyUpdates: (file, updates): Promise<void> => applyLinkChangeUpdates(this, file, updates),
       iterateReferences: (): void => { },
       renameSubpath: async (): Promise<void> => { }
     };

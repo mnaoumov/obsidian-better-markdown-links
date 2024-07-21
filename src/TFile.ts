@@ -2,7 +2,7 @@ import type { TFile } from "obsidian";
 
 export const MARKDOWN_FILE_EXTENSION = "md";
 
-export function isMarkdownFile(file: TFile) {
+export function isMarkdownFile(file: TFile): boolean {
   return file.extension.toLowerCase() === MARKDOWN_FILE_EXTENSION;
 }
 

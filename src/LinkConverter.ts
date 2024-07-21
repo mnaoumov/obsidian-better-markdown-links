@@ -126,7 +126,7 @@ export function updateLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCac
   }
   const isEmbed = link.original.startsWith("!");
   const isWikilink = plugin.settings.automaticallyConvertNewLinks ? undefined : link.original.includes("[[");
-  const [_, subpath] = splitSubpath(link.link);
+  const [, subpath] = splitSubpath(link.link);
   return generateMarkdownLink(plugin, file, source.path, subpath, link.displayText, isEmbed, isWikilink);
 }
 
@@ -137,7 +137,6 @@ export function convertLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCa
 
 function splitSubpath(link: string): [string, string | undefined] {
   const SUBPATH_SEPARATOR = "#";
-  let [linkPath = "", subpath] = link.split(SUBPATH_SEPARATOR);
-  subpath = subpath ? "#" + subpath : undefined;
-  return [linkPath, subpath];
+  const [linkPath = "", subpath] = link.split(SUBPATH_SEPARATOR);
+  return [linkPath, subpath ? "#" + subpath : undefined];
 }
