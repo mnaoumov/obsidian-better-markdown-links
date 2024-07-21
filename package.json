@@ -1,6 +1,6 @@
 {
   "name": "better-markdown-links",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "description": "Adds support for angle bracket links and manages relative links properly",
   "scripts": {
     "build": "tsx scripts/npmScriptExecutor.ts build",
