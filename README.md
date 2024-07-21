@@ -26,6 +26,25 @@ This plugin adds the ability to convert all links in an individual note or the e
 
 This plugin adds the ability to automatically convert all new links entered manually to the selected format.
 
+## Extend [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink]
+
+This plugin enhances the [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] function by adding two optional parameters: `isEmbed` and `isWikilink`. The extended function signature is as follows:
+
+```typescript
+/**
+ * Generate a markdown link based on the user's preferences.
+ * @param file - the file to link to.
+ * @param sourcePath - where the link is stored in, used to compute relative links.
+ * @param subpath - A subpath, starting with `#`, used for linking to headings or blocks.
+ * @param alias - The display text if it's to be different than the file name. Pass empty string to use file name.
+ * @param isEmbed - A boolean indicating if the link should be embedded. If omitted or `undefined`, the function behaves as its original version.
+ * @param isWikilink - A boolean indicating if the link should be in wiki-link format. If omitted or `undefined`, the function behaves as its original version.
+ */
+generateMarkdownLink(file: TFile, sourcePath: string, subpath?: string, alias?: string, isEmbed?: boolean, isWikilink?: boolean): string
+```
+
+**Note**: The plugin's setting `Ignore incompatible Obsidian settings` sets the default value of `isWikilink` to `false`.
+
 ## Installation
 
 - `Better Markdown Links` is not available in [the official Community Plugins repository](https://obsidian.md/plugins) yet.
@@ -36,3 +55,5 @@ This plugin adds the ability to automatically convert all new links entered manu
 © [Michael Naumov](https://github.com/mnaoumov/)
 
 [Obsidian]: https://obsidian.md/
+
+[generateMarkdownLink]: https://github.com/obsidianmd/obsidian-api/blob/ea526e2459ad3f188c994862a9b106d94bf0f692/obsidian.d.ts#L1435
