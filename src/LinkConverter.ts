@@ -105,15 +105,17 @@ export async function updateLinksInFile(plugin: BetterMarkdownLinksPlugin, file:
   await applyFileChanges(app, file, async () => getAllLinks(await getCacheSafe(app, file)).map(link => ({
     startIndex: link.position.start.offset,
     endIndex: link.position.end.offset,
-    newContent: updateLink(plugin, link, extractLinkFile(app, link, oldPath), file)
+    newContent: convertLink(plugin, link, file, oldPath)
   })));
 }
 
 export function extractLinkFile(app: App, link: ReferenceCache, oldPath: string): TFile | null {
+  const PARENT_DIRECTORY = "../";
+
   const [linkPath = ""] = link.link.split("#");
   let linkFile = app.metadataCache.getFirstLinkpathDest(linkPath, oldPath);
-  if (!linkFile && linkPath.startsWith("../")) {
-    linkFile = app.metadataCache.getFirstLinkpathDest(linkPath.slice("../".length), oldPath);
+  if (!linkFile && linkPath.startsWith(PARENT_DIRECTORY)) {
+    linkFile = app.metadataCache.getFirstLinkpathDest(linkPath.slice(PARENT_DIRECTORY.length), oldPath);
   }
 
   return linkFile;
@@ -130,7 +132,7 @@ export function updateLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCac
   return generateMarkdownLink(plugin, file, source.path, subpath, link.displayText, isEmbed, isWikilink);
 }
 
-export function convertLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCache, source: TFile): string {
-  const linkFile = extractLinkFile(plugin.app, link, source.path);
-  return updateLink(plugin, link, linkFile, source);
+export function convertLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCache, source: TFile, oldPath?: string): string {
+  oldPath ??= source.path;
+  return updateLink(plugin, link, extractLinkFile(plugin.app, link, oldPath), source);
 }
