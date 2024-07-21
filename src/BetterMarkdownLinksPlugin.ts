@@ -218,19 +218,8 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
 
     const subpath = originalSubpath ? "#" + originalSubpath : undefined;
 
-    const newLink = this.app.fileManager.generateMarkdownLink(linkFile, source.path, subpath, link.displayText);
     const isLinkEmbed = link.original.startsWith("!");
-    const isNewLinkEmbed = newLink.startsWith("!");
-
-    if (isLinkEmbed === isNewLinkEmbed) {
-      return newLink;
-    }
-
-    if (isLinkEmbed) {
-      return "!" + newLink;
-    }
-
-    return newLink.replace("![]", `[${link.displayText}]`);
+    return this.generateMarkdownLink(linkFile, source.path, subpath, link.displayText, isLinkEmbed);
   }
 
   private async handleMetadataCacheChanged(file: TFile): Promise<void> {
@@ -262,21 +251,22 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
    * BUG: https://forum.obsidian.md/t/update-internal-link-breaks-links-with-angle-brackets/85598
    */
   private fixChange(change: string, file: TFile): string {
-    const match = change.match(/^\[(.+?)\]\(([^<]+?) .+?>\)$/);
+    const match = change.match(/^!?\[(.+?)\]\(([^<]+?) .+?>\)$/);
     if (!match) {
       return change;
     }
 
     const alias = match[1]!;
     const escapedPath = match[2]!;
-    const [linkPath = "", subpath] = decodeURIComponent(escapedPath).split("#");
+    const [linkPath = "", originalSubpath] = decodeURIComponent(escapedPath).split("#");
     const linkedFile = this.app.metadataCache.getFirstLinkpathDest(linkPath, file.path);
     if (!linkedFile) {
       return change;
     }
 
-    const realSubpath = subpath ? "#" + subpath : undefined;
-    return this.app.fileManager.generateMarkdownLink(linkedFile, file.path, realSubpath, alias);
+    const subpath = originalSubpath ? "#" + originalSubpath : undefined;
+    const isEmbed = change.startsWith("!");
+    return this.generateMarkdownLink(linkedFile, file.path, subpath, alias, isEmbed, false);
   }
 
   private async editFile(file: TFile, changes: FileChange[]): Promise<void> {
