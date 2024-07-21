@@ -31,7 +31,6 @@ const SPECIAL_LINK_SYMBOLS_REGEXP = /[\\\x00\x08\x0B\x0C\x0E-\x1F ]/g;
 export default class BetterMarkdownLinksPlugin extends Plugin {
   private _settings!: BetterMarkdownLinksPluginSettings;
   private warningNotice!: Notice;
-  private originalGenerateMarkdownLink!: GenerateMarkdownLinkFn;
 
   public get settings(): BetterMarkdownLinksPluginSettings {
     return BetterMarkdownLinksPluginSettings.clone(this._settings);
@@ -43,10 +42,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     this.app.workspace.onLayoutReady(this.onLayoutReady.bind(this));
 
     this.register(around(this.app.fileManager, {
-      "generateMarkdownLink": (originalGenerateMarkdownLink: GenerateMarkdownLinkFn): GenerateMarkdownLinkFn => {
-        this.originalGenerateMarkdownLink = originalGenerateMarkdownLink.bind(this.app.fileManager);
-        return this.generateMarkdownLink.bind(this);
-      }
+      "generateMarkdownLink": (): GenerateMarkdownLinkFn => this.generateMarkdownLink.bind(this)
     }));
 
     this.addCommand({
@@ -110,30 +106,45 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     return false;
   }
 
-  private generateMarkdownLink(file: TFile, sourcePath: string, subpath: string | undefined, alias: string | undefined): string {
-    if (!this.checkObsidianSettingsCompatibility()) {
-      return this.originalGenerateMarkdownLink(file, sourcePath, subpath, alias);
-    }
+  private generateMarkdownLink(file: TFile, sourcePath: string, subpath?: string, alias?: string, isEmbed?: boolean, isWikilink?: boolean): string {
+    subpath ??= "";
+    alias ??= "";
+    const isMarkdownFile = file.extension.toLowerCase() === "md";
+    isEmbed ??= !isMarkdownFile;
+    isWikilink ??= !this._settings.ignoreIncompatibleObsidianSettings && !this.app.vault.getConfig("useMarkdownLinks");
+    const useRelativePath = this._settings.ignoreIncompatibleObsidianSettings || this.app.vault.getConfig("newLinkFormat") === "relative";
 
     let linkText = file.path === sourcePath && subpath
       ? subpath
-      : relative(dirname(sourcePath), file.path) + (subpath || "");
-    if (this._settings.useLeadingDot && !linkText.startsWith(".") && !linkText.startsWith("#")) {
+      : useRelativePath
+        ? relative(dirname(sourcePath), isWikilink && isMarkdownFile ? file.path.slice(0, -".md".length) : file.path) + subpath
+        : this.app.metadataCache.fileToLinktext(file, sourcePath, isWikilink) + subpath;
+
+    if (useRelativePath && this._settings.useLeadingDot && !linkText.startsWith(".") && !linkText.startsWith("#")) {
       linkText = "./" + linkText;
     }
 
-    if (this._settings.useAngleBrackets) {
-      linkText = `<${linkText}>`;
-    } else {
-      linkText = linkText.replace(SPECIAL_LINK_SYMBOLS_REGEXP, function (specialLinkSymbol) {
-        return encodeURIComponent(specialLinkSymbol);
-      });
-    }
+    if (!isWikilink) {
+      if (this._settings.useAngleBrackets) {
+        linkText = `<${linkText}>`;
+      } else {
+        linkText = linkText.replace(SPECIAL_LINK_SYMBOLS_REGEXP, function (specialLinkSymbol) {
+          return encodeURIComponent(specialLinkSymbol);
+        });
+      }
 
-    if (file.extension.toLowerCase() === "md") {
-      return `[${alias || file.basename}](${linkText})`;
+      if (!isEmbed) {
+        return `[${alias || file.basename}](${linkText})`;
+      } else {
+        return `![${alias}](${linkText})`;
+      }
     } else {
-      return `![](${linkText})`;
+      if (alias && alias.toLowerCase() === linkText.toLowerCase()) {
+        linkText = alias;
+        alias = "";
+      }
+
+      return (isEmbed ? "!" : "") + (alias ? `[[${linkText}|${alias}]]` : `[[${linkText}]]`);
     }
   }
 
