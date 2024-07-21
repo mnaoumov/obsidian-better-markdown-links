@@ -1,4 +1,6 @@
-import { Notice } from "obsidian";
+import { showError } from "./Error.ts";
+
+export type MaybePromise<T> = T | Promise<T>;
 
 export async function retryWithTimeout(
   asyncFn: () => Promise<boolean>,
@@ -37,8 +39,5 @@ async function runWithTimeout<R>(timeoutInMilliseconds: number, asyncFn: () => P
 }
 
 export function convertToSync(promise: Promise<unknown>): void {
-  promise.catch((error) => {
-    console.error(error);
-    new Notice("An unhandled error occurred. Please check the console for more information.");
-  });
+  promise.catch(showError);
 }
