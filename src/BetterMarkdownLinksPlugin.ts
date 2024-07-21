@@ -271,7 +271,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
   }
 
   private async editFile(file: TFile, changes: FileChange[]): Promise<void> {
-    changes.sort((a, b) => b.startIndex - a.startIndex);
+    changes.sort((a, b) => a.startIndex - b.startIndex);
 
     for (let i = 1; i < changes.length; i++) {
       if (changes[i - 1]!.endIndex >= changes[i]!.startIndex) {
