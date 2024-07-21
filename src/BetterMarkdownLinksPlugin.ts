@@ -252,6 +252,8 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
    */
   private fixChange(change: string, file: TFile): string {
     const match = change.match(/^!?\[(.*?)\]\(([^<]+?) .+?>\)$/);
+    const isEmbed = change.startsWith("!");
+
     if (!match) {
       return change;
     }
@@ -261,11 +263,10 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
     const [linkPath = "", originalSubpath] = decodeURIComponent(escapedPath).split("#");
     const linkedFile = this.app.metadataCache.getFirstLinkpathDest(linkPath, file.path);
     if (!linkedFile) {
-      return change;
+      return `${isEmbed ? "!" : ""}[${alias}](${escapedPath})`;
     }
 
     const subpath = originalSubpath ? "#" + originalSubpath : undefined;
-    const isEmbed = change.startsWith("!");
     return this.generateMarkdownLink(linkedFile, file.path, subpath, alias, isEmbed, false);
   }
 
