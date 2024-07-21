@@ -15,7 +15,6 @@ import {
   convertToSync,
 } from "./Async.ts";
 import { dirname } from "node:path/posix";
-import { createTFile } from "obsidian-typings/implementations";
 import {
   generateMarkdownLink,
   type GenerateMarkdownLinkFn
@@ -128,9 +127,9 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
       await updateLinksInFile(this, file, oldPath);
     }
 
-    const oldFile = createTFile(this.app.vault, oldPath);
+    await getCacheSafe(this.app, file);
 
-    const backlinks = this.app.metadataCache.getBacklinksForFile(oldFile);
+    const backlinks = this.app.metadataCache.getBacklinksForFile(file);
 
     for (const parentNotePath of backlinks.keys()) {
       const parentNote = parentNotePath === oldPath ? file : this.app.vault.getFileByPath(parentNotePath);
@@ -138,8 +137,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
         showError(`Parent note not found: ${parentNotePath}`);
         continue;
       }
-      const links = backlinks.get(parentNotePath) ?? [];
-      await applyFileChanges(this.app, parentNote, () => links.map(link => ({
+      await applyFileChanges(this.app, parentNote, () => (this.app.metadataCache.getBacklinksForFile(file).get(parentNotePath) ?? []).map(link => ({
         startIndex: link.position.start.offset,
         endIndex: link.position.end.offset,
         newContent: updateLink(this, link, file, parentNote)
