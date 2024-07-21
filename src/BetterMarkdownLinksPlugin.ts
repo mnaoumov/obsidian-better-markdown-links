@@ -251,7 +251,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
    * BUG: https://forum.obsidian.md/t/update-internal-link-breaks-links-with-angle-brackets/85598
    */
   private fixChange(change: string, file: TFile): string {
-    const match = change.match(/^!?\[(.+?)\]\(([^<]+?) .+?>\)$/);
+    const match = change.match(/^!?\[(.*?)\]\(([^<]+?) .+?>\)$/);
     if (!match) {
       return change;
     }
