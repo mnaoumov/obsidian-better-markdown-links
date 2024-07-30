@@ -7,7 +7,7 @@
 # 2.0.0
 
 - Fix race condition for backlinks
-- Don't preserve wikilinks if automaticallyConvertNewLinks
+- Don't preserve wikilinks if `automaticallyConvertNewLinks`
 - Fix links even to non-existing files
 - Add support for links without alias
 

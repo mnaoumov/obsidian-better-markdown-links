@@ -53,8 +53,8 @@ generateMarkdownLink(file: TFile, sourcePath: string, subpath?: string, alias?: 
 
 ## Installation
 
-- `Better Markdown Links` is available in [the official Community Plugins repository](https://obsidian.md/plugins).
-- Beta releases can be installed through [BRAT](https://github.com/TfTHacker/obsidian42-brat).
+- `Better Markdown Links` is available in [the official Community Plugins repository](https://obsidian.md/plugins?id=better-markdown-links).
+- Beta releases can be installed through [BRAT](https://obsidian.md/plugins?id=obsidian42-brat).
 
 ## License
 
