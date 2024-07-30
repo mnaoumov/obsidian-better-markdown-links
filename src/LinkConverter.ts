@@ -38,6 +38,7 @@ export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file
   await applyFileChanges(plugin.app, file, async () => getAllLinks(await getCacheSafe(plugin.app, file)).map(link => ({
     startIndex: link.position.start.offset,
     endIndex: link.position.end.offset,
+    oldContent: link.original,
     newContent: convertLink(plugin, link, file)
   })));
 }
@@ -60,8 +61,7 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
     console.log(message);
     try {
       await convertLinksInFile(plugin, file);
-    }
-    catch (e) {
+    } catch (e) {
       showError(e);
     }
   }
@@ -70,11 +70,18 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
 }
 
 export async function applyLinkChangeUpdates(plugin: BetterMarkdownLinksPlugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
-  await applyFileChanges(plugin.app, file, () => updates.map(update => ({
-    startIndex: update.reference.position.start.offset,
-    endIndex: update.reference.position.end.offset,
-    newContent: fixChange(plugin, update.change, file)
-  })));
+  await applyFileChanges(plugin.app, file, async () => {
+    const changes = updates.map(update => ({
+      startIndex: update.reference.position.start.offset,
+      endIndex: update.reference.position.end.offset,
+      oldContent: update.reference.original,
+      newContent: fixChange(plugin, update.change, file)
+    }));
+
+    const content = await plugin.app.vault.read(file);
+    const doUpdatesMatchContent = changes.every(change => content.slice(change.startIndex, change.endIndex) === change.oldContent);
+    return doUpdatesMatchContent ? changes : [];
+  });
 }
 
 /**
@@ -104,6 +111,7 @@ export async function updateLinksInFile(plugin: BetterMarkdownLinksPlugin, file:
   await applyFileChanges(app, file, async () => getAllLinks(await getCacheSafe(app, file)).map(link => ({
     startIndex: link.position.start.offset,
     endIndex: link.position.end.offset,
+    oldContent: link.original,
     newContent: convertLink(plugin, link, file, oldPath)
   })));
 }

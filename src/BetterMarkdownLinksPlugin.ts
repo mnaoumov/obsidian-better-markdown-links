@@ -140,6 +140,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
       await applyFileChanges(this.app, parentNote, () => (this.app.metadataCache.getBacklinksForFile(file).get(parentNotePath) ?? []).map(link => ({
         startIndex: link.position.start.offset,
         endIndex: link.position.end.offset,
+        oldContent: link.original,
         newContent: updateLink(this, link, file, parentNote)
       })));
     }

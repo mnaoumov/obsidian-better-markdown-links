@@ -10,6 +10,10 @@ export async function getCacheSafe(app: App, file: TFile): Promise<CachedMetadat
   let cache: CachedMetadata | null = null;
 
   await retryWithTimeout(async () => {
+    if (file.deleted) {
+      throw new Error(`File ${file.path} is deleted`);
+    }
+
     const fileInfo = app.metadataCache.getFileInfo(file.path);
     const stat = await app.vault.adapter.stat(file.path);
 
