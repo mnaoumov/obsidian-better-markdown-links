@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.2.0
+
+- Fix race condition
+
 ## 2.1.0
 
 - Fix invalid race condition updates
