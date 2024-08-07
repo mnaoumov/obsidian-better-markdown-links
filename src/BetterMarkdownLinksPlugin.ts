@@ -9,6 +9,7 @@ import BetterMarkdownLinksPluginSettingsTab from "./BetterMarkdownLinksPluginSet
 import { around } from "monkey-around";
 import {
   getAllLinks,
+  getBacklinksForFileSafe,
   getCacheSafe
 } from "./MetadataCache.ts";
 import {
@@ -19,8 +20,10 @@ import {
   generateMarkdownLink,
   type GenerateMarkdownLinkFn
 } from "./GenerateMarkdownLink.ts";
-import { isMarkdownFile,
-  MARKDOWN_FILE_EXTENSION } from "./TFile.ts";
+import {
+  isMarkdownFile,
+  MARKDOWN_FILE_EXTENSION
+} from "./TFile.ts";
 import {
   applyLinkChangeUpdates,
   convertLink,
@@ -129,7 +132,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
 
     await getCacheSafe(this.app, file);
 
-    const backlinks = this.app.metadataCache.getBacklinksForFile(file);
+    const backlinks = await getBacklinksForFileSafe(this.app, file);
 
     for (const parentNotePath of backlinks.keys()) {
       const parentNote = parentNotePath === oldPath ? file : this.app.vault.getFileByPath(parentNotePath);
@@ -137,12 +140,15 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
         showError(`Parent note not found: ${parentNotePath}`);
         continue;
       }
-      await applyFileChanges(this.app, parentNote, () => (this.app.metadataCache.getBacklinksForFile(file).get(parentNotePath) ?? []).map(link => ({
-        startIndex: link.position.start.offset,
-        endIndex: link.position.end.offset,
-        oldContent: link.original,
-        newContent: updateLink(this, link, file, parentNote)
-      })));
+      await applyFileChanges(this.app, parentNote, async () => {
+        const backlinks = await getBacklinksForFileSafe(this.app, file);
+        return (backlinks.get(parentNotePath) ?? []).map(link => ({
+          startIndex: link.position.start.offset,
+          endIndex: link.position.end.offset,
+          oldContent: link.original,
+          newContent: updateLink(this, link, file, parentNote)
+        }))
+      });
     }
   }
 }
