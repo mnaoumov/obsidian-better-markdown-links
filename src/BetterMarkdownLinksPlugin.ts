@@ -147,7 +147,7 @@ export default class BetterMarkdownLinksPlugin extends Plugin {
           endIndex: link.position.end.offset,
           oldContent: link.original,
           newContent: updateLink(this, link, file, parentNote)
-        }))
+        }));
       });
     }
   }
