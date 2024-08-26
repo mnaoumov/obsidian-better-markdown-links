@@ -9,13 +9,14 @@ import { checkObsidianSettingsCompatibility } from "./ObsidianSettings.ts";
 import {
   getAllLinks,
   getCacheSafe
-} from "./MetadataCache.ts";
-import { applyFileChanges } from "./Vault.ts";
-import { isMarkdownFile } from "./TFile.ts";
-import { convertToSync } from "./Async.ts";
-import { showError } from "./Error.ts";
-import { generateMarkdownLink } from "./GenerateMarkdownLink.ts";
+} from "obsidian-dev-utils/obsidian/MetadataCache";
+import { applyFileChanges } from "obsidian-dev-utils/obsidian/Vault";
+import { isMarkdownFile } from "obsidian-dev-utils/obsidian/TAbstractFile";
+import { invokeAsyncSafely } from "obsidian-dev-utils/Async";
+import { generateMarkdownLinkForPlugin } from "./GenerateMarkdownLink.ts";
 import type { LinkChangeUpdate } from "obsidian-typings";
+import { emitAsyncErrorEvent } from "obsidian-dev-utils/Error";
+import { splitSubpath } from "obsidian-dev-utils/obsidian/Link";
 
 export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, checking: boolean): boolean {
   const activeFile = plugin.app.workspace.getActiveFile();
@@ -24,7 +25,7 @@ export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, che
   }
 
   if (!checking) {
-    convertToSync(convertLinksInFile(plugin, activeFile));
+    invokeAsyncSafely(convertLinksInFile(plugin, activeFile));
   }
 
   return true;
@@ -35,12 +36,18 @@ export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file
     return;
   }
 
-  await applyFileChanges(plugin.app, file, async () => getAllLinks(await getCacheSafe(plugin.app, file)).map(link => ({
-    startIndex: link.position.start.offset,
-    endIndex: link.position.end.offset,
-    oldContent: link.original,
-    newContent: convertLink(plugin, link, file)
-  })));
+  await applyFileChanges(plugin.app, file, async () => {
+    const cache = await getCacheSafe(plugin.app, file);
+    if (!cache) {
+      return [];
+    }
+    return getAllLinks(cache).map((link) => ({
+      startIndex: link.position.start.offset,
+      endIndex: link.position.end.offset,
+      oldContent: link.original,
+      newContent: convertLink(plugin, link, file)
+    }));
+  });
 }
 
 export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugin): Promise<void> {
@@ -62,7 +69,7 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
     try {
       await convertLinksInFile(plugin, file);
     } catch (e) {
-      showError(e);
+      emitAsyncErrorEvent(e);
     }
   }
 
@@ -71,7 +78,7 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
 
 export async function applyLinkChangeUpdates(plugin: BetterMarkdownLinksPlugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
   await applyFileChanges(plugin.app, file, async () => {
-    const changes = updates.map(update => ({
+    const changes = updates.map((update) => ({
       startIndex: update.reference.position.start.offset,
       endIndex: update.reference.position.end.offset,
       oldContent: update.reference.original,
@@ -79,7 +86,7 @@ export async function applyLinkChangeUpdates(plugin: BetterMarkdownLinksPlugin, 
     }));
 
     const content = await plugin.app.vault.read(file);
-    const doUpdatesMatchContent = changes.every(change => content.slice(change.startIndex, change.endIndex) === change.oldContent);
+    const doUpdatesMatchContent = changes.every((change) => content.slice(change.startIndex, change.endIndex) === change.oldContent);
     return doUpdatesMatchContent ? changes : [];
   });
 }
@@ -97,29 +104,42 @@ export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, fil
 
   const alias = match[1]!;
   const escapedPath = match[2]!;
-  const [linkPath = "", subpath] = splitSubpath(decodeURIComponent(escapedPath));
+  const { linkPath, subpath } = splitSubpath(decodeURIComponent(escapedPath));
   const linkedFile = plugin.app.metadataCache.getFirstLinkpathDest(linkPath, file.path);
   if (!linkedFile) {
     return `${isEmbed ? "!" : ""}[${alias}](${escapedPath})`;
   }
 
-  return generateMarkdownLink(plugin, linkedFile, file.path, subpath, alias, isEmbed, false);
+  return generateMarkdownLinkForPlugin(plugin, {
+    pathOrFile: linkedFile,
+    sourcePathOrFile: file.path,
+    subpath,
+    alias,
+    isEmbed,
+    isWikilink: false,
+  });
 }
 
 export async function updateLinksInFile(plugin: BetterMarkdownLinksPlugin, file: TFile, oldPath: string): Promise<void> {
   const app = plugin.app;
-  await applyFileChanges(app, file, async () => getAllLinks(await getCacheSafe(app, file)).map(link => ({
-    startIndex: link.position.start.offset,
-    endIndex: link.position.end.offset,
-    oldContent: link.original,
-    newContent: convertLink(plugin, link, file, oldPath)
-  })));
+  await applyFileChanges(app, file, async () => {
+    const cache = await getCacheSafe(app, file);
+    if (!cache) {
+      return [];
+    }
+    return getAllLinks(cache).map((link) => ({
+      startIndex: link.position.start.offset,
+      endIndex: link.position.end.offset,
+      oldContent: link.original,
+      newContent: convertLink(plugin, link, file, oldPath)
+    }));
+  });
 }
 
 export function extractLinkFile(app: App, link: ReferenceCache, oldPath: string): TFile | null {
   const PARENT_DIRECTORY = "../";
 
-  const [linkPath] = splitSubpath(link.link);
+  const { linkPath } = splitSubpath(link.link);
   let linkFile = app.metadataCache.getFirstLinkpathDest(linkPath, oldPath);
   if (!linkFile && linkPath.startsWith(PARENT_DIRECTORY)) {
     linkFile = app.metadataCache.getFirstLinkpathDest(linkPath.slice(PARENT_DIRECTORY.length), oldPath);
@@ -133,18 +153,19 @@ export function updateLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCac
     return link.original;
   }
   const isEmbed = link.original.startsWith("!");
-  const isWikilink = plugin.settings.automaticallyConvertNewLinks ? undefined : link.original.includes("[[");
-  const [, subpath] = splitSubpath(link.link);
-  return generateMarkdownLink(plugin, file, source.path, subpath, link.displayText, isEmbed, isWikilink);
+  const isWikilink = plugin.settingsCopy.automaticallyConvertNewLinks ? undefined : link.original.includes("[[");
+  const { subpath } = splitSubpath(link.link);
+  return generateMarkdownLinkForPlugin(plugin, {
+    pathOrFile: file,
+    sourcePathOrFile: source,
+    subpath,
+    alias: link.displayText,
+    isEmbed,
+    isWikilink
+  });
 }
 
 export function convertLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCache, source: TFile, oldPath?: string): string {
   oldPath ??= source.path;
   return updateLink(plugin, link, extractLinkFile(plugin.app, link, oldPath), source);
-}
-
-function splitSubpath(link: string): [string, string | undefined] {
-  const SUBPATH_SEPARATOR = "#";
-  const [linkPath = "", subpath] = link.split(SUBPATH_SEPARATOR);
-  return [linkPath, subpath ? "#" + subpath : undefined];
 }

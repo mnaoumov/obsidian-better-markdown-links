@@ -1,8 +1,9 @@
-import {
-  App,
-  Notice
-} from "obsidian";
+import { Notice } from "obsidian";
 import type BetterMarkdownLinksPlugin from "./BetterMarkdownLinksPlugin.ts";
+import {
+  shouldUseRelativeLinks,
+  shouldUseWikilinks
+} from "obsidian-dev-utils/obsidian/ObsidianSettings";
 
 const warningNotice = new Notice("");
 warningNotice.hide();
@@ -10,7 +11,7 @@ warningNotice.hide();
 export function checkObsidianSettingsCompatibility(plugin: BetterMarkdownLinksPlugin): boolean {
   const app = plugin.app;
 
-  if (plugin.settings.ignoreIncompatibleObsidianSettings) {
+  if (plugin.settingsCopy.ignoreIncompatibleObsidianSettings) {
     return true;
   }
 
@@ -20,12 +21,4 @@ export function checkObsidianSettingsCompatibility(plugin: BetterMarkdownLinksPl
 
   plugin.showCompatibilityWarning();
   return false;
-}
-
-export function shouldUseWikilinks(app: App): boolean {
-  return !app.vault.getConfig("useMarkdownLinks");
-}
-
-export function shouldUseRelativeLinks(app: App): boolean {
-  return app.vault.getConfig("newLinkFormat") === "relative";
 }

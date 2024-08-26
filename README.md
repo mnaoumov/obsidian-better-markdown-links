@@ -34,19 +34,58 @@ To improve performance, consider installing [Backlink Cache](https://obsidian.md
 
 ## Extend [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink]
 
-This plugin enhances the [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] function by adding two optional parameters: `isEmbed` and `isWikilink`. The extended function signature is as follows:
+This plugin enhances the [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] function by adding an additional overload:
 
 ```typescript
 /**
- * Generate a markdown link based on the user's preferences.
- * @param file - the file to link to.
- * @param sourcePath - where the link is stored in, used to compute relative links.
- * @param subpath - A subpath, starting with `#`, used for linking to headings or blocks.
- * @param alias - The display text if it's to be different than the file name. Pass empty string to use file name.
- * @param isEmbed - A boolean indicating if the link should be embedded. If omitted or `undefined`, the function behaves as its original version.
- * @param isWikilink - A boolean indicating if the link should be in wiki-link format. If omitted or `undefined`, the function behaves as its original version.
+ * Generates a markdown link based on the provided parameters.
+ *
+ * @param options - The options for generating the markdown link.
+ * @returns The generated markdown link.
  */
-generateMarkdownLink(file: TFile, sourcePath: string, subpath?: string, alias?: string, isEmbed?: boolean, isWikilink?: boolean): string
+generateMarkdownLink(options: GenerateMarkdownLinkOptions): string
+
+/**
+ * Options for generating a markdown link.
+ */
+export type GenerateMarkdownLinkOptions = {
+    /**
+     * The file to link to.
+     */
+    pathOrFile: PathOrFile;
+    /**
+     * The source path of the link.
+     */
+    sourcePathOrFile: PathOrFile;
+    /**
+     * The subpath of the link.
+     */
+    subpath?: string | undefined;
+    /**
+     * The alias for the link.
+     */
+    alias?: string | undefined;
+    /**
+     * Indicates if the link should be embedded. If not provided, it will be inferred based on the file type.
+     */
+    isEmbed?: boolean | undefined;
+    /**
+     * Indicates if the link should be a wikilink. If not provided, it will be inferred based on the Obsidian settings.
+     */
+    isWikilink?: boolean | undefined;
+    /**
+     * Indicates if the link should be relative. If not provided, it will be inferred based on the Obsidian settings.
+     */
+    isRelative?: boolean | undefined;
+    /**
+     * Indicates if the link should use a leading dot. Defaults to `false`. Has no effect if `isWikilink` is `true` or `isRelative` is `false`.
+     */
+    useLeadingDot?: boolean | undefined;
+    /**
+     * Indicates if the link should use angle brackets. Defaults to `false`. Has no effect if `isWikilink` is `true`
+     */
+    useAngleBrackets?: boolean | undefined;
+};
 ```
 
 **Note**: The plugin's setting `Ignore incompatible Obsidian settings` sets the default value of `isWikilink` to `false`.
