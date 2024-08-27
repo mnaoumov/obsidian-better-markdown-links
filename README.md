@@ -53,34 +53,42 @@ export type GenerateMarkdownLinkOptions = {
      * The file to link to.
      */
     pathOrFile: PathOrFile;
+
     /**
      * The source path of the link.
      */
     sourcePathOrFile: PathOrFile;
+
     /**
      * The subpath of the link.
      */
     subpath?: string | undefined;
+
     /**
      * The alias for the link.
      */
     alias?: string | undefined;
+
     /**
      * Indicates if the link should be embedded. If not provided, it will be inferred based on the file type.
      */
     isEmbed?: boolean | undefined;
+
     /**
      * Indicates if the link should be a wikilink. If not provided, it will be inferred based on the Obsidian settings.
      */
     isWikilink?: boolean | undefined;
+
     /**
-     * Indicates if the link should be relative. If not provided, it will be inferred based on the Obsidian settings.
+     * Indicates if the link should be relative. If not provided or `false`, it will be inferred based on the Obsidian settings.
      */
-    isRelative?: boolean | undefined;
+    forceRelativePath?: boolean | undefined;
+
     /**
      * Indicates if the link should use a leading dot. Defaults to `false`. Has no effect if `isWikilink` is `true` or `isRelative` is `false`.
      */
     useLeadingDot?: boolean | undefined;
+
     /**
      * Indicates if the link should use angle brackets. Defaults to `false`. Has no effect if `isWikilink` is `true`
      */
