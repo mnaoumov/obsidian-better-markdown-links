@@ -10,13 +10,13 @@ export type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?:
 export type GenerateMarkdownLinkForPluginOptions = Omit<GenerateMarkdownLinkFullOptions, "app">;
 
 export function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, options: GenerateMarkdownLinkForPluginOptions): string {
-  const settings = plugin.settingsCopy;
-  const fullOptions = Object.assign(options, {
-    app: plugin.app,
-    isWikilink: settings.ignoreIncompatibleObsidianSettings ? false : undefined,
-    isRelative: settings.ignoreIncompatibleObsidianSettings ? true : undefined,
-    useLeadingDot: settings.useLeadingDot,
-    useAngleBrackets: settings.useAngleBrackets
-  } as GenerateMarkdownLinkFullOptions);
+  const pluginSettings = plugin.settingsCopy;
+  const optionsFromPluginSettings: Partial<GenerateMarkdownLinkFullOptions> = {
+    isWikilink: pluginSettings.ignoreIncompatibleObsidianSettings ? false : undefined,
+    forceRelativePath: pluginSettings.ignoreIncompatibleObsidianSettings ? true : undefined,
+    useLeadingDot: pluginSettings.useLeadingDot,
+    useAngleBrackets: pluginSettings.useAngleBrackets
+  };
+  const fullOptions = Object.assign({ app: plugin.app }, optionsFromPluginSettings, options);
   return generateMarkdownLinkFull(fullOptions);
 }
