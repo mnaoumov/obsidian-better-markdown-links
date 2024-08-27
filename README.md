@@ -85,7 +85,7 @@ export type GenerateMarkdownLinkOptions = {
     forceRelativePath?: boolean | undefined;
 
     /**
-     * Indicates if the link should use a leading dot. Defaults to `false`. Has no effect if `isWikilink` is `true` or `isRelative` is `false`.
+     * Indicates if the link should use a leading dot. Defaults to `false`. Has no effect if `isWikilink` is `true` or `forceRelativePath` is `false`.
      */
     useLeadingDot?: boolean | undefined;
 
