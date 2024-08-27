@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.3.0
+
+- Switch to obsidian-dev-utils
+- Refactor generateMarkdownLink
+
 ## 2.2.0
 
 - Fix race condition
