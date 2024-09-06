@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.4.0
+
+- Fix mobile build
+
 ## 2.3.0
 
 - Switch to obsidian-dev-utils
