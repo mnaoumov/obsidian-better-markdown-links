@@ -48,7 +48,7 @@ generateMarkdownLink(options: GenerateMarkdownLinkOptions): string
 /**
  * Options for generating a markdown link.
  */
-export type GenerateMarkdownLinkOptions = {
+export interface GenerateMarkdownLinkOptions {
     /**
      * The file to link to.
      */
@@ -93,7 +93,7 @@ export type GenerateMarkdownLinkOptions = {
      * Indicates if the link should use angle brackets. Defaults to `false`. Has no effect if `isWikilink` is `true`
      */
     useAngleBrackets?: boolean | undefined;
-};
+}
 ```
 
 **Note**: The plugin's setting `Ignore incompatible Obsidian settings` sets the default value of `isWikilink` to `false`.
