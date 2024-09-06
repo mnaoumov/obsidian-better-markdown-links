@@ -1,1 +1,1 @@
-export { default } from "./BetterMarkdownLinksPlugin.ts";
+export { default } from './BetterMarkdownLinksPlugin.ts';

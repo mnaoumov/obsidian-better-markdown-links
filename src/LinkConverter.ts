@@ -1,22 +1,25 @@
+import type {
+  ReferenceCache,
+  TFile
+} from 'obsidian';
 import {
   App,
-  Notice,
-  type ReferenceCache,
-  type TFile
-} from "obsidian";
-import type BetterMarkdownLinksPlugin from "./BetterMarkdownLinksPlugin.ts";
-import { checkObsidianSettingsCompatibility } from "./ObsidianSettings.ts";
+  Notice
+} from 'obsidian';
+import { invokeAsyncSafely } from 'obsidian-dev-utils/Async';
+import { emitAsyncErrorEvent } from 'obsidian-dev-utils/Error';
+import { splitSubpath } from 'obsidian-dev-utils/obsidian/Link';
 import {
   getAllLinks,
   getCacheSafe
-} from "obsidian-dev-utils/obsidian/MetadataCache";
-import { applyFileChanges } from "obsidian-dev-utils/obsidian/Vault";
-import { isMarkdownFile } from "obsidian-dev-utils/obsidian/TAbstractFile";
-import { invokeAsyncSafely } from "obsidian-dev-utils/Async";
-import { generateMarkdownLinkForPlugin } from "./GenerateMarkdownLink.ts";
-import type { LinkChangeUpdate } from "obsidian-typings";
-import { emitAsyncErrorEvent } from "obsidian-dev-utils/Error";
-import { splitSubpath } from "obsidian-dev-utils/obsidian/Link";
+} from 'obsidian-dev-utils/obsidian/MetadataCache';
+import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/TAbstractFile';
+import { applyFileChanges } from 'obsidian-dev-utils/obsidian/Vault';
+import type { LinkChangeUpdate } from 'obsidian-typings';
+
+import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
+import { generateMarkdownLinkForPlugin } from './GenerateMarkdownLink.ts';
+import { checkObsidianSettingsCompatibility } from './ObsidianSettings.ts';
 
 export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, checking: boolean): boolean {
   const activeFile = plugin.app.workspace.getActiveFile();
@@ -59,11 +62,11 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
 
   let index = 0;
 
-  const notice = new Notice("", 0);
+  const notice = new Notice('', 0);
 
   for (const file of mdFiles) {
     index++;
-    const message = `Converting links in note # ${index} / ${mdFiles.length}: ${file.path}`;
+    const message = `Converting links in note # ${index.toString()} / ${mdFiles.length.toString()}: ${file.path}`;
     notice.setMessage(message);
     console.log(message);
     try {
@@ -95,19 +98,19 @@ export async function applyLinkChangeUpdates(plugin: BetterMarkdownLinksPlugin, 
  * BUG: https://forum.obsidian.md/t/update-internal-link-breaks-links-with-angle-brackets/85598
  */
 export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, file: TFile): string {
-  const match = change.match(/^!?\[(.*?)\]\(([^<]+?) .+?>\)$/);
-  const isEmbed = change.startsWith("!");
+  const match = /^!?\[(.*?)\]\(([^<]+?) .+?>\)$/.exec(change);
+  const isEmbed = change.startsWith('!');
 
   if (!match) {
     return change;
   }
 
-  const alias = match[1]!;
-  const escapedPath = match[2]!;
+  const alias = match[1] ?? '';
+  const escapedPath = match[2] ?? '';
   const { linkPath, subpath } = splitSubpath(decodeURIComponent(escapedPath));
   const linkedFile = plugin.app.metadataCache.getFirstLinkpathDest(linkPath, file.path);
   if (!linkedFile) {
-    return `${isEmbed ? "!" : ""}[${alias}](${escapedPath})`;
+    return `${isEmbed ? '!' : ''}[${alias}](${escapedPath})`;
   }
 
   return generateMarkdownLinkForPlugin(plugin, {
@@ -116,7 +119,7 @@ export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, fil
     subpath,
     alias,
     isEmbed,
-    isWikilink: false,
+    isWikilink: false
   });
 }
 
@@ -137,7 +140,7 @@ export async function updateLinksInFile(plugin: BetterMarkdownLinksPlugin, file:
 }
 
 export function extractLinkFile(app: App, link: ReferenceCache, oldPath: string): TFile | null {
-  const PARENT_DIRECTORY = "../";
+  const PARENT_DIRECTORY = '../';
 
   const { linkPath } = splitSubpath(link.link);
   let linkFile = app.metadataCache.getFirstLinkpathDest(linkPath, oldPath);
@@ -152,8 +155,8 @@ export function updateLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCac
   if (!file) {
     return link.original;
   }
-  const isEmbed = link.original.startsWith("!");
-  const isWikilink = plugin.settingsCopy.automaticallyConvertNewLinks ? undefined : link.original.includes("[[");
+  const isEmbed = link.original.startsWith('!');
+  const isWikilink = plugin.settingsCopy.automaticallyConvertNewLinks ? undefined : link.original.includes('[[');
   const { subpath } = splitSubpath(link.link);
   return generateMarkdownLinkForPlugin(plugin, {
     pathOrFile: file,

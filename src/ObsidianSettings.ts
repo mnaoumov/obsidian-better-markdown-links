@@ -1,11 +1,12 @@
-import { Notice } from "obsidian";
-import type BetterMarkdownLinksPlugin from "./BetterMarkdownLinksPlugin.ts";
+import { Notice } from 'obsidian';
 import {
   shouldUseRelativeLinks,
   shouldUseWikilinks
-} from "obsidian-dev-utils/obsidian/ObsidianSettings";
+} from 'obsidian-dev-utils/obsidian/ObsidianSettings';
 
-const warningNotice = new Notice("");
+import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
+
+const warningNotice = new Notice('');
 warningNotice.hide();
 
 export function checkObsidianSettingsCompatibility(plugin: BetterMarkdownLinksPlugin): boolean {

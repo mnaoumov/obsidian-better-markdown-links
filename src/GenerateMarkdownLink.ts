@@ -1,13 +1,12 @@
-import type { TFile } from "obsidian";
-import type BetterMarkdownLinksPlugin from "./BetterMarkdownLinksPlugin.ts";
-import {
-  generateMarkdownLink as generateMarkdownLinkFull,
-  type GenerateMarkdownLinkOptions as GenerateMarkdownLinkFullOptions
-} from "obsidian-dev-utils/obsidian/Link";
+import type { TFile } from 'obsidian';
+import type { GenerateMarkdownLinkOptions as GenerateMarkdownLinkFullOptions } from 'obsidian-dev-utils/obsidian/Link';
+import { generateMarkdownLink as generateMarkdownLinkFull } from 'obsidian-dev-utils/obsidian/Link';
+
+import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
 
 export type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?: string, alias?: string) => string;
 
-export type GenerateMarkdownLinkForPluginOptions = Omit<GenerateMarkdownLinkFullOptions, "app">;
+export type GenerateMarkdownLinkForPluginOptions = Omit<GenerateMarkdownLinkFullOptions, 'app'>;
 
 export function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, options: GenerateMarkdownLinkForPluginOptions): string {
   const pluginSettings = plugin.settingsCopy;
