@@ -7,6 +7,7 @@ import {
 } from 'obsidian';
 import type { MaybePromise } from 'obsidian-dev-utils/Async';
 import { invokeAsyncSafely } from 'obsidian-dev-utils/Async';
+import type { GenerateMarkdownLinkDefaultOptionsWrapper } from 'obsidian-dev-utils/obsidian/Link';
 import {
   getAllLinks,
   getBacklinksForFileSafe,
@@ -22,11 +23,8 @@ import { dirname } from 'obsidian-dev-utils/Path';
 
 import BetterMarkdownLinksPluginSettings from './BetterMarkdownLinksPluginSettings.ts';
 import BetterMarkdownLinksPluginSettingsTab from './BetterMarkdownLinksPluginSettingsTab.ts';
-import type {
-  GenerateMarkdownLinkFn,
-  GenerateMarkdownLinkForPluginOptions
-} from './GenerateMarkdownLink.ts';
-import { generateMarkdownLinkForPlugin } from './GenerateMarkdownLink.ts';
+import type { GenerateMarkdownLinkFn } from './GenerateMarkdownLink.ts';
+import { getPatchedGenerateMarkdownLink } from './GenerateMarkdownLink.ts';
 import {
   applyLinkChangeUpdates,
   convertLink,
@@ -50,17 +48,7 @@ export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdown
 
   protected override onloadComplete(): MaybePromise<void> {
     this.register(around(this.app.fileManager, {
-      generateMarkdownLink: (): GenerateMarkdownLinkFn => (fileOrOptions: TFile | GenerateMarkdownLinkForPluginOptions, sourcePath: string, subpath?: string, alias?: string): string => {
-        const options = fileOrOptions instanceof TFile
-          ? {
-              pathOrFile: fileOrOptions,
-              sourcePathOrFile: sourcePath,
-              subpath,
-              alias
-            }
-          : fileOrOptions;
-        return generateMarkdownLinkForPlugin(this, options);
-      }
+      generateMarkdownLink: (): GenerateMarkdownLinkFn & Required<GenerateMarkdownLinkDefaultOptionsWrapper> => getPatchedGenerateMarkdownLink(this)
     }));
 
     this.addCommand({

@@ -8,7 +8,10 @@ import {
 } from 'obsidian';
 import { invokeAsyncSafely } from 'obsidian-dev-utils/Async';
 import { emitAsyncErrorEvent } from 'obsidian-dev-utils/Error';
-import { splitSubpath } from 'obsidian-dev-utils/obsidian/Link';
+import {
+  generateMarkdownLink,
+  splitSubpath
+} from 'obsidian-dev-utils/obsidian/Link';
 import {
   getAllLinks,
   getCacheSafe
@@ -18,7 +21,6 @@ import { applyFileChanges } from 'obsidian-dev-utils/obsidian/Vault';
 import type { LinkChangeUpdate } from 'obsidian-typings';
 
 import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
-import { generateMarkdownLinkForPlugin } from './GenerateMarkdownLink.ts';
 import { checkObsidianSettingsCompatibility } from './ObsidianSettings.ts';
 
 export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, checking: boolean): boolean {
@@ -113,7 +115,8 @@ export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, fil
     return `${isEmbed ? '!' : ''}[${alias}](${escapedPath})`;
   }
 
-  return generateMarkdownLinkForPlugin(plugin, {
+  return generateMarkdownLink({
+    app: plugin.app,
     pathOrFile: linkedFile,
     sourcePathOrFile: file.path,
     subpath,
@@ -158,7 +161,8 @@ export function updateLink(plugin: BetterMarkdownLinksPlugin, link: ReferenceCac
   const isEmbed = link.original.startsWith('!');
   const isWikilink = plugin.settingsCopy.automaticallyConvertNewLinks ? undefined : link.original.includes('[[');
   const { subpath } = splitSubpath(link.link);
-  return generateMarkdownLinkForPlugin(plugin, {
+  return generateMarkdownLink({
+    app: plugin.app,
     pathOrFile: file,
     sourcePathOrFile: source,
     subpath,
