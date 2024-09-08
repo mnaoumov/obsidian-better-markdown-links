@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.5.0
+
+- Refactor generateMarkdownLink
+
 ## 2.4.0
 
 - Fix mobile build
