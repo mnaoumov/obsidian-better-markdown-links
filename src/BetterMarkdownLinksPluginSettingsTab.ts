@@ -29,7 +29,7 @@ export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettings
       .setDesc(createFragment((f) => {
         f.appendText('Automatically update links when a file is renamed or moved to another directory.');
         f.createEl('br');
-        f.appendText('Consider installing');
+        f.appendText('Consider installing the ');
         f.createEl('a', {
           href: 'obsidian://show-plugin?id=backlink-cache',
           text: 'Backlink Cache'
