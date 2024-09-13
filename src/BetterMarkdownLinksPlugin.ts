@@ -48,7 +48,7 @@ export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdown
 
   protected override onloadComplete(): MaybePromise<void> {
     this.register(around(this.app.fileManager, {
-      generateMarkdownLink: (): GenerateMarkdownLinkFn & Required<GenerateMarkdownLinkDefaultOptionsWrapper> => getPatchedGenerateMarkdownLink(this)
+      generateMarkdownLink: (): GenerateMarkdownLinkFn & GenerateMarkdownLinkDefaultOptionsWrapper => getPatchedGenerateMarkdownLink(this)
     }));
 
     this.addCommand({
