@@ -1,5 +1,4 @@
 import { around } from 'monkey-around';
-import type { TAbstractFile } from 'obsidian';
 import {
   Notice,
   PluginSettingTab,
@@ -8,19 +7,14 @@ import {
 import type { MaybePromise } from 'obsidian-dev-utils/Async';
 import { invokeAsyncSafely } from 'obsidian-dev-utils/Async';
 import type { GenerateMarkdownLinkDefaultOptionsWrapper } from 'obsidian-dev-utils/obsidian/Link';
+import { convertLink } from 'obsidian-dev-utils/obsidian/Link';
 import {
   getAllLinks,
-  getBacklinksForFileSafe,
   getCacheSafe
 } from 'obsidian-dev-utils/obsidian/MetadataCache';
 import { PluginBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginBase';
-import {
-  isMarkdownFile,
-  MARKDOWN_FILE_EXTENSION
-} from 'obsidian-dev-utils/obsidian/TAbstractFile';
-import { applyFileChanges } from 'obsidian-dev-utils/obsidian/Vault';
-import { dirname } from 'obsidian-dev-utils/Path';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
+import { MARKDOWN_FILE_EXTENSION } from 'obsidian-dev-utils/obsidian/TAbstractFile';
 
 import BetterMarkdownLinksPluginSettings from './BetterMarkdownLinksPluginSettings.ts';
 import BetterMarkdownLinksPluginSettingsTab from './BetterMarkdownLinksPluginSettingsTab.ts';
@@ -28,12 +22,9 @@ import type { GenerateMarkdownLinkFn } from './GenerateMarkdownLink.ts';
 import { getPatchedGenerateMarkdownLink } from './GenerateMarkdownLink.ts';
 import {
   applyLinkChangeUpdates,
-  convertLink,
   convertLinksInCurrentFile,
   convertLinksInEntireVault,
   convertLinksInFile,
-  updateLink,
-  updateLinksInFile
 } from './LinkConverter.ts';
 
 export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPluginSettings> {
@@ -115,7 +106,11 @@ export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdown
       return;
     }
     const links = getAllLinks(cache);
-    if (links.some((link) => link.original !== convertLink(this, link, file))) {
+    if (links.some((link) => link.original !== convertLink({
+      app: this.app,
+      link,
+      sourcePathOrFile: file
+    }))) {
       await convertLinksInFile(this, file);
     }
   }
