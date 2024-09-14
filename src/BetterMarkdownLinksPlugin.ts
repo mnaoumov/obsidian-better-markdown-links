@@ -20,6 +20,7 @@ import {
 } from 'obsidian-dev-utils/obsidian/TAbstractFile';
 import { applyFileChanges } from 'obsidian-dev-utils/obsidian/Vault';
 import { dirname } from 'obsidian-dev-utils/Path';
+import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
 import BetterMarkdownLinksPluginSettings from './BetterMarkdownLinksPluginSettings.ts';
 import BetterMarkdownLinksPluginSettingsTab from './BetterMarkdownLinksPluginSettingsTab.ts';
@@ -66,8 +67,9 @@ export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdown
     this.registerEvent(this.app.metadataCache.on('changed', (file) => {
       invokeAsyncSafely(this.handleMetadataCacheChanged(file));
     }));
-    this.registerEvent(this.app.vault.on('rename', (file, oldPath) => {
-      invokeAsyncSafely(this.handleRename(file, oldPath));
+
+    registerRenameDeleteHandlers(this, () => ({
+      shouldUpdateLinks: this.settings.automaticallyUpdateLinksOnRenameOrMove
     }));
 
     this.warningNotice = new Notice('');
@@ -115,41 +117,6 @@ export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdown
     const links = getAllLinks(cache);
     if (links.some((link) => link.original !== convertLink(this, link, file))) {
       await convertLinksInFile(this, file);
-    }
-  }
-
-  private async handleRename(file: TAbstractFile, oldPath: string): Promise<void> {
-    if (!this.settings.automaticallyUpdateLinksOnRenameOrMove) {
-      return;
-    }
-
-    if (!(file instanceof TFile)) {
-      return;
-    }
-
-    if (isMarkdownFile(file) && file.parent?.path !== dirname(oldPath)) {
-      await updateLinksInFile(this, file, oldPath);
-    }
-
-    await getCacheSafe(this.app, file);
-
-    const backlinks = await getBacklinksForFileSafe(this.app, file);
-
-    for (const parentNotePath of backlinks.keys()) {
-      const parentNote = parentNotePath === oldPath ? file : this.app.vault.getFileByPath(parentNotePath);
-      if (!parentNote) {
-        console.warn(`Parent note not found: ${parentNotePath}`);
-        continue;
-      }
-      await applyFileChanges(this.app, parentNote, async () => {
-        const backlinks = await getBacklinksForFileSafe(this.app, file);
-        return (backlinks.get(parentNotePath) ?? []).map((link) => ({
-          startIndex: link.position.start.offset,
-          endIndex: link.position.end.offset,
-          oldContent: link.original,
-          newContent: updateLink(this, link, file, parentNote)
-        }));
-      });
     }
   }
 }
