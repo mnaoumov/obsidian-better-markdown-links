@@ -52,5 +52,21 @@ export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettings
         f.appendText('If you enable current setting, it will override incompatible Obsidian settings and will work as expected.');
       }))
       .addToggle((toggle) => bindUiComponent(this.plugin, toggle, 'ignoreIncompatibleObsidianSettings'));
+
+    new Setting(this.containerEl)
+      .setName('Allow empty embed alias')
+      .setDesc('If disabled, empty alias will be replaced with the attachment name')
+      .addToggle((toggle) => bindUiComponent(this.plugin, toggle, 'allowEmptyEmbedAlias'));
+
+    new Setting(this.containerEl)
+      .setName('Include attachment extension to embed alias')
+      .setDesc(createFragment((f)=>{
+        f.appendText('If enabled, the extension of the attachment will be included in the embed alias.');
+        f.createEl('br');
+        f.appendText('The setting is ignored if ');
+        appendCodeBlock(f, 'Allow empty embed alias');
+        f.appendText(' is enabled.');
+      }))
+      .addToggle((toggle) => bindUiComponent(this.plugin, toggle, 'includeAttachmentExtensionToEmbedAlias'));
   }
 }

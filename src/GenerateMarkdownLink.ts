@@ -17,7 +17,9 @@ function getDefaultOptions(plugin: BetterMarkdownLinksPlugin): Partial<GenerateM
     isWikilink: pluginSettings.ignoreIncompatibleObsidianSettings ? false : undefined,
     forceRelativePath: pluginSettings.ignoreIncompatibleObsidianSettings ? true : undefined,
     useLeadingDot: pluginSettings.useLeadingDot,
-    useAngleBrackets: pluginSettings.useAngleBrackets
+    useAngleBrackets: pluginSettings.useAngleBrackets,
+    allowEmptyEmbedAlias: pluginSettings.allowEmptyEmbedAlias,
+    includeAttachmentExtensionToEmbedAlias: pluginSettings.includeAttachmentExtensionToEmbedAlias,
   };
 }
 
