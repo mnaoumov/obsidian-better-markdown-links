@@ -36,7 +36,7 @@ function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, fileOr
   return generateMarkdownLinkFull({ app: plugin.app, ...options });
 }
 
-export function getPatchedGenerateMarkdownLink(plugin: BetterMarkdownLinksPlugin): GenerateMarkdownLinkFn & Required<GenerateMarkdownLinkDefaultOptionsWrapper> {
+export function getPatchedGenerateMarkdownLink(plugin: BetterMarkdownLinksPlugin): GenerateMarkdownLinkFn & GenerateMarkdownLinkDefaultOptionsWrapper {
   return Object.assign((fileOrOptions: TFile | GenerateMarkdownLinkForPluginOptions, sourcePath: string, subpath?: string, alias?: string): string =>
     generateMarkdownLinkForPlugin(plugin, fileOrOptions, sourcePath, subpath, alias), {
     defaultOptionsFn: () => getDefaultOptions(plugin)
