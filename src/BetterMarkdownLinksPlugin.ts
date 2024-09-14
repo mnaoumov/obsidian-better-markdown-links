@@ -30,7 +30,6 @@ import {
 
 export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPluginSettings> {
   private warningNotice!: Notice;
-  private processingMetadataFiles = new Set<string>();
 
   protected override createDefaultPluginSettings(): BetterMarkdownLinksPluginSettings {
     return new BetterMarkdownLinksPluginSettings();
@@ -107,27 +106,17 @@ export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdown
       return;
     }
 
-    if (this.processingMetadataFiles.has(file.path)) {
+    const cache = await getCacheSafe(this.app, file);
+    if (!cache) {
       return;
     }
-
-    this.processingMetadataFiles.add(file.path);
-
-    try {
-      const cache = await getCacheSafe(this.app, file);
-      if (!cache) {
-        return;
-      }
-      const links = getAllLinks(cache);
-      if (links.some((link) => link.original !== convertLink({
-        app: this.app,
-        link,
-        sourcePathOrFile: file
-      }))) {
-        await convertLinksInFile(this, file);
-      }
-    } finally {
-      this.processingMetadataFiles.delete(file.path);
+    const links = getAllLinks(cache);
+    if (links.some((link) => link.original !== convertLink({
+      app: this.app,
+      link,
+      sourcePathOrFile: file
+    }))) {
+      await convertLinksInFile(this, file);
     }
   }
 }
