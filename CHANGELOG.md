@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.6.0
+
+- Add more settings
+- Fix race condition
+
 ## 2.5.0
 
 - Refactor generateMarkdownLink
