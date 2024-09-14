@@ -13,6 +13,7 @@ import {
   getCacheSafe
 } from 'obsidian-dev-utils/obsidian/MetadataCache';
 import { PluginBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginBase';
+import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 import { MARKDOWN_FILE_EXTENSION } from 'obsidian-dev-utils/obsidian/TAbstractFile';
 
@@ -59,9 +60,13 @@ export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdown
       invokeAsyncSafely(this.handleMetadataCacheChanged(file));
     }));
 
-    registerRenameDeleteHandlers(this, () => ({
-      shouldUpdateLinks: this.settings.automaticallyUpdateLinksOnRenameOrMove
-    }));
+    registerRenameDeleteHandlers(this, () => {
+      const settings: Partial<RenameDeleteHandlerSettings> = {
+        shouldUpdateFilenameAliases: true,
+        shouldUpdateLinks: this.settings.automaticallyUpdateLinksOnRenameOrMove
+      };
+      return settings;
+    });
 
     this.warningNotice = new Notice('');
     this.warningNotice.hide();
