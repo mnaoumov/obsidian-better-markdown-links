@@ -35,7 +35,7 @@ export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file
   await updateLinksInFile({
     app: plugin.app,
     pathOrFile: file
-  })
+  });
 }
 
 export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugin): Promise<void> {
