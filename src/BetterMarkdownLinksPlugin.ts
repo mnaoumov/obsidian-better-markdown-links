@@ -24,7 +24,7 @@ import {
   applyLinkChangeUpdates,
   convertLinksInCurrentFile,
   convertLinksInEntireVault,
-  convertLinksInFile,
+  convertLinksInFile
 } from './LinkConverter.ts';
 
 export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPluginSettings> {
