@@ -19,7 +19,7 @@ function getDefaultOptions(plugin: BetterMarkdownLinksPlugin): Partial<GenerateM
     useLeadingDot: pluginSettings.useLeadingDot,
     useAngleBrackets: pluginSettings.useAngleBrackets,
     allowEmptyEmbedAlias: pluginSettings.allowEmptyEmbedAlias,
-    includeAttachmentExtensionToEmbedAlias: pluginSettings.includeAttachmentExtensionToEmbedAlias,
+    includeAttachmentExtensionToEmbedAlias: pluginSettings.includeAttachmentExtensionToEmbedAlias
   };
 }
 

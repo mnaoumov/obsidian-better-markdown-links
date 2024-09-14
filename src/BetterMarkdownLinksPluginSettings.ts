@@ -3,7 +3,7 @@ export default class BetterMarkdownLinksPluginSettings {
   public automaticallyConvertNewLinks = true;
   public automaticallyUpdateLinksOnRenameOrMove = true;
   public ignoreIncompatibleObsidianSettings = false;
-  public includeAttachmentExtensionToEmbedAlias = true;
+  public includeAttachmentExtensionToEmbedAlias = false;
   public useAngleBrackets = true;
   public useLeadingDot = true;
 }

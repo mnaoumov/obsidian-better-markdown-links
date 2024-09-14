@@ -60,7 +60,7 @@ export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettings
 
     new Setting(this.containerEl)
       .setName('Include attachment extension to embed alias')
-      .setDesc(createFragment((f)=>{
+      .setDesc(createFragment((f) => {
         f.appendText('If enabled, the extension of the attachment will be included in the embed alias.');
         f.createEl('br');
         f.appendText('The setting is ignored if ');
