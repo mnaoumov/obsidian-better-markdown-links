@@ -42,7 +42,7 @@ export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file
   });
 }
 
-export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugin): Promise<void> {
+export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugin, abortSignal: AbortSignal): Promise<void> {
   if (!checkObsidianSettingsCompatibility(plugin)) {
     return;
   }
@@ -54,6 +54,9 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
   const notice = new Notice('', 0);
 
   for (const file of mdFiles) {
+    if (abortSignal.aborted) {
+      break;
+    }
     index++;
     const message = `Converting links in note # ${index.toString()} / ${mdFiles.length.toString()}: ${file.path}`;
     notice.setMessage(message);
