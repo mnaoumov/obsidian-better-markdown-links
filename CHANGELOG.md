@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.7.1
+
+- Refactor
+
 ## 2.7.0
 
 - Stop race condition
