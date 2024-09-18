@@ -8,7 +8,11 @@ import {
   splitSubpath,
   updateLinksInFile
 } from 'obsidian-dev-utils/obsidian/Link';
-import { applyFileChanges } from 'obsidian-dev-utils/obsidian/Vault';
+import {
+  applyFileChanges,
+  getMarkdownFilesSorted
+} from 'obsidian-dev-utils/obsidian/Vault';
+
 import type { LinkChangeUpdate } from 'obsidian-typings';
 
 import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
@@ -43,7 +47,7 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
     return;
   }
 
-  const mdFiles = plugin.app.vault.getMarkdownFiles().sort((a, b) => a.path.localeCompare(b.path));
+  const mdFiles = getMarkdownFilesSorted(plugin.app);
 
   let index = 0;
 
