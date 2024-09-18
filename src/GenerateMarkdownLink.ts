@@ -39,9 +39,8 @@ function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, fileOr
 }
 
 export function getPatchedGenerateMarkdownLink(plugin: BetterMarkdownLinksPlugin): GenerateMarkdownLinkFn & GenerateMarkdownLinkDefaultOptionsWrapper {
-  const generateMarkdownLinkFn = (fileOrOptions: TFile | GenerateMarkdownLinkForPluginOptions, sourcePath: string, subpath?: string, alias?: string): string =>
-    generateMarkdownLinkForPlugin(plugin, fileOrOptions, sourcePath, subpath, alias);
-  const generateMarkdownLinkDefaultOptionsWrapper = {
+  const generateMarkdownLinkFn: GenerateMarkdownLinkFn = (fileOrOptions, sourcePath, subpath, alias): string => generateMarkdownLinkForPlugin(plugin, fileOrOptions, sourcePath, subpath, alias);
+  const generateMarkdownLinkDefaultOptionsWrapper: GenerateMarkdownLinkDefaultOptionsWrapper = {
     defaultOptionsFn: () => getDefaultOptions(plugin)
   };
   return Object.assign(generateMarkdownLinkFn, generateMarkdownLinkDefaultOptionsWrapper);
