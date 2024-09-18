@@ -12,7 +12,6 @@ import {
   applyFileChanges,
   getMarkdownFilesSorted
 } from 'obsidian-dev-utils/obsidian/Vault';
-
 import type { LinkChangeUpdate } from 'obsidian-typings';
 
 import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
