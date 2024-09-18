@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.7.0
+
+- Stop race condition
+
 ## 2.6.0
 
 - Add more settings
