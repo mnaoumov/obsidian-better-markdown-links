@@ -53,7 +53,7 @@ export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdown
     this.addCommand({
       id: 'convert-links-in-entire-vault',
       name: 'Convert links in entire vault',
-      callback: () => convertLinksInEntireVault(this)
+      callback: () => convertLinksInEntireVault(this, this.abortSignal)
     });
 
     this.registerEvent(this.app.metadataCache.on('changed', (file) => {
