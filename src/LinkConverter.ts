@@ -1,13 +1,13 @@
 import type { TFile } from 'obsidian';
 import { Notice } from 'obsidian';
-import { invokeAsyncSafely } from 'obsidian-dev-utils/Async';
 import { emitAsyncErrorEvent } from 'obsidian-dev-utils/Error';
+import { chainAsyncFn } from 'obsidian-dev-utils/obsidian/ChainedPromise';
+import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/FileSystem';
 import {
   generateMarkdownLink,
   splitSubpath,
   updateLinksInFile
 } from 'obsidian-dev-utils/obsidian/Link';
-import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/TAbstractFile';
 import { applyFileChanges } from 'obsidian-dev-utils/obsidian/Vault';
 import type { LinkChangeUpdate } from 'obsidian-typings';
 
@@ -21,7 +21,7 @@ export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, che
   }
 
   if (!checking) {
-    invokeAsyncSafely(convertLinksInFile(plugin, activeFile));
+    chainAsyncFn(plugin.app, () => convertLinksInFile(plugin, activeFile));
   }
 
   return true;

@@ -6,6 +6,7 @@ import {
 } from 'obsidian';
 import type { MaybePromise } from 'obsidian-dev-utils/Async';
 import { chainAsyncFn } from 'obsidian-dev-utils/obsidian/ChainedPromise';
+import { MARKDOWN_FILE_EXTENSION } from 'obsidian-dev-utils/obsidian/FileSystem';
 import type { GenerateMarkdownLinkDefaultOptionsWrapper } from 'obsidian-dev-utils/obsidian/Link';
 import { convertLink } from 'obsidian-dev-utils/obsidian/Link';
 import {
@@ -15,7 +16,6 @@ import {
 import { PluginBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginBase';
 import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
-import { MARKDOWN_FILE_EXTENSION } from 'obsidian-dev-utils/obsidian/TAbstractFile';
 
 import BetterMarkdownLinksPluginSettings from './BetterMarkdownLinksPluginSettings.ts';
 import BetterMarkdownLinksPluginSettingsTab from './BetterMarkdownLinksPluginSettingsTab.ts';
