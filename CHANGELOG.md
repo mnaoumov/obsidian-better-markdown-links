@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.8.0
+
+- Update lib to 3.30.0
+- Fix unnecessary extra alias
+
 ## 2.7.1
 
 - Refactor
