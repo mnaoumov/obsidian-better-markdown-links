@@ -5,7 +5,7 @@ import {
   TFile
 } from 'obsidian';
 import type { MaybePromise } from 'obsidian-dev-utils/Async';
-import { chainAsyncFn } from 'obsidian-dev-utils/obsidian/ChainedPromise';
+import { chain } from 'obsidian-dev-utils/obsidian/ChainedPromise';
 import { MARKDOWN_FILE_EXTENSION } from 'obsidian-dev-utils/obsidian/FileSystem';
 import type { GenerateMarkdownLinkDefaultOptionsWrapper } from 'obsidian-dev-utils/obsidian/Link';
 import { convertLink } from 'obsidian-dev-utils/obsidian/Link';
@@ -57,7 +57,7 @@ export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdown
     });
 
     this.registerEvent(this.app.metadataCache.on('changed', (file) => {
-      chainAsyncFn(this.app, () => this.handleMetadataCacheChanged(file));
+      chain(this.app, () => this.handleMetadataCacheChanged(file));
     }));
 
     registerRenameDeleteHandlers(this, () => {

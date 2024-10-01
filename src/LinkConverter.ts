@@ -1,7 +1,7 @@
 import type { TFile } from 'obsidian';
 import { Notice } from 'obsidian';
 import { emitAsyncErrorEvent } from 'obsidian-dev-utils/Error';
-import { chainAsyncFn } from 'obsidian-dev-utils/obsidian/ChainedPromise';
+import { chain } from 'obsidian-dev-utils/obsidian/ChainedPromise';
 import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/FileSystem';
 import {
   generateMarkdownLink,
@@ -24,7 +24,7 @@ export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, che
   }
 
   if (!checking) {
-    chainAsyncFn(plugin.app, () => convertLinksInFile(plugin, activeFile));
+    chain(plugin.app, () => convertLinksInFile(plugin, activeFile));
   }
 
   return true;
