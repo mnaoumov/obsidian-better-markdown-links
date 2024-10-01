@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.9.0
+
+- Update lib
+
 ## 2.8.0
 
 - Update lib to 3.30.0
