@@ -2,16 +2,14 @@ import type { TFile } from 'obsidian';
 import { Notice } from 'obsidian';
 import { emitAsyncErrorEvent } from 'obsidian-dev-utils/Error';
 import { chain } from 'obsidian-dev-utils/obsidian/ChainedPromise';
+import { applyFileChanges } from 'obsidian-dev-utils/obsidian/FileChange';
 import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/FileSystem';
 import {
   generateMarkdownLink,
   splitSubpath,
   updateLinksInFile
 } from 'obsidian-dev-utils/obsidian/Link';
-import {
-  applyFileChanges,
-  getMarkdownFilesSorted
-} from 'obsidian-dev-utils/obsidian/Vault';
+import { getMarkdownFilesSorted } from 'obsidian-dev-utils/obsidian/Vault';
 import type { LinkChangeUpdate } from 'obsidian-typings';
 
 import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';

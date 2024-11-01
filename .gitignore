@@ -24,3 +24,5 @@ data.json
 dist
 
 .env
+
+/tsconfig.tsbuildinfo
