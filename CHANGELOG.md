@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.9.3
+
+- Update libs
+
 ## 2.9.2
 
 - Update lib
