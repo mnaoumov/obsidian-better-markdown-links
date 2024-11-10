@@ -1,7 +1,7 @@
 import { Setting } from 'obsidian';
 import { appendCodeBlock } from 'obsidian-dev-utils/DocumentFragment';
 import { PluginSettingsTabBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginSettingsTabBase';
-import { bindUiComponent } from 'obsidian-dev-utils/obsidian/Plugin/UIComponent';
+import { extend } from 'obsidian-dev-utils/obsidian/Plugin/ValueComponent';
 
 import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
 
@@ -12,17 +12,17 @@ export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettings
     new Setting(this.containerEl)
       .setName('Use leading dot')
       .setDesc('Use a leading dot in relative links')
-      .addToggle((toggle) => bindUiComponent(this.plugin, toggle, 'useLeadingDot'));
+      .addToggle((toggle) => extend(toggle).bind(this.plugin, 'useLeadingDot'));
 
     new Setting(this.containerEl)
       .setName('Use angle brackets')
       .setDesc('Use angle brackets in links')
-      .addToggle((toggle) => bindUiComponent(this.plugin, toggle, 'useAngleBrackets'));
+      .addToggle((toggle) => extend(toggle).bind(this.plugin, 'useAngleBrackets'));
 
     new Setting(this.containerEl)
       .setName('Automatically convert new links')
       .setDesc('Automatically convert new links entered manually to the selected format')
-      .addToggle((toggle) => bindUiComponent(this.plugin, toggle, 'automaticallyConvertNewLinks'));
+      .addToggle((toggle) => extend(toggle).bind(this.plugin, 'automaticallyConvertNewLinks'));
 
     new Setting(this.containerEl)
       .setName('Automatically update links on rename or move')
@@ -36,7 +36,7 @@ export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettings
         });
         f.appendText(' plugin to improve performance.');
       }))
-      .addToggle((toggle) => bindUiComponent(this.plugin, toggle, 'automaticallyUpdateLinksOnRenameOrMove'));
+      .addToggle((toggle) => extend(toggle).bind(this.plugin, 'automaticallyUpdateLinksOnRenameOrMove'));
 
     new Setting(this.containerEl)
       .setName('Ignore incompatible Obsidian settings')
@@ -51,12 +51,12 @@ export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettings
         f.createEl('br');
         f.appendText('If you enable current setting, it will override incompatible Obsidian settings and will work as expected.');
       }))
-      .addToggle((toggle) => bindUiComponent(this.plugin, toggle, 'ignoreIncompatibleObsidianSettings'));
+      .addToggle((toggle) => extend(toggle).bind(this.plugin, 'ignoreIncompatibleObsidianSettings'));
 
     new Setting(this.containerEl)
       .setName('Allow empty embed alias')
       .setDesc('If disabled, empty alias will be replaced with the attachment name')
-      .addToggle((toggle) => bindUiComponent(this.plugin, toggle, 'allowEmptyEmbedAlias'));
+      .addToggle((toggle) => extend(toggle).bind(this.plugin, 'allowEmptyEmbedAlias'));
 
     new Setting(this.containerEl)
       .setName('Include attachment extension to embed alias')
@@ -67,6 +67,6 @@ export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettings
         appendCodeBlock(f, 'Allow empty embed alias');
         f.appendText(' is enabled.');
       }))
-      .addToggle((toggle) => bindUiComponent(this.plugin, toggle, 'includeAttachmentExtensionToEmbedAlias'));
+      .addToggle((toggle) => extend(toggle).bind(this.plugin, 'includeAttachmentExtensionToEmbedAlias'));
   }
 }
