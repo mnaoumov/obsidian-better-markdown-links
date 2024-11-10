@@ -1,4 +1,6 @@
 import type { TFile } from 'obsidian';
+import type { LinkChangeUpdate } from 'obsidian-typings';
+
 import { Notice } from 'obsidian';
 import { emitAsyncErrorEvent } from 'obsidian-dev-utils/Error';
 import { chain } from 'obsidian-dev-utils/obsidian/ChainedPromise';
@@ -10,9 +12,9 @@ import {
   updateLinksInFile
 } from 'obsidian-dev-utils/obsidian/Link';
 import { getMarkdownFilesSorted } from 'obsidian-dev-utils/obsidian/Vault';
-import type { LinkChangeUpdate } from 'obsidian-typings';
 
 import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
+
 import { checkObsidianSettingsCompatibility } from './ObsidianSettings.ts';
 
 export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, checking: boolean): boolean {
@@ -71,10 +73,10 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
 export async function applyLinkChangeUpdates(plugin: BetterMarkdownLinksPlugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
   await applyFileChanges(plugin.app, file, async () => {
     const changes = updates.map((update) => ({
-      startIndex: update.reference.position.start.offset,
       endIndex: update.reference.position.end.offset,
+      newContent: fixChange(plugin, update.change, file),
       oldContent: update.reference.original,
-      newContent: fixChange(plugin, update.change, file)
+      startIndex: update.reference.position.start.offset
     }));
 
     const content = await plugin.app.vault.read(file);
@@ -103,12 +105,12 @@ export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, fil
   }
 
   return generateMarkdownLink({
+    alias,
     app: plugin.app,
+    isEmbed,
+    isWikilink: false,
     pathOrFile: linkedFile,
     sourcePathOrFile: file,
-    subpath,
-    alias,
-    isEmbed,
-    isWikilink: false
+    subpath
   });
 }
