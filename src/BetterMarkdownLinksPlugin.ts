@@ -8,7 +8,6 @@ import {
   PluginSettingTab,
   TFile
 } from 'obsidian';
-import { chain } from 'obsidian-dev-utils/obsidian/ChainedPromise';
 import { MARKDOWN_FILE_EXTENSION } from 'obsidian-dev-utils/obsidian/FileSystem';
 import { convertLink } from 'obsidian-dev-utils/obsidian/Link';
 import {
@@ -16,6 +15,7 @@ import {
   getCacheSafe
 } from 'obsidian-dev-utils/obsidian/MetadataCache';
 import { PluginBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginBase';
+import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
 import type { GenerateMarkdownLinkFn } from './GenerateMarkdownLink.ts';
@@ -32,6 +32,15 @@ import {
 
 export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPluginSettings> {
   private warningNotice!: Notice;
+
+  public showCompatibilityWarning(): void {
+    const message = 'Your Obsidian settings are incompatible with the "Better Markdown Links" plugin. Please disable "Use [[Wikilinks]]" and set "New link format" to "Relative path to file" in Obsidian settings.\nAlternatively, you can enable the "Ignore incompatible Obsidian settings" option in the plugin settings.';
+    console.warn(message);
+
+    if (this.warningNotice.noticeEl.style.opacity === '0') {
+      this.warningNotice = new Notice(message, 10000);
+    }
+  }
 
   protected override createDefaultPluginSettings(): BetterMarkdownLinksPluginSettings {
     return new BetterMarkdownLinksPluginSettings();
@@ -59,7 +68,7 @@ export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdown
     });
 
     this.registerEvent(this.app.metadataCache.on('changed', (file) => {
-      chain(this.app, () => this.handleMetadataCacheChanged(file));
+      addToQueue(this.app, () => this.handleMetadataCacheChanged(file));
     }));
 
     registerRenameDeleteHandlers(this, () => {
@@ -110,15 +119,6 @@ export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdown
       sourcePathOrFile: file
     }))) {
       await convertLinksInFile(this, file);
-    }
-  }
-
-  public showCompatibilityWarning(): void {
-    const message = 'Your Obsidian settings are incompatible with the "Better Markdown Links" plugin. Please disable "Use [[Wikilinks]]" and set "New link format" to "Relative path to file" in Obsidian settings.\nAlternatively, you can enable the "Ignore incompatible Obsidian settings" option in the plugin settings.';
-    console.warn(message);
-
-    if (this.warningNotice.noticeEl.style.opacity === '0') {
-      this.warningNotice = new Notice(message, 10000);
     }
   }
 }

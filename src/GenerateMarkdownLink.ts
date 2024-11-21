@@ -12,16 +12,12 @@ export type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?:
 
 type GenerateMarkdownLinkForPluginOptions = Omit<GenerateMarkdownLinkFullOptions, 'app'>;
 
-function getDefaultOptions(plugin: BetterMarkdownLinksPlugin): Partial<GenerateMarkdownLinkFullOptions> {
-  const pluginSettings = plugin.settingsCopy;
-  return {
-    allowEmptyEmbedAlias: pluginSettings.allowEmptyEmbedAlias,
-    forceRelativePath: pluginSettings.ignoreIncompatibleObsidianSettings ? true : undefined,
-    includeAttachmentExtensionToEmbedAlias: pluginSettings.includeAttachmentExtensionToEmbedAlias,
-    isWikilink: pluginSettings.ignoreIncompatibleObsidianSettings ? false : undefined,
-    useAngleBrackets: pluginSettings.useAngleBrackets,
-    useLeadingDot: pluginSettings.useLeadingDot
+export function getPatchedGenerateMarkdownLink(plugin: BetterMarkdownLinksPlugin): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn {
+  const generateMarkdownLinkFn: GenerateMarkdownLinkFn = (fileOrOptions, sourcePath, subpath, alias): string => generateMarkdownLinkForPlugin(plugin, fileOrOptions, sourcePath, subpath, alias);
+  const generateMarkdownLinkDefaultOptionsWrapper: GenerateMarkdownLinkDefaultOptionsWrapper = {
+    defaultOptionsFn: () => getDefaultOptions(plugin)
   };
+  return Object.assign(generateMarkdownLinkFn, generateMarkdownLinkDefaultOptionsWrapper);
 }
 
 function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, fileOrOptions: GenerateMarkdownLinkForPluginOptions | TFile, sourcePath: string, subpath?: string, alias?: string): string {
@@ -39,10 +35,14 @@ function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, fileOr
   return generateMarkdownLinkFull({ app: plugin.app, ...options });
 }
 
-export function getPatchedGenerateMarkdownLink(plugin: BetterMarkdownLinksPlugin): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn {
-  const generateMarkdownLinkFn: GenerateMarkdownLinkFn = (fileOrOptions, sourcePath, subpath, alias): string => generateMarkdownLinkForPlugin(plugin, fileOrOptions, sourcePath, subpath, alias);
-  const generateMarkdownLinkDefaultOptionsWrapper: GenerateMarkdownLinkDefaultOptionsWrapper = {
-    defaultOptionsFn: () => getDefaultOptions(plugin)
+function getDefaultOptions(plugin: BetterMarkdownLinksPlugin): Partial<GenerateMarkdownLinkFullOptions> {
+  const pluginSettings = plugin.settingsCopy;
+  return {
+    allowEmptyEmbedAlias: pluginSettings.allowEmptyEmbedAlias,
+    forceRelativePath: pluginSettings.ignoreIncompatibleObsidianSettings ? true : undefined,
+    includeAttachmentExtensionToEmbedAlias: pluginSettings.includeAttachmentExtensionToEmbedAlias,
+    isWikilink: pluginSettings.ignoreIncompatibleObsidianSettings ? false : undefined,
+    useAngleBrackets: pluginSettings.useAngleBrackets,
+    useLeadingDot: pluginSettings.useLeadingDot
   };
-  return Object.assign(generateMarkdownLinkFn, generateMarkdownLinkDefaultOptionsWrapper);
 }
