@@ -20,8 +20,8 @@ import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/Rename
 
 import type { GenerateMarkdownLinkFn } from './GenerateMarkdownLink.ts';
 
-import BetterMarkdownLinksPluginSettings from './BetterMarkdownLinksPluginSettings.ts';
-import BetterMarkdownLinksPluginSettingsTab from './BetterMarkdownLinksPluginSettingsTab.ts';
+import { BetterMarkdownLinksPluginSettings } from './BetterMarkdownLinksPluginSettings.ts';
+import { BetterMarkdownLinksPluginSettingsTab } from './BetterMarkdownLinksPluginSettingsTab.ts';
 import { getPatchedGenerateMarkdownLink } from './GenerateMarkdownLink.ts';
 import {
   applyLinkChangeUpdates,
@@ -30,7 +30,7 @@ import {
   convertLinksInFile
 } from './LinkConverter.ts';
 
-export default class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPluginSettings> {
+export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPluginSettings> {
   private warningNotice!: Notice;
 
   public showCompatibilityWarning(): void {

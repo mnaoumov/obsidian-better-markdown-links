@@ -3,7 +3,7 @@ import {
   shouldUseWikilinks
 } from 'obsidian-dev-utils/obsidian/ObsidianSettings';
 
-import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
+import type { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
 
 export function checkObsidianSettingsCompatibility(plugin: BetterMarkdownLinksPlugin): boolean {
   const app = plugin.app;

@@ -3,9 +3,9 @@ import { appendCodeBlock } from 'obsidian-dev-utils/DocumentFragment';
 import { PluginSettingsTabBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginSettingsTabBase';
 import { extend } from 'obsidian-dev-utils/obsidian/Plugin/ValueComponent';
 
-import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
+import type { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
 
-export default class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<BetterMarkdownLinksPlugin> {
+export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<BetterMarkdownLinksPlugin> {
   public override display(): void {
     this.containerEl.empty();
 

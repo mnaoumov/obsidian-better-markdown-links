@@ -6,7 +6,7 @@ import type {
 import { TFile } from 'obsidian';
 import { generateMarkdownLink as generateMarkdownLinkFull } from 'obsidian-dev-utils/obsidian/Link';
 
-import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
+import type { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
 
 export type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?: string, alias?: string) => string;
 

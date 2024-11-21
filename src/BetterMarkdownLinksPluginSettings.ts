@@ -1,4 +1,4 @@
-export default class BetterMarkdownLinksPluginSettings {
+export class BetterMarkdownLinksPluginSettings {
   public allowEmptyEmbedAlias = true;
   public automaticallyConvertNewLinks = true;
   public automaticallyUpdateLinksOnRenameOrMove = true;
