@@ -3,7 +3,6 @@ import type { LinkChangeUpdate } from 'obsidian-typings';
 
 import { Notice } from 'obsidian';
 import { emitAsyncErrorEvent } from 'obsidian-dev-utils/Error';
-import { chain } from 'obsidian-dev-utils/obsidian/ChainedPromise';
 import { applyFileChanges } from 'obsidian-dev-utils/obsidian/FileChange';
 import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/FileSystem';
 import {
@@ -11,11 +10,27 @@ import {
   splitSubpath,
   updateLinksInFile
 } from 'obsidian-dev-utils/obsidian/Link';
+import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
 import { getMarkdownFilesSorted } from 'obsidian-dev-utils/obsidian/Vault';
 
 import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
 
 import { checkObsidianSettingsCompatibility } from './ObsidianSettings.ts';
+
+export async function applyLinkChangeUpdates(plugin: BetterMarkdownLinksPlugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
+  await applyFileChanges(plugin.app, file, async () => {
+    const changes = updates.map((update) => ({
+      endIndex: update.reference.position.end.offset,
+      newContent: fixChange(plugin, update.change, file),
+      oldContent: update.reference.original,
+      startIndex: update.reference.position.start.offset
+    }));
+
+    const content = await plugin.app.vault.read(file);
+    const doUpdatesMatchContent = changes.every((change) => content.slice(change.startIndex, change.endIndex) === change.oldContent);
+    return doUpdatesMatchContent ? changes : [];
+  });
+}
 
 export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, checking: boolean): boolean {
   const activeFile = plugin.app.workspace.getActiveFile();
@@ -24,21 +39,10 @@ export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, che
   }
 
   if (!checking) {
-    chain(plugin.app, () => convertLinksInFile(plugin, activeFile));
+    addToQueue(plugin.app, () => convertLinksInFile(plugin, activeFile));
   }
 
   return true;
-}
-
-export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file: TFile): Promise<void> {
-  if (!checkObsidianSettingsCompatibility(plugin)) {
-    return;
-  }
-
-  await updateLinksInFile({
-    app: plugin.app,
-    pathOrFile: file
-  });
 }
 
 export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugin, abortSignal: AbortSignal): Promise<void> {
@@ -70,18 +74,14 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
   notice.hide();
 }
 
-export async function applyLinkChangeUpdates(plugin: BetterMarkdownLinksPlugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
-  await applyFileChanges(plugin.app, file, async () => {
-    const changes = updates.map((update) => ({
-      endIndex: update.reference.position.end.offset,
-      newContent: fixChange(plugin, update.change, file),
-      oldContent: update.reference.original,
-      startIndex: update.reference.position.start.offset
-    }));
+export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file: TFile): Promise<void> {
+  if (!checkObsidianSettingsCompatibility(plugin)) {
+    return;
+  }
 
-    const content = await plugin.app.vault.read(file);
-    const doUpdatesMatchContent = changes.every((change) => content.slice(change.startIndex, change.endIndex) === change.oldContent);
-    return doUpdatesMatchContent ? changes : [];
+  await updateLinksInFile({
+    app: plugin.app,
+    pathOrFile: file
   });
 }
 
