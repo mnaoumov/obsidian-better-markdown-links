@@ -13,7 +13,7 @@ import {
 import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
 import { getMarkdownFilesSorted } from 'obsidian-dev-utils/obsidian/Vault';
 
-import type BetterMarkdownLinksPlugin from './BetterMarkdownLinksPlugin.ts';
+import type { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
 
 import { checkObsidianSettingsCompatibility } from './ObsidianSettings.ts';
 
