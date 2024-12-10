@@ -1,8 +1,6 @@
 import type { TFile } from 'obsidian';
 import type { LinkChangeUpdate } from 'obsidian-typings';
 
-import { Notice } from 'obsidian';
-import { emitAsyncErrorEvent } from 'obsidian-dev-utils/Error';
 import { applyFileChanges } from 'obsidian-dev-utils/obsidian/FileChange';
 import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/FileSystem';
 import {
@@ -10,6 +8,7 @@ import {
   splitSubpath,
   updateLinksInFile
 } from 'obsidian-dev-utils/obsidian/Link';
+import { loop } from 'obsidian-dev-utils/obsidian/Loop';
 import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
 import { getMarkdownFilesSorted } from 'obsidian-dev-utils/obsidian/Vault';
 
@@ -50,28 +49,15 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
     return;
   }
 
-  const mdFiles = getMarkdownFilesSorted(plugin.app);
-
-  let index = 0;
-
-  const notice = new Notice('', 0);
-
-  for (const file of mdFiles) {
-    if (abortSignal.aborted) {
-      break;
-    }
-    index++;
-    const message = `Converting links in note # ${index.toString()} / ${mdFiles.length.toString()}: ${file.path}`;
-    notice.setMessage(message);
-    console.log(message);
-    try {
+  await loop({
+    abortSignal,
+    buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,
+    continueOnError: true,
+    items: getMarkdownFilesSorted(plugin.app),
+    processItem: async (file) => {
       await convertLinksInFile(plugin, file);
-    } catch (e) {
-      emitAsyncErrorEvent(e);
     }
-  }
-
-  notice.hide();
+  });
 }
 
 export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file: TFile): Promise<void> {
