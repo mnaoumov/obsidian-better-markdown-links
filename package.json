@@ -19,7 +19,7 @@
     "@types/node": "^22.10.1",
     "monkey-around": "^3.0.0",
     "obsidian": "^1.7.2",
-    "obsidian-dev-utils": "^4.19.0",
+    "obsidian-dev-utils": "^5.2.0",
     "obsidian-typings": "^2.5.0"
   },
   "type": "module"
