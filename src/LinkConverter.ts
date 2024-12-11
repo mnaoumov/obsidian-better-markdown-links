@@ -52,11 +52,11 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
   await loop({
     abortSignal,
     buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,
-    shouldContinueOnError: true,
     items: getMarkdownFilesSorted(plugin.app),
     processItem: async (file) => {
       await convertLinksInFile(plugin, file);
-    }
+    },
+    shouldContinueOnError: true
   });
 }
 
@@ -95,8 +95,8 @@ export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, sou
     app: plugin.app,
     isEmbed,
     isWikilink: false,
-    targetPathOrFile: targetFile,
     sourcePathOrFile: sourceFile,
-    subpath
+    subpath,
+    targetPathOrFile: targetFile
   });
 }
