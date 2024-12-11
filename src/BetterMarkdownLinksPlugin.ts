@@ -116,7 +116,7 @@ export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPlu
     if (links.some((link) => link.original !== convertLink({
       app: this.app,
       link,
-      sourcePathOrFile: file
+      newSourcePathOrFile: file
     }))) {
       await convertLinksInFile(this, file);
     }

@@ -25,7 +25,7 @@ function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, fileOr
   if (fileOrOptions instanceof TFile) {
     options = {
       alias,
-      pathOrFile: fileOrOptions,
+      targetPathOrFile: fileOrOptions,
       sourcePathOrFile: sourcePath,
       subpath
     };
@@ -38,11 +38,11 @@ function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, fileOr
 function getDefaultOptions(plugin: BetterMarkdownLinksPlugin): Partial<GenerateMarkdownLinkFullOptions> {
   const pluginSettings = plugin.settingsCopy;
   return {
-    allowEmptyEmbedAlias: pluginSettings.allowEmptyEmbedAlias,
-    forceRelativePath: pluginSettings.ignoreIncompatibleObsidianSettings ? true : undefined,
-    includeAttachmentExtensionToEmbedAlias: pluginSettings.includeAttachmentExtensionToEmbedAlias,
+    isEmptyEmbedAliasAllowed: pluginSettings.allowEmptyEmbedAlias,
+    shouldForceRelativePath: pluginSettings.ignoreIncompatibleObsidianSettings ? true : undefined,
+    shouldIncludeAttachmentExtensionToEmbedAlias: pluginSettings.includeAttachmentExtensionToEmbedAlias,
     isWikilink: pluginSettings.ignoreIncompatibleObsidianSettings ? false : undefined,
-    useAngleBrackets: pluginSettings.useAngleBrackets,
-    useLeadingDot: pluginSettings.useLeadingDot
+    shouldUseAngleBrackets: pluginSettings.useAngleBrackets,
+    shouldUseLeadingDot: pluginSettings.useLeadingDot
   };
 }
