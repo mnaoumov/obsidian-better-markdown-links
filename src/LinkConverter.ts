@@ -52,7 +52,7 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
   await loop({
     abortSignal,
     buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,
-    continueOnError: true,
+    shouldContinueOnError: true,
     items: getMarkdownFilesSorted(plugin.app),
     processItem: async (file) => {
       await convertLinksInFile(plugin, file);
@@ -67,14 +67,14 @@ export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file
 
   await updateLinksInFile({
     app: plugin.app,
-    pathOrFile: file
+    newSourcePathOrFile: file
   });
 }
 
 /**
  * BUG: https://forum.obsidian.md/t/update-internal-link-breaks-links-with-angle-brackets/85598
  */
-export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, file: TFile): string {
+export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, sourceFile: TFile): string {
   const match = /^!?\[(.*?)\]\(([^<]+?) .+?>\)$/.exec(change);
   const isEmbed = change.startsWith('!');
 
@@ -85,8 +85,8 @@ export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, fil
   const alias = match[1] ?? '';
   const escapedPath = match[2] ?? '';
   const { linkPath, subpath } = splitSubpath(decodeURIComponent(escapedPath));
-  const linkedFile = plugin.app.metadataCache.getFirstLinkpathDest(linkPath, file.path);
-  if (!linkedFile) {
+  const targetFile = plugin.app.metadataCache.getFirstLinkpathDest(linkPath, sourceFile.path);
+  if (!targetFile) {
     return `${isEmbed ? '!' : ''}[${alias}](${escapedPath})`;
   }
 
@@ -95,8 +95,8 @@ export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, fil
     app: plugin.app,
     isEmbed,
     isWikilink: false,
-    pathOrFile: linkedFile,
-    sourcePathOrFile: file,
+    targetPathOrFile: targetFile,
+    sourcePathOrFile: sourceFile,
     subpath
   });
 }
