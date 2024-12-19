@@ -9,6 +9,7 @@ import {
   updateLinksInFile
 } from 'obsidian-dev-utils/obsidian/Link';
 import { loop } from 'obsidian-dev-utils/obsidian/Loop';
+import { confirm } from 'obsidian-dev-utils/obsidian/Modal/Confirm';
 import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
 import { getMarkdownFilesSorted } from 'obsidian-dev-utils/obsidian/Vault';
 
@@ -33,12 +34,12 @@ export async function applyLinkChangeUpdates(plugin: BetterMarkdownLinksPlugin, 
 
 export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, checking: boolean): boolean {
   const activeFile = plugin.app.workspace.getActiveFile();
-  if (!activeFile || !isMarkdownFile(activeFile)) {
+  if (!activeFile || !isMarkdownFile(plugin.app, activeFile)) {
     return false;
   }
 
   if (!checking) {
-    addToQueue(plugin.app, () => convertLinksInFile(plugin, activeFile));
+    addToQueue(plugin.app, () => convertLinksInFile(plugin, activeFile, true));
   }
 
   return true;
@@ -60,9 +61,20 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
   });
 }
 
-export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file: TFile): Promise<void> {
+export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file: TFile, shouldPromptForExcludedFile?: boolean): Promise<void> {
   if (!checkObsidianSettingsCompatibility(plugin)) {
     return;
+  }
+
+  if (plugin.settingsCopy.isPathIgnored(file.path)) {
+    if (!shouldPromptForExcludedFile) {
+      return;
+    }
+
+    const shouldConvert = await confirm({ app: plugin.app, message: `Note '${file.path}' is excluded from the conversion in plugin settings. Do you want to convert it anyway?` });
+    if (!shouldConvert) {
+      return;
+    }
   }
 
   await updateLinksInFile({

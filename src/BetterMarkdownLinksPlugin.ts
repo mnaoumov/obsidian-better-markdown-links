@@ -8,6 +8,10 @@ import {
   PluginSettingTab,
   TFile
 } from 'obsidian';
+import {
+  noop,
+  noopAsync
+} from 'obsidian-dev-utils/Function';
 import { MARKDOWN_FILE_EXTENSION } from 'obsidian-dev-utils/obsidian/FileSystem';
 import { convertLink } from 'obsidian-dev-utils/obsidian/Link';
 import {
@@ -42,8 +46,8 @@ export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPlu
     }
   }
 
-  protected override createDefaultPluginSettings(): BetterMarkdownLinksPluginSettings {
-    return new BetterMarkdownLinksPluginSettings();
+  protected override createPluginSettings(data: unknown): BetterMarkdownLinksPluginSettings {
+    return new BetterMarkdownLinksPluginSettings(data);
   }
 
   protected override createPluginSettingsTab(): null | PluginSettingTab {
@@ -73,6 +77,9 @@ export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPlu
 
     registerRenameDeleteHandlers(this, () => {
       const settings: Partial<RenameDeleteHandlerSettings> = {
+        isPathIgnored: (path) => {
+          return this.settings.isPathIgnored(path);
+        },
         shouldUpdateFilenameAliases: true,
         shouldUpdateLinks: this.settings.automaticallyUpdateLinksOnRenameOrMove
       };
@@ -84,12 +91,8 @@ export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPlu
 
     this.app.fileManager.linkUpdaters[MARKDOWN_FILE_EXTENSION] = {
       applyUpdates: (file, updates): Promise<void> => applyLinkChangeUpdates(this, file, updates),
-      iterateReferences: (): void => {
-        // Do nothing
-      },
-      renameSubpath: async (): Promise<void> => {
-        // Do nothing
-      }
+      iterateReferences: noop,
+      renameSubpath: noopAsync
     };
 
     this.register(() => {
