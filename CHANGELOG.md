@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.10.0
+
+- Add include/exclude path settings
+
 ## 2.9.15
 
 - Update libs
