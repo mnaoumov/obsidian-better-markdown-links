@@ -4,6 +4,7 @@ import type {
 } from 'obsidian-dev-utils/obsidian/Link';
 
 import { TFile } from 'obsidian';
+import { normalizeOptionalProperties } from 'obsidian-dev-utils/Object';
 import { generateMarkdownLink as generateMarkdownLinkFull } from 'obsidian-dev-utils/obsidian/Link';
 
 import type { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
@@ -23,12 +24,12 @@ export function getPatchedGenerateMarkdownLink(plugin: BetterMarkdownLinksPlugin
 function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, fileOrOptions: GenerateMarkdownLinkForPluginOptions | TFile, sourcePath: string, subpath?: string, alias?: string): string {
   let options: GenerateMarkdownLinkForPluginOptions;
   if (fileOrOptions instanceof TFile) {
-    options = {
+    options = normalizeOptionalProperties<GenerateMarkdownLinkForPluginOptions>({
       alias,
       sourcePathOrFile: sourcePath,
       subpath,
       targetPathOrFile: fileOrOptions
-    };
+    });
   } else {
     options = fileOrOptions;
   }
@@ -37,12 +38,12 @@ function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, fileOr
 
 function getDefaultOptions(plugin: BetterMarkdownLinksPlugin): Partial<GenerateMarkdownLinkFullOptions> {
   const pluginSettings = plugin.settingsCopy;
-  return {
+  return normalizeOptionalProperties<Partial<GenerateMarkdownLinkFullOptions>>({
     isEmptyEmbedAliasAllowed: pluginSettings.allowEmptyEmbedAlias,
     isWikilink: pluginSettings.ignoreIncompatibleObsidianSettings ? false : undefined,
     shouldForceRelativePath: pluginSettings.ignoreIncompatibleObsidianSettings ? true : undefined,
     shouldIncludeAttachmentExtensionToEmbedAlias: pluginSettings.includeAttachmentExtensionToEmbedAlias,
     shouldUseAngleBrackets: pluginSettings.useAngleBrackets,
     shouldUseLeadingDot: pluginSettings.useLeadingDot
-  };
+  });
 }
