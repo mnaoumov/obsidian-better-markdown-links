@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.10.4
+
+- Exclude empty paths
+- https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/11.1.0
+
 ## 2.10.3
 
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/11.0.0
