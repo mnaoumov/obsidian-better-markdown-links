@@ -80,8 +80,8 @@ export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPlu
         isPathIgnored: (path) => {
           return this.settings.isPathIgnored(path);
         },
-        shouldUpdateFilenameAliases: true,
-        shouldUpdateLinks: this.settings.automaticallyUpdateLinksOnRenameOrMove
+        shouldHandleRenames: this.settings.automaticallyUpdateLinksOnRenameOrMove,
+        shouldUpdateFilenameAliases: true
       };
       return settings;
     });
