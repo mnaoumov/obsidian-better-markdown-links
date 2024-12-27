@@ -2,17 +2,14 @@
 
 ## 2.10.3
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/11.0.0
 
 ## 2.10.2
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/9.0.2
 
 ## 2.10.1
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/9.0.0
 
 ## 2.10.0
@@ -22,12 +19,10 @@
 
 ## 2.9.15
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/6.0.0
 
 ## 2.9.14
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/5.3.1
 
 ## 2.9.13
@@ -37,73 +32,59 @@
 
 ## 2.9.12
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/4.19.0
 
 ## 2.9.11
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/4.14.0
 
 ## 2.9.10
 
-- Update libs
 - Avoid default exports
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/4.13.0
 
 ## 2.9.9
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/4.11.0
 
 ## 2.9.8
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/4.8.2
 
 ## 2.9.7
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/4.8.0
 
 ## 2.9.6
 
-- Update lib
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/3.44.0
 
 ## 2.9.5
 
-- Update lib
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/3.43.2
 
 ## 2.9.4
 
-- Update lib
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/3.43.1
 
 ## 2.9.3
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/3.42.1
 
 ## 2.9.2
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/3.35.0
 
 ## 2.9.1
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/3.34.0
 
 ## 2.9.0
 
-- Update libs
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/3.33.0
 
 ## 2.8.0
 
-- Update libs
 - Fix unnecessary extra alias
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/3.30.0
 
