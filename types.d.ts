@@ -1,4 +1,4 @@
-import type { TFile } from "obsidian";
+import type { TFile } from 'obsidian';
 
 /**
  * Extended implementation of the `app.fileManager.generateMarkdownLink` function from Obsidian.
