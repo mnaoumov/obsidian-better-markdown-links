@@ -5,7 +5,12 @@ import type { TFile } from 'obsidian';
  *
  * Usage: `(app.fileManager.generateMarkdownLink as GenerateMarkdownLinkFn)(options)`
  */
-type GenerateMarkdownLinkFn = (options: GenerateMarkdownLinkOptions) => string
+type GenerateMarkdownLinkFn = (options: GenerateMarkdownLinkOptions) => string;
+
+/**
+ * Represents a path or a file.
+ */
+export type PathOrFile = string | TFile;
 
 /**
  * Options for generating a markdown link.
