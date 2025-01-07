@@ -60,4 +60,4 @@ But those handlers are designed to work fine with each other and the plugins can
 
 [Obsidian]: https://obsidian.md/
 
-[generateMarkdownLink]: https://github.com/obsidianmd/obsidian-api/blob/ea526e2459ad3f188c994862a9b106d94bf0f692/obsidian.d.ts#L1435
+[generateMarkdownLink]: https://docs.obsidian.md/Reference/TypeScript+API/FileManager/generateMarkdownLink
