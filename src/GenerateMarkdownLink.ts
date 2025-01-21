@@ -18,7 +18,7 @@ export function getPatchedGenerateMarkdownLink(plugin: BetterMarkdownLinksPlugin
   const generateMarkdownLinkDefaultOptionsWrapper: GenerateMarkdownLinkDefaultOptionsWrapper = {
     defaultOptionsFn: () => getDefaultOptions(plugin)
   };
-  return Object.assign(generateMarkdownLinkFn, generateMarkdownLinkDefaultOptionsWrapper);
+  return Object.assign(generateMarkdownLinkFn, generateMarkdownLinkDefaultOptionsWrapper) as GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn;
 }
 
 function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, fileOrOptions: GenerateMarkdownLinkForPluginOptions | TFile, sourcePath: string, subpath?: string, alias?: string): string {
