@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.10.7
+
+- Refactor
+
 ## 2.10.6
 
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/16.0.2
