@@ -8,7 +8,7 @@ import type { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
 export function checkObsidianSettingsCompatibility(plugin: BetterMarkdownLinksPlugin): boolean {
   const app = plugin.app;
 
-  if (plugin.settingsCopy.ignoreIncompatibleObsidianSettings) {
+  if (plugin.settings.ignoreIncompatibleObsidianSettings) {
     return true;
   }
 
