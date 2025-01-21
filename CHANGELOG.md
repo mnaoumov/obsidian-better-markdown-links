@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.10.5
+
+- https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/15.0.0
+
 ## 2.10.4
 
 - Exclude empty paths
