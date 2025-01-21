@@ -66,7 +66,7 @@ export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file
     return;
   }
 
-  if (plugin.settingsCopy.isPathIgnored(file.path)) {
+  if (plugin.settings.isPathIgnored(file.path)) {
     if (!shouldPromptForExcludedFile) {
       return;
     }
