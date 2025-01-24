@@ -38,7 +38,8 @@ export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPlu
   private warningNotice!: Notice;
 
   public showCompatibilityWarning(): void {
-    const message = 'Your Obsidian settings are incompatible with the "Better Markdown Links" plugin. Please disable "Use [[Wikilinks]]" and set "New link format" to "Relative path to file" in Obsidian settings.\nAlternatively, you can enable the "Ignore incompatible Obsidian settings" option in the plugin settings.';
+    const message =
+      'Your Obsidian settings are incompatible with the "Better Markdown Links" plugin. Please disable "Use [[Wikilinks]]" and set "New link format" to "Relative path to file" in Obsidian settings.\nAlternatively, you can enable the "Ignore incompatible Obsidian settings" option in the plugin settings.';
     console.warn(message);
 
     if (this.warningNotice.noticeEl.style.opacity === '0') {
@@ -116,11 +117,15 @@ export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPlu
       return;
     }
     const links = getAllLinks(cache);
-    if (links.some((link) => link.original !== convertLink({
-      app: this.app,
-      link,
-      newSourcePathOrFile: file
-    }))) {
+    if (
+      links.some((link) =>
+        link.original !== convertLink({
+          app: this.app,
+          link,
+          newSourcePathOrFile: file
+        })
+      )
+    ) {
       await convertLinksInFile(this, file);
     }
   }

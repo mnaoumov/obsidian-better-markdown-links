@@ -71,5 +71,4 @@ For more details, refer to the [documentation](https://github.com/mnaoumov/obsid
 © [Michael Naumov](https://github.com/mnaoumov/)
 
 [Obsidian]: https://obsidian.md/
-
 [generateMarkdownLink]: https://docs.obsidian.md/Reference/TypeScript+API/FileManager/generateMarkdownLink
