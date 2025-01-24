@@ -14,14 +14,21 @@ export type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?:
 type GenerateMarkdownLinkForPluginOptions = Omit<GenerateMarkdownLinkFullOptions, 'app'>;
 
 export function getPatchedGenerateMarkdownLink(plugin: BetterMarkdownLinksPlugin): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn {
-  const generateMarkdownLinkFn: GenerateMarkdownLinkFn = (fileOrOptions, sourcePath, subpath, alias): string => generateMarkdownLinkForPlugin(plugin, fileOrOptions, sourcePath, subpath, alias);
+  const generateMarkdownLinkFn: GenerateMarkdownLinkFn = (fileOrOptions, sourcePath, subpath, alias): string =>
+    generateMarkdownLinkForPlugin(plugin, fileOrOptions, sourcePath, subpath, alias);
   const generateMarkdownLinkDefaultOptionsWrapper: GenerateMarkdownLinkDefaultOptionsWrapper = {
     defaultOptionsFn: () => getDefaultOptions(plugin)
   };
   return Object.assign(generateMarkdownLinkFn, generateMarkdownLinkDefaultOptionsWrapper) as GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn;
 }
 
-function generateMarkdownLinkForPlugin(plugin: BetterMarkdownLinksPlugin, fileOrOptions: GenerateMarkdownLinkForPluginOptions | TFile, sourcePath: string, subpath?: string, alias?: string): string {
+function generateMarkdownLinkForPlugin(
+  plugin: BetterMarkdownLinksPlugin,
+  fileOrOptions: GenerateMarkdownLinkForPluginOptions | TFile,
+  sourcePath: string,
+  subpath?: string,
+  alias?: string
+): string {
   let options: GenerateMarkdownLinkForPluginOptions;
   if (fileOrOptions instanceof TFile) {
     options = normalizeOptionalProperties<GenerateMarkdownLinkForPluginOptions>({

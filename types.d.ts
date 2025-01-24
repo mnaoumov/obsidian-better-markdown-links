@@ -42,9 +42,9 @@ export interface GenerateMarkdownLinkOptions {
   isWikilink?: boolean;
 
   /**
-    * The original link text. If provided, it will be used to infer the values of `isEmbed`, `isWikilink`, `useLeadingDot`, and `useAngleBrackets`.
-    * These inferred values will be overridden by corresponding settings if specified.
-    */
+   * The original link text. If provided, it will be used to infer the values of `isEmbed`, `isWikilink`, `useLeadingDot`, and `useAngleBrackets`.
+   * These inferred values will be overridden by corresponding settings if specified.
+   */
   originalLink?: string;
 
   /**

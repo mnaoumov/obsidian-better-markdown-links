@@ -71,7 +71,10 @@ export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file
       return;
     }
 
-    const shouldConvert = await confirm({ app: plugin.app, message: `Note '${file.path}' is excluded from the conversion in plugin settings. Do you want to convert it anyway?` });
+    const shouldConvert = await confirm({
+      app: plugin.app,
+      message: `Note '${file.path}' is excluded from the conversion in plugin settings. Do you want to convert it anyway?`
+    });
     if (!shouldConvert) {
       return;
     }
