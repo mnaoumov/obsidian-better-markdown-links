@@ -83,7 +83,6 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
             }
           }
         }
-        return;
       }
     };
 

@@ -90,15 +90,15 @@ export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file
  * BUG: https://forum.obsidian.md/t/update-internal-link-breaks-links-with-angle-brackets/85598
  */
 export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, sourceFile: TFile): string {
-  const match = /^!?\[(.*?)\]\(([^<]+?) .+?>\)$/.exec(change);
+  const match = /^!?\[(?<Alias>.*?)\]\((?<EscapedPath>[^<]+?) .+?>\)$/.exec(change);
   const isEmbed = change.startsWith('!');
 
   if (!match) {
     return change;
   }
 
-  const alias = match[1] ?? '';
-  const escapedPath = match[2] ?? '';
+  const alias = match.groups?.['Alias'] ?? '';
+  const escapedPath = match.groups?.['EscapedPath'] ?? '';
   const { linkPath, subpath } = splitSubpath(decodeURIComponent(escapedPath));
   const targetFile = plugin.app.metadataCache.getFirstLinkpathDest(linkPath, sourceFile.path);
   if (!targetFile) {
