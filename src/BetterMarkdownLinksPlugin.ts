@@ -43,7 +43,8 @@ export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPlu
     console.warn(message);
 
     if (this.warningNotice.noticeEl.style.opacity === '0') {
-      this.warningNotice = new Notice(message, 10000);
+      const WARNING_NOTICE_DURATION_IN_MILLISECONDS = 10000;
+      this.warningNotice = new Notice(message, WARNING_NOTICE_DURATION_IN_MILLISECONDS);
     }
   }
 
