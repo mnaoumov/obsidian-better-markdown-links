@@ -9,7 +9,7 @@ import {
   updateLinksInFile
 } from 'obsidian-dev-utils/obsidian/Link';
 import { loop } from 'obsidian-dev-utils/obsidian/Loop';
-import { confirm } from 'obsidian-dev-utils/obsidian/Modal/Confirm';
+import { confirm } from 'obsidian-dev-utils/obsidian/Modals/Confirm';
 import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
 import { getMarkdownFilesSorted } from 'obsidian-dev-utils/obsidian/Vault';
 
