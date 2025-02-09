@@ -1,6 +1,6 @@
-import { Setting } from 'obsidian';
 import { appendCodeBlock } from 'obsidian-dev-utils/HTMLElement';
 import { PluginSettingsTabBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginSettingsTabBase';
+import { SettingEx } from 'obsidian-dev-utils/obsidian/SettingEx';
 import { isValidRegExp } from 'obsidian-dev-utils/RegExp';
 
 import type { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
@@ -9,22 +9,28 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
   public override display(): void {
     this.containerEl.empty();
 
-    new Setting(this.containerEl)
+    new SettingEx(this.containerEl)
       .setName('Use leading dot')
       .setDesc('Use a leading dot in relative links')
-      .addToggle((toggle) => this.bind(toggle, 'useLeadingDot'));
+      .addToggle((toggle) => {
+        this.bind(toggle, 'useLeadingDot');
+      });
 
-    new Setting(this.containerEl)
+    new SettingEx(this.containerEl)
       .setName('Use angle brackets')
       .setDesc('Use angle brackets in links')
-      .addToggle((toggle) => this.bind(toggle, 'useAngleBrackets'));
+      .addToggle((toggle) => {
+        this.bind(toggle, 'useAngleBrackets');
+      });
 
-    new Setting(this.containerEl)
+    new SettingEx(this.containerEl)
       .setName('Automatically convert new links')
       .setDesc('Automatically convert new links entered manually to the selected format')
-      .addToggle((toggle) => this.bind(toggle, 'automaticallyConvertNewLinks'));
+      .addToggle((toggle) => {
+        this.bind(toggle, 'automaticallyConvertNewLinks');
+      });
 
-    new Setting(this.containerEl)
+    new SettingEx(this.containerEl)
       .setName('Automatically update links on rename or move')
       .setDesc(createFragment((f) => {
         f.appendText('Automatically update links when a file is renamed or moved to another directory.');
@@ -36,9 +42,11 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
         });
         f.appendText(' plugin to improve performance.');
       }))
-      .addToggle((toggle) => this.bind(toggle, 'automaticallyUpdateLinksOnRenameOrMove'));
+      .addToggle((toggle) => {
+        this.bind(toggle, 'automaticallyUpdateLinksOnRenameOrMove');
+      });
 
-    new Setting(this.containerEl)
+    new SettingEx(this.containerEl)
       .setName('Ignore incompatible Obsidian settings')
       .setDesc(createFragment((f) => {
         f.appendText('Current plugin makes sense only if you have ');
@@ -51,14 +59,18 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
         f.createEl('br');
         f.appendText('If you enable current setting, it will override incompatible Obsidian settings and will work as expected.');
       }))
-      .addToggle((toggle) => this.bind(toggle, 'ignoreIncompatibleObsidianSettings'));
+      .addToggle((toggle) => {
+        this.bind(toggle, 'ignoreIncompatibleObsidianSettings');
+      });
 
-    new Setting(this.containerEl)
+    new SettingEx(this.containerEl)
       .setName('Allow empty embed alias')
       .setDesc('If disabled, empty alias will be replaced with the attachment name')
-      .addToggle((toggle) => this.bind(toggle, 'allowEmptyEmbedAlias'));
+      .addToggle((toggle) => {
+        this.bind(toggle, 'allowEmptyEmbedAlias');
+      });
 
-    new Setting(this.containerEl)
+    new SettingEx(this.containerEl)
       .setName('Include attachment extension to embed alias')
       .setDesc(createFragment((f) => {
         f.appendText('If enabled, the extension of the attachment will be included in the embed alias.');
@@ -67,7 +79,9 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
         appendCodeBlock(f, 'Allow empty embed alias');
         f.appendText(' is enabled.');
       }))
-      .addToggle((toggle) => this.bind(toggle, 'includeAttachmentExtensionToEmbedAlias'));
+      .addToggle((toggle) => {
+        this.bind(toggle, 'includeAttachmentExtensionToEmbedAlias');
+      });
 
     const pathBindSettings = {
       componentToPluginSettingsValueConverter: (value: string): string[] => value.split('\n').filter(Boolean),
@@ -86,7 +100,7 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
       }
     };
 
-    new Setting(this.containerEl)
+    new SettingEx(this.containerEl)
       .setName('Include paths')
       .setDesc(createFragment((f) => {
         f.appendText('Include notes from the following paths');
@@ -98,9 +112,11 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
         f.createEl('br');
         f.appendText('If the setting is empty, all notes are included');
       }))
-      .addTextArea((textArea) => this.bind(textArea, 'includePaths', pathBindSettings));
+      .addTextArea((textArea) => {
+        this.bind(textArea, 'includePaths', pathBindSettings);
+      });
 
-    new Setting(this.containerEl)
+    new SettingEx(this.containerEl)
       .setName('Exclude paths')
       .setDesc(createFragment((f) => {
         f.appendText('Exclude notes from the following paths');
@@ -112,6 +128,8 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
         f.createEl('br');
         f.appendText('If the setting is empty, no notes are excluded');
       }))
-      .addTextArea((textArea) => this.bind(textArea, 'excludePaths', pathBindSettings));
+      .addTextArea((textArea) => {
+        this.bind(textArea, 'excludePaths', pathBindSettings);
+      });
   }
 }
