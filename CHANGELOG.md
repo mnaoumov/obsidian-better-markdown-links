@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.10.12
+
+- Refactor
+- https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/18.4.2
+
 ## 2.10.11
 
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/18.3.0
