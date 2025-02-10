@@ -83,23 +83,6 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
         this.bind(toggle, 'includeAttachmentExtensionToEmbedAlias');
       });
 
-    const pathBindSettings = {
-      componentToPluginSettingsValueConverter: (value: string): string[] => value.split('\n').filter(Boolean),
-      pluginSettingsToComponentValueConverter: (value: string[]): string => value.join('\n'),
-      // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-      valueValidator: (value: string): string | void => {
-        const paths = value.split('\n');
-        for (const path of paths) {
-          if (path.startsWith('/') && path.endsWith('/')) {
-            const regExp = path.slice(1, -1);
-            if (!isValidRegExp(regExp)) {
-              return `Invalid regular expression ${path}`;
-            }
-          }
-        }
-      }
-    };
-
     new SettingEx(this.containerEl)
       .setName('Include paths')
       .setDesc(createFragment((f) => {
@@ -112,8 +95,10 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
         f.createEl('br');
         f.appendText('If the setting is empty, all notes are included');
       }))
-      .addTextArea((textArea) => {
-        this.bind(textArea, 'includePaths', pathBindSettings);
+      .addMultipleText((multipleText) => {
+        this.bind(multipleText, 'includePaths', {
+          valueValidator: pathsValidator
+        });
       });
 
     new SettingEx(this.containerEl)
@@ -128,8 +113,22 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
         f.createEl('br');
         f.appendText('If the setting is empty, no notes are excluded');
       }))
-      .addTextArea((textArea) => {
-        this.bind(textArea, 'excludePaths', pathBindSettings);
+      .addMultipleText((multipleText) => {
+        this.bind(multipleText, 'excludePaths', {
+          valueValidator: pathsValidator
+        });
       });
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+function pathsValidator(paths: string[]): string | void {
+  for (const path of paths) {
+    if (path.startsWith('/') && path.endsWith('/')) {
+      const regExp = path.slice(1, -1);
+      if (!isValidRegExp(regExp)) {
+        return `Invalid regular expression ${path}`;
+      }
+    }
   }
 }
