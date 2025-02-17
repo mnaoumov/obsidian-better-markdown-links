@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.10.13
+
+- https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/19.2.1
+
 ## 2.10.12
 
 - Refactor
