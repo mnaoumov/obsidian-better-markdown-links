@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.10.17
+
+- Fix build
+- Explicit typescript package
+- https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/19.17.3
+
 ## 2.10.16
 
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/19.8.2
