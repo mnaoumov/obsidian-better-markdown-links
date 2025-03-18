@@ -2,6 +2,7 @@ import type {
   GenerateMarkdownLinkDefaultOptionsWrapper,
   GenerateMarkdownLinkOptions as GenerateMarkdownLinkFullOptions
 } from 'obsidian-dev-utils/obsidian/Link';
+import type { Except } from 'type-fest';
 
 import { TFile } from 'obsidian';
 import { normalizeOptionalProperties } from 'obsidian-dev-utils/Object';
@@ -11,7 +12,7 @@ import type { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
 
 export type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?: string, alias?: string) => string;
 
-type GenerateMarkdownLinkForPluginOptions = Omit<GenerateMarkdownLinkFullOptions, 'app'>;
+type GenerateMarkdownLinkForPluginOptions = Except<GenerateMarkdownLinkFullOptions, 'app'>;
 
 export function getPatchedGenerateMarkdownLink(plugin: BetterMarkdownLinksPlugin): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn {
   const generateMarkdownLinkFn: GenerateMarkdownLinkFn = (fileOrOptions, sourcePath, subpath, alias): string =>
