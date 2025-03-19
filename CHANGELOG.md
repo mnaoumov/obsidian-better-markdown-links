@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.10.18
+
+- https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/19.17.5
+
 ## 2.10.17
 
 - Fix build
