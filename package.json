@@ -18,13 +18,13 @@
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.5",
-    "@types/node": "^22.13.10",
+    "@types/node": "^22.13.13",
     "jiti": "^2.4.2",
     "monkey-around": "^3.0.0",
     "obsidian": "^1.8.7",
-    "obsidian-dev-utils": "^19.17.5",
-    "obsidian-typings": "^2.36.1",
-    "type-fest": "^4.37.0",
+    "obsidian-dev-utils": "^19.22.0",
+    "obsidian-typings": "^2.37.0",
+    "type-fest": "^4.38.0",
     "typescript": "^5.8.2"
   },
   "type": "module"
