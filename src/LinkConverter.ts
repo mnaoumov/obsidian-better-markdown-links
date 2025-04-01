@@ -57,7 +57,9 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
     processItem: async (file) => {
       await convertLinksInFile(plugin, file);
     },
-    shouldContinueOnError: true
+    progressBarTitle: 'Better Markdown Links: Converting links in entire vault...',
+    shouldContinueOnError: true,
+    shouldShowProgressBar: true
   });
 }
 
