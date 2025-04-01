@@ -1,4 +1,3 @@
-import type { MaybePromise } from 'obsidian-dev-utils/Async';
 import type { GenerateMarkdownLinkDefaultOptionsWrapper } from 'obsidian-dev-utils/obsidian/Link';
 import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
@@ -56,7 +55,7 @@ export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPlu
     return new BetterMarkdownLinksPluginSettingsTab(this);
   }
 
-  protected override onloadComplete(): MaybePromise<void> {
+  protected override onloadComplete(): void {
     this.register(around(this.app.fileManager, {
       generateMarkdownLink: (): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn => getPatchedGenerateMarkdownLink(this)
     }));
