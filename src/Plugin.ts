@@ -1,7 +1,7 @@
 import type { GenerateMarkdownLinkDefaultOptionsWrapper } from 'obsidian-dev-utils/obsidian/Link';
+import type { PluginSettingsManagerBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginSettingsManagerBase';
 import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
-import { around } from 'monkey-around';
 import {
   Notice,
   PluginSettingTab,
@@ -17,14 +17,13 @@ import {
   getAllLinks,
   getCacheSafe
 } from 'obsidian-dev-utils/obsidian/MetadataCache';
+import { registerPatch } from 'obsidian-dev-utils/obsidian/MonkeyAround';
 import { PluginBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginBase';
 import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
 import type { GenerateMarkdownLinkFn } from './GenerateMarkdownLink.ts';
 
-import { BetterMarkdownLinksPluginSettings } from './BetterMarkdownLinksPluginSettings.ts';
-import { BetterMarkdownLinksPluginSettingsTab } from './BetterMarkdownLinksPluginSettingsTab.ts';
 import { getPatchedGenerateMarkdownLink } from './GenerateMarkdownLink.ts';
 import {
   applyLinkChangeUpdates,
@@ -32,8 +31,11 @@ import {
   convertLinksInEntireVault,
   convertLinksInFile
 } from './LinkConverter.ts';
+import { PluginSettings } from './PluginSettings.ts';
+import { PluginSettingsManager } from './PluginSettingsManager.ts';
+import { PluginSettingsTab } from './PluginSettingsTab.ts';
 
-export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPluginSettings> {
+export class Plugin extends PluginBase<PluginSettings> {
   private warningNotice!: Notice;
 
   public showCompatibilityWarning(): void {
@@ -42,23 +44,23 @@ export class BetterMarkdownLinksPlugin extends PluginBase<BetterMarkdownLinksPlu
     console.warn(message);
 
     if (this.warningNotice.messageEl.style.opacity === '0') {
-      const WARNING_NOTICE_DURATION_IN_MILLISECONDS = 10000;
+      const WARNING_NOTICE_DURATION_IN_MILLISECONDS = 10_000;
       this.warningNotice = new Notice(message, WARNING_NOTICE_DURATION_IN_MILLISECONDS);
     }
   }
 
-  protected override createPluginSettings(data: unknown): BetterMarkdownLinksPluginSettings {
-    return new BetterMarkdownLinksPluginSettings(data);
+  protected override createPluginSettingsTab(): null | PluginSettingTab {
+    return new PluginSettingsTab(this);
   }
 
-  protected override createPluginSettingsTab(): null | PluginSettingTab {
-    return new BetterMarkdownLinksPluginSettingsTab(this);
+  protected override createSettingsManager(): PluginSettingsManagerBase<PluginSettings> {
+    return new PluginSettingsManager(this);
   }
 
   protected override onloadComplete(): void {
-    this.register(around(this.app.fileManager, {
+    registerPatch(this, this.app.fileManager, {
       generateMarkdownLink: (): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn => getPatchedGenerateMarkdownLink(this)
-    }));
+    });
 
     this.addCommand({
       checkCallback: (checking) => convertLinksInCurrentFile(this, checking),

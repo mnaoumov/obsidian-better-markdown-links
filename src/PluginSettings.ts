@@ -1,10 +1,9 @@
-import { PluginSettingsBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginSettingsBase';
 import { escapeRegExp } from 'obsidian-dev-utils/RegExp';
 
 const ALWAYS_MATCH_REG_EXP = /(?:)/;
 const NEVER_MATCH_REG_EXP = /$./;
 
-export class BetterMarkdownLinksPluginSettings extends PluginSettingsBase {
+export class PluginSettings {
   public allowEmptyEmbedAlias = true;
   public automaticallyConvertNewLinks = true;
   public automaticallyUpdateLinksOnRenameOrMove = true;
@@ -36,21 +35,8 @@ export class BetterMarkdownLinksPluginSettings extends PluginSettingsBase {
   private _includePaths: string[] = [];
   private _includePathsRegExp = ALWAYS_MATCH_REG_EXP;
 
-  public constructor(data: unknown) {
-    super();
-    this.init(data);
-  }
-
   public isPathIgnored(path: string): boolean {
     return !this._includePathsRegExp.test(path) || this._excludePathsRegExp.test(path);
-  }
-
-  public override toJSON(): Record<string, unknown> {
-    return {
-      ...super.toJSON(),
-      excludePaths: this.excludePaths,
-      includePaths: this.includePaths
-    };
   }
 }
 

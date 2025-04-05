@@ -1,3 +1,4 @@
+import type { FileManager } from 'obsidian';
 import type {
   GenerateMarkdownLinkDefaultOptionsWrapper,
   GenerateMarkdownLinkOptions as GenerateMarkdownLinkFullOptions
@@ -8,13 +9,13 @@ import { TFile } from 'obsidian';
 import { normalizeOptionalProperties } from 'obsidian-dev-utils/Object';
 import { generateMarkdownLink as generateMarkdownLinkFull } from 'obsidian-dev-utils/obsidian/Link';
 
-import type { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
+import type { Plugin } from './Plugin.ts';
 
-export type GenerateMarkdownLinkFn = (file: TFile, sourcePath: string, subpath?: string, alias?: string) => string;
+export type GenerateMarkdownLinkFn = FileManager['generateMarkdownLink'];
 
 type GenerateMarkdownLinkForPluginOptions = Except<GenerateMarkdownLinkFullOptions, 'app'>;
 
-export function getPatchedGenerateMarkdownLink(plugin: BetterMarkdownLinksPlugin): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn {
+export function getPatchedGenerateMarkdownLink(plugin: Plugin): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn {
   const generateMarkdownLinkFn: GenerateMarkdownLinkFn = (fileOrOptions, sourcePath, subpath, alias): string =>
     generateMarkdownLinkForPlugin(plugin, fileOrOptions, sourcePath, subpath, alias);
   const generateMarkdownLinkDefaultOptionsWrapper: GenerateMarkdownLinkDefaultOptionsWrapper = {
@@ -24,7 +25,7 @@ export function getPatchedGenerateMarkdownLink(plugin: BetterMarkdownLinksPlugin
 }
 
 function generateMarkdownLinkForPlugin(
-  plugin: BetterMarkdownLinksPlugin,
+  plugin: Plugin,
   fileOrOptions: GenerateMarkdownLinkForPluginOptions | TFile,
   sourcePath: string,
   subpath?: string,
@@ -44,7 +45,7 @@ function generateMarkdownLinkForPlugin(
   return generateMarkdownLinkFull({ app: plugin.app, ...options });
 }
 
-function getDefaultOptions(plugin: BetterMarkdownLinksPlugin): Partial<GenerateMarkdownLinkFullOptions> {
+function getDefaultOptions(plugin: Plugin): Partial<GenerateMarkdownLinkFullOptions> {
   return normalizeOptionalProperties<Partial<GenerateMarkdownLinkFullOptions>>({
     isEmptyEmbedAliasAllowed: plugin.settings.allowEmptyEmbedAlias,
     isWikilink: plugin.settings.ignoreIncompatibleObsidianSettings ? false : undefined,
