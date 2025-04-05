@@ -1,11 +1,10 @@
 import { appendCodeBlock } from 'obsidian-dev-utils/HTMLElement';
 import { PluginSettingsTabBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginSettingsTabBase';
 import { SettingEx } from 'obsidian-dev-utils/obsidian/SettingEx';
-import { isValidRegExp } from 'obsidian-dev-utils/RegExp';
 
-import type { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
+import type { Plugin } from './Plugin.ts';
 
-export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<BetterMarkdownLinksPlugin> {
+export class PluginSettingsTab extends PluginSettingsTabBase<Plugin> {
   public override display(): void {
     this.containerEl.empty();
 
@@ -96,9 +95,7 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
         f.appendText('If the setting is empty, all notes are included');
       }))
       .addMultipleText((multipleText) => {
-        this.bind(multipleText, 'includePaths', {
-          valueValidator: pathsValidator
-        });
+        this.bind(multipleText, 'includePaths');
       });
 
     new SettingEx(this.containerEl)
@@ -114,21 +111,7 @@ export class BetterMarkdownLinksPluginSettingsTab extends PluginSettingsTabBase<
         f.appendText('If the setting is empty, no notes are excluded');
       }))
       .addMultipleText((multipleText) => {
-        this.bind(multipleText, 'excludePaths', {
-          valueValidator: pathsValidator
-        });
+        this.bind(multipleText, 'excludePaths');
       });
-  }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-function pathsValidator(paths: string[]): string | void {
-  for (const path of paths) {
-    if (path.startsWith('/') && path.endsWith('/')) {
-      const regExp = path.slice(1, -1);
-      if (!isValidRegExp(regExp)) {
-        return `Invalid regular expression ${path}`;
-      }
-    }
   }
 }

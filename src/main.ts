@@ -1,4 +1,4 @@
-import { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
+import { Plugin } from './Plugin.ts';
 
 // eslint-disable-next-line import-x/no-default-export
-export default BetterMarkdownLinksPlugin;
+export default Plugin;

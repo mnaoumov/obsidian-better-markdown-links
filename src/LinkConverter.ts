@@ -13,11 +13,11 @@ import { confirm } from 'obsidian-dev-utils/obsidian/Modals/Confirm';
 import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
 import { getMarkdownFilesSorted } from 'obsidian-dev-utils/obsidian/Vault';
 
-import type { BetterMarkdownLinksPlugin } from './BetterMarkdownLinksPlugin.ts';
+import type { Plugin } from './Plugin.ts';
 
 import { checkObsidianSettingsCompatibility } from './ObsidianSettings.ts';
 
-export async function applyLinkChangeUpdates(plugin: BetterMarkdownLinksPlugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
+export async function applyLinkChangeUpdates(plugin: Plugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
   await applyFileChanges(plugin.app, file, async () => {
     const changes = updates.map((update) => ({
       endIndex: update.reference.position.end.offset,
@@ -32,7 +32,7 @@ export async function applyLinkChangeUpdates(plugin: BetterMarkdownLinksPlugin, 
   });
 }
 
-export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, checking: boolean): boolean {
+export function convertLinksInCurrentFile(plugin: Plugin, checking: boolean): boolean {
   const activeFile = plugin.app.workspace.getActiveFile();
   if (!activeFile || !isMarkdownFile(plugin.app, activeFile)) {
     return false;
@@ -45,7 +45,7 @@ export function convertLinksInCurrentFile(plugin: BetterMarkdownLinksPlugin, che
   return true;
 }
 
-export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugin, abortSignal: AbortSignal): Promise<void> {
+export async function convertLinksInEntireVault(plugin: Plugin, abortSignal: AbortSignal): Promise<void> {
   if (!checkObsidianSettingsCompatibility(plugin)) {
     return;
   }
@@ -63,7 +63,7 @@ export async function convertLinksInEntireVault(plugin: BetterMarkdownLinksPlugi
   });
 }
 
-export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file: TFile, shouldPromptForExcludedFile?: boolean): Promise<void> {
+export async function convertLinksInFile(plugin: Plugin, file: TFile, shouldPromptForExcludedFile?: boolean): Promise<void> {
   if (!checkObsidianSettingsCompatibility(plugin)) {
     return;
   }
@@ -91,7 +91,7 @@ export async function convertLinksInFile(plugin: BetterMarkdownLinksPlugin, file
 /**
  * BUG: https://forum.obsidian.md/t/update-internal-link-breaks-links-with-angle-brackets/85598
  */
-export function fixChange(plugin: BetterMarkdownLinksPlugin, change: string, sourceFile: TFile): string {
+export function fixChange(plugin: Plugin, change: string, sourceFile: TFile): string {
   const match = /^!?\[(?<Alias>.*?)\]\((?<EscapedPath>[^<]+?) .+?>\)$/.exec(change);
   const isEmbed = change.startsWith('!');
 
