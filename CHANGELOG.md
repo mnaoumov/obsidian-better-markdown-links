@@ -1,4 +1,8 @@
-# CHANGELOG
+npm run lint:fix; npm run format; git add -A; git commit --amend --no-edit; npm run version patch# CHANGELOG
+
+## 2.11.1
+
+- New template
 
 ## 2.11.0
 
