@@ -16,8 +16,10 @@ export type GenerateMarkdownLinkFn = FileManager['generateMarkdownLink'];
 type GenerateMarkdownLinkForPluginOptions = Except<GenerateMarkdownLinkFullOptions, 'app'>;
 
 export function getPatchedGenerateMarkdownLink(plugin: Plugin): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn {
-  const generateMarkdownLinkFn: GenerateMarkdownLinkFn = (fileOrOptions, sourcePath, subpath, alias): string =>
-    generateMarkdownLinkForPlugin(plugin, fileOrOptions, sourcePath, subpath, alias);
+  function generateMarkdownLinkFn(fileOrOptions: GenerateMarkdownLinkForPluginOptions | TFile, sourcePath: string, subpath?: string, alias?: string): string {
+    return generateMarkdownLinkForPlugin(plugin, fileOrOptions, sourcePath, subpath, alias);
+  }
+
   const generateMarkdownLinkDefaultOptionsWrapper: GenerateMarkdownLinkDefaultOptionsWrapper = {
     defaultOptionsFn: () => getDefaultOptions(plugin)
   };

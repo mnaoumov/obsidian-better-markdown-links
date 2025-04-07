@@ -2,9 +2,9 @@ import { appendCodeBlock } from 'obsidian-dev-utils/HTMLElement';
 import { PluginSettingsTabBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginSettingsTabBase';
 import { SettingEx } from 'obsidian-dev-utils/obsidian/SettingEx';
 
-import type { Plugin } from './Plugin.ts';
+import type { PluginTypes } from './PluginTypes.ts';
 
-export class PluginSettingsTab extends PluginSettingsTabBase<Plugin> {
+export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
   public override display(): void {
     this.containerEl.empty();
 

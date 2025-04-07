@@ -1,10 +1,8 @@
 import type { GenerateMarkdownLinkDefaultOptionsWrapper } from 'obsidian-dev-utils/obsidian/Link';
-import type { PluginSettingsManagerBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginSettingsManagerBase';
 import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
 import {
   Notice,
-  PluginSettingTab,
   TFile
 } from 'obsidian';
 import {
@@ -23,6 +21,7 @@ import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
 import type { GenerateMarkdownLinkFn } from './GenerateMarkdownLink.ts';
+import type { PluginTypes } from './PluginTypes.ts';
 
 import { getPatchedGenerateMarkdownLink } from './GenerateMarkdownLink.ts';
 import {
@@ -31,11 +30,10 @@ import {
   convertLinksInEntireVault,
   convertLinksInFile
 } from './LinkConverter.ts';
-import { PluginSettings } from './PluginSettings.ts';
 import { PluginSettingsManager } from './PluginSettingsManager.ts';
 import { PluginSettingsTab } from './PluginSettingsTab.ts';
 
-export class Plugin extends PluginBase<PluginSettings> {
+export class Plugin extends PluginBase<PluginTypes> {
   private warningNotice!: Notice;
 
   public showCompatibilityWarning(): void {
@@ -49,15 +47,16 @@ export class Plugin extends PluginBase<PluginSettings> {
     }
   }
 
-  protected override createPluginSettingsTab(): null | PluginSettingTab {
+  protected override createPluginSettingsTab(): null | PluginSettingsTab {
     return new PluginSettingsTab(this);
   }
 
-  protected override createSettingsManager(): PluginSettingsManagerBase<PluginSettings> {
+  protected override createSettingsManager(): PluginSettingsManager {
     return new PluginSettingsManager(this);
   }
 
-  protected override onloadComplete(): void {
+  protected override async onloadImpl(): Promise<void> {
+    await super.onloadImpl();
     registerPatch(this, this.app.fileManager, {
       generateMarkdownLink: (): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn => getPatchedGenerateMarkdownLink(this)
     });
