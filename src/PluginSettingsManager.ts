@@ -8,13 +8,13 @@ import type { PluginTypes } from './PluginTypes.ts';
 import { PluginSettings } from './PluginSettings.ts';
 
 export class PluginSettingsManager extends PluginSettingsManagerBase<PluginTypes> {
-  protected override addValidators(): void {
-    this.addValidator('includePaths', pathsValidator);
-    this.addValidator('excludePaths', pathsValidator);
-  }
-
   protected override createDefaultSettings(): PluginSettings {
     return new PluginSettings();
+  }
+
+  protected override registerValidators(): void {
+    this.registerValidator('includePaths', pathsValidator);
+    this.registerValidator('excludePaths', pathsValidator);
   }
 }
 
