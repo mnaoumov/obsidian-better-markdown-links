@@ -6,6 +6,7 @@ import type { PluginTypes } from './PluginTypes.ts';
 
 export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
   public override display(): void {
+    super.display();
     this.containerEl.empty();
 
     new SettingEx(this.containerEl)
