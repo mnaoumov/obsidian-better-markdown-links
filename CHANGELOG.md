@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.11.6
+
+- Improve performance
+- https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/26.15.2
+
 ## 2.11.5
 
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/26.11.0
