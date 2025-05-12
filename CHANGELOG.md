@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.11.8
+
+- Update libs
+
 ## 2.11.7
 
 - https://github.com/mnaoumov/obsidian-dev-utils/releases/tag/26.16.0
