@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.11.11
+
+- Update libs
+
 ## 2.11.10
 
 - Update libs
