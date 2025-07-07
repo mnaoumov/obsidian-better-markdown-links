@@ -20,6 +20,7 @@
   "author": "mnaoumov",
   "license": "MIT",
   "devDependencies": {
+    "@antfu/utils": "9.2.0",
     "@tsconfig/strictest": "^2.0.5",
     "@types/node": "^24.0.10",
     "jiti": "^2.4.2",
@@ -28,6 +29,9 @@
     "obsidian-typings": "^3.12.1",
     "type-fest": "^4.41.0",
     "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "@antfu/utils": "$@antfu/utils"
   },
   "type": "module"
 }
