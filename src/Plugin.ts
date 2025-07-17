@@ -83,7 +83,7 @@ export class Plugin extends PluginBase<PluginTypes> {
           return this.settings.isPathIgnored(path);
         },
         shouldHandleRenames: this.settings.automaticallyUpdateLinksOnRenameOrMove,
-        shouldUpdateFilenameAliases: true
+        shouldUpdateFileNameAliases: true
       };
       return settings;
     });
