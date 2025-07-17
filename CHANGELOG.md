@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.11.15
+
+- Update libs
+
 ## 2.11.14
 
 - Update libs (Fixes #19)
