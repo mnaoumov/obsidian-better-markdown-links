@@ -18,18 +18,19 @@ import type { Plugin } from './Plugin.ts';
 import { checkObsidianSettingsCompatibility } from './ObsidianSettings.ts';
 
 export async function applyLinkChangeUpdates(plugin: Plugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
-  await applyFileChanges(plugin.app, file, async () => {
-    const changes = updates.map((update) => ({
-      endIndex: update.reference.position.end.offset,
-      newContent: fixChange(plugin, update.change, file),
-      oldContent: update.reference.original,
-      startIndex: update.reference.position.start.offset
-    }));
-
-    const content = await plugin.app.vault.read(file);
-    const doUpdatesMatchContent = changes.every((change) => content.slice(change.startIndex, change.endIndex) === change.oldContent);
-    return doUpdatesMatchContent ? changes : [];
-  });
+  await applyFileChanges(
+    plugin.app,
+    file,
+    () => {
+      return updates.map((update) => ({
+        newContent: fixChange(plugin, update.change, file),
+        oldContent: update.reference.original,
+        reference: update.reference
+      }));
+    },
+    {},
+    false
+  );
 }
 
 export function convertLinksInCurrentFile(plugin: Plugin, checking: boolean): boolean {
