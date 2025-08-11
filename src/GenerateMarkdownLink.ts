@@ -6,7 +6,7 @@ import type {
 import type { Except } from 'type-fest';
 
 import { TFile } from 'obsidian';
-import { normalizeOptionalProperties } from 'obsidian-dev-utils/Object';
+import { normalizeOptionalProperties } from 'obsidian-dev-utils/ObjectUtils';
 import { generateMarkdownLink as generateMarkdownLinkFull } from 'obsidian-dev-utils/obsidian/Link';
 
 import type { Plugin } from './Plugin.ts';
