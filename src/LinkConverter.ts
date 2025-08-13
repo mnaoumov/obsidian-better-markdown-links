@@ -40,7 +40,7 @@ export function convertLinksInCurrentFile(plugin: Plugin, checking: boolean): bo
   }
 
   if (!checking) {
-    addToQueue(plugin.app, () => convertLinksInFile(plugin, activeFile, true));
+    addToQueue(plugin.app, (abortSignal) => convertLinksInFile(plugin, activeFile, abortSignal, true));
   }
 
   return true;
@@ -56,7 +56,7 @@ export async function convertLinksInEntireVault(plugin: Plugin, abortSignal: Abo
     buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,
     items: getMarkdownFilesSorted(plugin.app),
     processItem: async (file) => {
-      await convertLinksInFile(plugin, file);
+      await convertLinksInFile(plugin, file, abortSignal);
     },
     progressBarTitle: 'Better Markdown Links: Converting links in entire vault...',
     shouldContinueOnError: true,
@@ -64,7 +64,8 @@ export async function convertLinksInEntireVault(plugin: Plugin, abortSignal: Abo
   });
 }
 
-export async function convertLinksInFile(plugin: Plugin, file: TFile, shouldPromptForExcludedFile?: boolean): Promise<void> {
+export async function convertLinksInFile(plugin: Plugin, file: TFile, abortSignal: AbortSignal, shouldPromptForExcludedFile?: boolean): Promise<void> {
+  abortSignal.throwIfAborted();
   if (!checkObsidianSettingsCompatibility(plugin)) {
     return;
   }
@@ -87,6 +88,7 @@ export async function convertLinksInFile(plugin: Plugin, file: TFile, shouldProm
     app: plugin.app,
     newSourcePathOrFile: file
   });
+  abortSignal.throwIfAborted();
 }
 
 /**

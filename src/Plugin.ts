@@ -74,7 +74,7 @@ export class Plugin extends PluginBase<PluginTypes> {
     });
 
     this.registerEvent(this.app.metadataCache.on('changed', (file) => {
-      addToQueue(this.app, () => this.handleMetadataCacheChanged(file));
+      addToQueue(this.app, (abortSignal) => this.handleMetadataCacheChanged(file, abortSignal));
     }));
 
     registerRenameDeleteHandlers(this, () => {
@@ -103,7 +103,8 @@ export class Plugin extends PluginBase<PluginTypes> {
     });
   }
 
-  private async handleMetadataCacheChanged(file: TFile): Promise<void> {
+  private async handleMetadataCacheChanged(file: TFile, abortSignal: AbortSignal): Promise<void> {
+    abortSignal.throwIfAborted();
     if (!this.settings.automaticallyConvertNewLinks) {
       return;
     }
@@ -114,6 +115,7 @@ export class Plugin extends PluginBase<PluginTypes> {
     }
 
     const cache = await getCacheSafe(this.app, file);
+    abortSignal.throwIfAborted();
     if (!cache) {
       return;
     }
@@ -127,7 +129,8 @@ export class Plugin extends PluginBase<PluginTypes> {
         })
       )
     ) {
-      await convertLinksInFile(this, file);
+      await convertLinksInFile(this, file, abortSignal);
+      abortSignal.throwIfAborted();
     }
   }
 }
