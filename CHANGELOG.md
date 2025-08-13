@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.12.0
+
+- Pass abortSignal
+
 ## 2.11.20
 
 - Update libs
