@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.12.1
+
+- Pass plugin's abortSignal
+
 ## 2.12.0
 
 - Pass abortSignal
