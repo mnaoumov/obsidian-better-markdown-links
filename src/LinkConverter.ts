@@ -40,7 +40,7 @@ export function convertLinksInCurrentFile(plugin: Plugin, checking: boolean): bo
   }
 
   if (!checking) {
-    addToQueue(plugin.app, (abortSignal) => convertLinksInFile(plugin, activeFile, abortSignal, true));
+    addToQueue(plugin.app, (abortSignal) => convertLinksInFile(plugin, activeFile, abortSignal, true), plugin.abortSignal);
   }
 
   return true;
@@ -88,7 +88,6 @@ export async function convertLinksInFile(plugin: Plugin, file: TFile, abortSigna
     app: plugin.app,
     newSourcePathOrFile: file
   });
-  abortSignal.throwIfAborted();
 }
 
 /**

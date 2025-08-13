@@ -74,7 +74,7 @@ export class Plugin extends PluginBase<PluginTypes> {
     });
 
     this.registerEvent(this.app.metadataCache.on('changed', (file) => {
-      addToQueue(this.app, (abortSignal) => this.handleMetadataCacheChanged(file, abortSignal));
+      addToQueue(this.app, (abortSignal) => this.handleMetadataCacheChanged(file, abortSignal), this.abortSignal);
     }));
 
     registerRenameDeleteHandlers(this, () => {
