@@ -4,14 +4,14 @@ const ALWAYS_MATCH_REG_EXP = /(?:)/;
 const NEVER_MATCH_REG_EXP = /$./;
 
 export class PluginSettings {
-  public allowEmptyEmbedAlias = true;
-  public automaticallyConvertNewLinks = true;
-  public automaticallyUpdateLinksOnRenameOrMove = true;
-  public ignoreIncompatibleObsidianSettings = false;
+  public shouldAllowEmptyEmbedAlias = true;
+  public shouldAutomaticallyConvertNewLinks = true;
+  public shouldAutomaticallyUpdateLinksOnRenameOrMove = true;
+  public shouldIgnoreIncompatibleObsidianSettings = false;
+  public shouldIncludeAttachmentExtensionToEmbedAlias = false;
+  public shouldUseAngleBrackets = true;
+  public shouldUseLeadingDot = true;
 
-  public includeAttachmentExtensionToEmbedAlias = false;
-  public useAngleBrackets = true;
-  public useLeadingDot = true;
   public get excludePaths(): string[] {
     return this._excludePaths;
   }

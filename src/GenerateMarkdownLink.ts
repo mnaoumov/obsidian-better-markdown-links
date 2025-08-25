@@ -49,11 +49,11 @@ function generateMarkdownLinkForPlugin(
 
 function getDefaultOptions(plugin: Plugin): Partial<GenerateMarkdownLinkFullOptions> {
   return normalizeOptionalProperties<Partial<GenerateMarkdownLinkFullOptions>>({
-    isEmptyEmbedAliasAllowed: plugin.settings.allowEmptyEmbedAlias,
-    isWikilink: plugin.settings.ignoreIncompatibleObsidianSettings ? false : undefined,
-    shouldForceRelativePath: plugin.settings.ignoreIncompatibleObsidianSettings ? true : undefined,
-    shouldIncludeAttachmentExtensionToEmbedAlias: plugin.settings.includeAttachmentExtensionToEmbedAlias,
-    shouldUseAngleBrackets: plugin.settings.useAngleBrackets,
-    shouldUseLeadingDot: plugin.settings.useLeadingDot
+    isEmptyEmbedAliasAllowed: plugin.settings.shouldAllowEmptyEmbedAlias,
+    isWikilink: plugin.settings.shouldIgnoreIncompatibleObsidianSettings ? false : undefined,
+    shouldForceRelativePath: plugin.settings.shouldIgnoreIncompatibleObsidianSettings ? true : undefined,
+    shouldIncludeAttachmentExtensionToEmbedAlias: plugin.settings.shouldIncludeAttachmentExtensionToEmbedAlias,
+    shouldUseAngleBrackets: plugin.settings.shouldUseAngleBrackets,
+    shouldUseLeadingDot: plugin.settings.shouldUseLeadingDot
   });
 }

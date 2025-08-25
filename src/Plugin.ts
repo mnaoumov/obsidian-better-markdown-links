@@ -86,7 +86,7 @@ export class Plugin extends PluginBase<PluginTypes> {
         isPathIgnored: (path) => {
           return this.settings.isPathIgnored(path);
         },
-        shouldHandleRenames: this.settings.automaticallyUpdateLinksOnRenameOrMove,
+        shouldHandleRenames: this.settings.shouldAutomaticallyUpdateLinksOnRenameOrMove,
         shouldUpdateFileNameAliases: true
       };
       return settings;
@@ -114,7 +114,7 @@ export class Plugin extends PluginBase<PluginTypes> {
     processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
     this.processFileAbortControllers.delete(file.path);
 
-    if (!this.settings.automaticallyConvertNewLinks) {
+    if (!this.settings.shouldAutomaticallyConvertNewLinks) {
       return;
     }
 
