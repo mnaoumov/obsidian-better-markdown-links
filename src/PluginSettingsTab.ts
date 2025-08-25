@@ -10,30 +10,30 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
     this.containerEl.empty();
 
     new SettingEx(this.containerEl)
-      .setName('Use leading dot')
-      .setDesc('Use a leading dot in relative links')
+      .setName('Should use leading dot')
+      .setDesc('Whether to use a leading dot in relative links.')
       .addToggle((toggle) => {
-        this.bind(toggle, 'useLeadingDot');
+        this.bind(toggle, 'shouldUseLeadingDot');
       });
 
     new SettingEx(this.containerEl)
-      .setName('Use angle brackets')
-      .setDesc('Use angle brackets in links')
+      .setName('Should use angle brackets')
+      .setDesc('Whether to use angle brackets in links.')
       .addToggle((toggle) => {
-        this.bind(toggle, 'useAngleBrackets');
+        this.bind(toggle, 'shouldUseAngleBrackets');
       });
 
     new SettingEx(this.containerEl)
-      .setName('Automatically convert new links')
-      .setDesc('Automatically convert new links entered manually to the selected format')
+      .setName('Should automatically convert new links')
+      .setDesc('Whether to automatically convert new links entered manually to the selected format.')
       .addToggle((toggle) => {
-        this.bind(toggle, 'automaticallyConvertNewLinks');
+        this.bind(toggle, 'shouldAutomaticallyConvertNewLinks');
       });
 
     new SettingEx(this.containerEl)
-      .setName('Automatically update links on rename or move')
+      .setName('Should automatically update links on rename or move')
       .setDesc(createFragment((f) => {
-        f.appendText('Automatically update links when a file is renamed or moved to another directory.');
+        f.appendText('Whether to automatically update links when a file is renamed or moved to another directory.');
         f.createEl('br');
         f.appendText('Consider installing the ');
         f.createEl('a', {
@@ -43,11 +43,11 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
         f.appendText(' plugin to improve performance.');
       }))
       .addToggle((toggle) => {
-        this.bind(toggle, 'automaticallyUpdateLinksOnRenameOrMove');
+        this.bind(toggle, 'shouldAutomaticallyUpdateLinksOnRenameOrMove');
       });
 
     new SettingEx(this.containerEl)
-      .setName('Ignore incompatible Obsidian settings')
+      .setName('Should ignore incompatible Obsidian settings')
       .setDesc(createFragment((f) => {
         f.appendText('Current plugin makes sense only if you have ');
         appendCodeBlock(f, 'Use [[Wikilinks]]');
@@ -60,27 +60,21 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
         f.appendText('If you enable current setting, it will override incompatible Obsidian settings and will work as expected.');
       }))
       .addToggle((toggle) => {
-        this.bind(toggle, 'ignoreIncompatibleObsidianSettings');
+        this.bind(toggle, 'shouldIgnoreIncompatibleObsidianSettings');
       });
 
     new SettingEx(this.containerEl)
-      .setName('Allow empty embed alias')
-      .setDesc('If disabled, empty alias will be replaced with the attachment name')
+      .setName('Should allow empty embed alias')
+      .setDesc('Whether to allow empty embed alias. If disabled, empty alias will be replaced with the attachment name.')
       .addToggle((toggle) => {
-        this.bind(toggle, 'allowEmptyEmbedAlias');
+        this.bind(toggle, 'shouldAllowEmptyEmbedAlias');
       });
 
     new SettingEx(this.containerEl)
-      .setName('Include attachment extension to embed alias')
-      .setDesc(createFragment((f) => {
-        f.appendText('If enabled, the extension of the attachment will be included in the embed alias.');
-        f.createEl('br');
-        f.appendText('The setting is ignored if ');
-        appendCodeBlock(f, 'Allow empty embed alias');
-        f.appendText(' is enabled.');
-      }))
+      .setName('Should include attachment extension to embed alias')
+      .setDesc('Whether to include the extension of the attachment in the embed alias.')
       .addToggle((toggle) => {
-        this.bind(toggle, 'includeAttachmentExtensionToEmbedAlias');
+        this.bind(toggle, 'shouldIncludeAttachmentExtensionToEmbedAlias');
       });
 
     new SettingEx(this.containerEl)

@@ -8,7 +8,7 @@ import type { Plugin } from './Plugin.ts';
 export function checkObsidianSettingsCompatibility(plugin: Plugin): boolean {
   const app = plugin.app;
 
-  if (plugin.settings.ignoreIncompatibleObsidianSettings) {
+  if (plugin.settings.shouldIgnoreIncompatibleObsidianSettings) {
     return true;
   }
 
