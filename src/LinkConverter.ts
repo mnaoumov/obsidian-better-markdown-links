@@ -1,6 +1,7 @@
 import type { TFile } from 'obsidian';
 import type { LinkChangeUpdate } from 'obsidian-typings';
 
+import { SilentError } from 'obsidian-dev-utils/Error';
 import { applyFileChanges } from 'obsidian-dev-utils/obsidian/FileChange';
 import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/FileSystem';
 import {
@@ -18,6 +19,11 @@ import type { Plugin } from './Plugin.ts';
 import { checkObsidianSettingsCompatibility } from './ObsidianSettings.ts';
 
 export async function applyLinkChangeUpdates(plugin: Plugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
+  let processFileAbortController = plugin.processFileAbortControllers.get(file.path);
+  processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
+  processFileAbortController = new AbortController();
+  plugin.processFileAbortControllers.set(file.path, processFileAbortController);
+
   await applyFileChanges(
     plugin.app,
     file,
@@ -28,7 +34,9 @@ export async function applyLinkChangeUpdates(plugin: Plugin, file: TFile, update
         reference: update.reference
       }));
     },
-    {},
+    {
+      abortSignal: processFileAbortController.signal
+    },
     false
   );
 }

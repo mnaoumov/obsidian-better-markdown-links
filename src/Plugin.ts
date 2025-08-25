@@ -5,6 +5,8 @@ import {
   Notice,
   TFile
 } from 'obsidian';
+import { abortSignalAny } from 'obsidian-dev-utils/AbortController';
+import { SilentError } from 'obsidian-dev-utils/Error';
 import {
   noop,
   noopAsync
@@ -34,6 +36,8 @@ import { PluginSettingsManager } from './PluginSettingsManager.ts';
 import { PluginSettingsTab } from './PluginSettingsTab.ts';
 
 export class Plugin extends PluginBase<PluginTypes> {
+  public readonly processFileAbortControllers = new Map<string, AbortController>();
+
   private warningNotice!: Notice;
 
   public showCompatibilityWarning(): void {
@@ -105,6 +109,11 @@ export class Plugin extends PluginBase<PluginTypes> {
 
   private async handleMetadataCacheChanged(file: TFile, abortSignal: AbortSignal): Promise<void> {
     abortSignal.throwIfAborted();
+
+    let processFileAbortController = this.processFileAbortControllers.get(file.path);
+    processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
+    this.processFileAbortControllers.delete(file.path);
+
     if (!this.settings.automaticallyConvertNewLinks) {
       return;
     }
@@ -114,23 +123,29 @@ export class Plugin extends PluginBase<PluginTypes> {
       return;
     }
 
-    const cache = await getCacheSafe(this.app, file);
-    abortSignal.throwIfAborted();
-    if (!cache) {
-      return;
-    }
-    const links = getAllLinks(cache);
-    if (
-      links.some((link) =>
-        link.original !== convertLink({
-          app: this.app,
-          link,
-          newSourcePathOrFile: file
-        })
-      )
-    ) {
-      await convertLinksInFile(this, file, abortSignal);
-      abortSignal.throwIfAborted();
+    processFileAbortController = new AbortController();
+    this.processFileAbortControllers.set(file.path, processFileAbortController);
+    try {
+      const combinedAbortSignal = abortSignalAny(abortSignal, processFileAbortController.signal);
+      const cache = await getCacheSafe(this.app, file);
+      combinedAbortSignal.throwIfAborted();
+      if (!cache) {
+        return;
+      }
+      const links = getAllLinks(cache);
+      if (
+        links.some((link) =>
+          link.original !== convertLink({
+            app: this.app,
+            link,
+            newSourcePathOrFile: file
+          })
+        )
+      ) {
+        await convertLinksInFile(this, file, combinedAbortSignal);
+      }
+    } finally {
+      this.processFileAbortControllers.delete(file.path);
     }
   }
 }
