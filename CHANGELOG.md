@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2.13.0
+
+- shouldPreserveExistingLinkStyle
+- Increase include/exclude settings
+- Prevent conflicting updates
+- Update libs
+
 ## 2.12.4
 
 - Update libs
