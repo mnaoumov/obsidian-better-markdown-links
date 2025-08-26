@@ -138,6 +138,7 @@ export class Plugin extends PluginBase<PluginTypes> {
           link.original !== convertLink({
             app: this.app,
             link,
+            linkStyle: this.settings.getLinkStyle(true),
             newSourcePathOrFile: file
           })
         )

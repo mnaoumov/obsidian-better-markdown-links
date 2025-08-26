@@ -50,7 +50,7 @@ function generateMarkdownLinkForPlugin(
 function getDefaultOptions(plugin: Plugin): Partial<GenerateMarkdownLinkFullOptions> {
   return normalizeOptionalProperties<Partial<GenerateMarkdownLinkFullOptions>>({
     isEmptyEmbedAliasAllowed: plugin.settings.shouldAllowEmptyEmbedAlias,
-    isWikilink: plugin.settings.shouldIgnoreIncompatibleObsidianSettings ? false : undefined,
+    linkStyle: plugin.settings.getLinkStyle(false),
     shouldForceRelativePath: plugin.settings.shouldIgnoreIncompatibleObsidianSettings ? true : undefined,
     shouldIncludeAttachmentExtensionToEmbedAlias: plugin.settings.shouldIncludeAttachmentExtensionToEmbedAlias,
     shouldUseAngleBrackets: plugin.settings.shouldUseAngleBrackets,
