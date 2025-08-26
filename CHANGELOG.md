@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.13.1
+
+- Update libs
+
 ## 2.13.0
 
 - shouldPreserveExistingLinkStyle
