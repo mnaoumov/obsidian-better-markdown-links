@@ -1,3 +1,4 @@
+import { LinkStyle } from 'obsidian-dev-utils/obsidian/Link';
 import { escapeRegExp } from 'obsidian-dev-utils/RegExp';
 
 const ALWAYS_MATCH_REG_EXP = /(?:)/;
@@ -9,6 +10,7 @@ export class PluginSettings {
   public shouldAutomaticallyUpdateLinksOnRenameOrMove = true;
   public shouldIgnoreIncompatibleObsidianSettings = false;
   public shouldIncludeAttachmentExtensionToEmbedAlias = false;
+  public shouldPreserveExistingLinkStyle = false;
   public shouldUseAngleBrackets = true;
   public shouldUseLeadingDot = true;
 
@@ -34,6 +36,18 @@ export class PluginSettings {
   private _excludePathsRegExp = NEVER_MATCH_REG_EXP;
   private _includePaths: string[] = [];
   private _includePathsRegExp = ALWAYS_MATCH_REG_EXP;
+
+  public getLinkStyle(isExistingLink: boolean): LinkStyle {
+    if (isExistingLink && this.shouldPreserveExistingLinkStyle) {
+      return LinkStyle.PreserveExisting;
+    }
+
+    if (this.shouldIgnoreIncompatibleObsidianSettings) {
+      return LinkStyle.Markdown;
+    }
+
+    return LinkStyle.ObsidianSettingsDefault;
+  }
 
   public isPathIgnored(path: string): boolean {
     return !this._includePathsRegExp.test(path) || this._excludePathsRegExp.test(path);

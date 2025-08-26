@@ -74,9 +74,6 @@ export async function convertLinksInEntireVault(plugin: Plugin, abortSignal: Abo
 
 export async function convertLinksInFile(plugin: Plugin, file: TFile, abortSignal: AbortSignal, shouldPromptForExcludedFile?: boolean): Promise<void> {
   abortSignal.throwIfAborted();
-  if (!checkObsidianSettingsCompatibility(plugin)) {
-    return;
-  }
 
   if (plugin.settings.isPathIgnored(file.path)) {
     if (!shouldPromptForExcludedFile) {
@@ -94,6 +91,7 @@ export async function convertLinksInFile(plugin: Plugin, file: TFile, abortSigna
 
   await updateLinksInFile({
     app: plugin.app,
+    linkStyle: plugin.settings.getLinkStyle(true),
     newSourcePathOrFile: file
   });
 }
@@ -121,7 +119,7 @@ export function fixChange(plugin: Plugin, change: string, sourceFile: TFile): st
     alias,
     app: plugin.app,
     isEmbed,
-    isWikilink: false,
+    linkStyle: plugin.settings.getLinkStyle(false),
     sourcePathOrFile: sourceFile,
     subpath,
     targetPathOrFile: targetFile
