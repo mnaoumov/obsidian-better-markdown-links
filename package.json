@@ -1,6 +1,6 @@
 {
   "name": "better-markdown-links",
-  "version": "2.13.3",
+  "version": "2.13.4",
   "description": "Adds support for angle bracket links and manages relative links properly",
   "scripts": {
     "build": "obsidian-dev-utils build",
