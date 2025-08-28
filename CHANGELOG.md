@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.13.3
+
+- Update libs (fixes https://github.com/mnaoumov/obsidian-better-markdown-links/issues/21#issuecomment-3225879039)
+
 ## 2.13.2
 
 - Update libs
