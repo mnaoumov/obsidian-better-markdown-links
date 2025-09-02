@@ -3,9 +3,11 @@ import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/Re
 
 import {
   Notice,
+  TAbstractFile,
   TFile
 } from 'obsidian';
 import { abortSignalAny } from 'obsidian-dev-utils/AbortController';
+import { convertAsyncToSync } from 'obsidian-dev-utils/Async';
 import { SilentError } from 'obsidian-dev-utils/Error';
 import {
   noop,
@@ -19,7 +21,6 @@ import {
 } from 'obsidian-dev-utils/obsidian/MetadataCache';
 import { registerPatch } from 'obsidian-dev-utils/obsidian/MonkeyAround';
 import { PluginBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginBase';
-import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
 import type { GenerateMarkdownLinkFn } from './GenerateMarkdownLink.ts';
@@ -59,8 +60,9 @@ export class Plugin extends PluginBase<PluginTypes> {
     return new PluginSettingsTab(this);
   }
 
-  protected override async onloadImpl(): Promise<void> {
-    await super.onloadImpl();
+  protected override async onLayoutReady(): Promise<void> {
+    await super.onLayoutReady();
+
     registerPatch(this, this.app.fileManager, {
       generateMarkdownLink: (): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn => getPatchedGenerateMarkdownLink(this)
     });
@@ -77,9 +79,7 @@ export class Plugin extends PluginBase<PluginTypes> {
       name: 'Convert links in entire vault'
     });
 
-    this.registerEvent(this.app.metadataCache.on('changed', (file) => {
-      addToQueue(this.app, (abortSignal) => this.handleMetadataCacheChanged(file, abortSignal), this.abortSignal);
-    }));
+    this.registerEvent(this.app.vault.on('modify', convertAsyncToSync(this.handleModify.bind(this))));
 
     registerRenameDeleteHandlers(this, () => {
       const settings: Partial<RenameDeleteHandlerSettings> = {
@@ -107,8 +107,12 @@ export class Plugin extends PluginBase<PluginTypes> {
     });
   }
 
-  private async handleMetadataCacheChanged(file: TFile, abortSignal: AbortSignal): Promise<void> {
-    abortSignal.throwIfAborted();
+  private async handleModify(file: TAbstractFile): Promise<void> {
+    this.abortSignal.throwIfAborted();
+
+    if (!(file instanceof TFile)) {
+      return;
+    }
 
     let processFileAbortController = this.processFileAbortControllers.get(file.path);
     processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
@@ -126,7 +130,7 @@ export class Plugin extends PluginBase<PluginTypes> {
     processFileAbortController = new AbortController();
     this.processFileAbortControllers.set(file.path, processFileAbortController);
     try {
-      const combinedAbortSignal = abortSignalAny(abortSignal, processFileAbortController.signal);
+      const combinedAbortSignal = abortSignalAny(this.abortSignal, processFileAbortController.signal);
       const cache = await getCacheSafe(this.app, file);
       combinedAbortSignal.throwIfAborted();
       if (!cache) {
