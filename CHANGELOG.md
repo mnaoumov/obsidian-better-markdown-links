@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.13.8
+
+- Minor changes
+
 ## 2.13.7
 
 - Improve error handling (#21)
