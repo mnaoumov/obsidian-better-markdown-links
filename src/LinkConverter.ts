@@ -90,6 +90,7 @@ export async function convertLinksInFile(plugin: Plugin, file: TFile, abortSigna
   }
 
   await updateLinksInFile({
+    abortSignal,
     app: plugin.app,
     linkStyle: plugin.settings.getLinkStyle(true),
     newSourcePathOrFile: file
