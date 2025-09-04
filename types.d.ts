@@ -5,19 +5,14 @@ import type { TFile } from 'obsidian';
  *
  * Usage: `(app.fileManager.generateMarkdownLink as GenerateMarkdownLinkFn)(options)`
  */
-type GenerateMarkdownLinkFn = (options: GenerateMarkdownLinkOptions) => string;
+export type GenerateMarkdownLinkFn = (options: GenerateMarkdownLinkOptions) => string;
 
 /**
- * Represents a path or a file.
- */
-export type PathOrFile = string | TFile;
-
-/**
- * Options for generating a markdown link.
+ * Options for {@link generateMarkdownLink}.
  */
 export interface GenerateMarkdownLinkOptions {
   /**
-   * The alias for the link.
+   * An alias for the link.
    */
   alias?: string;
 
@@ -37,15 +32,20 @@ export interface GenerateMarkdownLinkOptions {
   isNonExistingFileAllowed?: boolean;
 
   /**
-   * Indicates if the link should be a wikilink. If not provided, it will be inferred based on the Obsidian settings.
+   * A style of the link.
    */
-  isWikilink?: boolean;
+  linkStyle?: LinkStyle;
 
   /**
-   * The original link text. If provided, it will be used to infer the values of `isEmbed`, `isWikilink`, `useLeadingDot`, and `useAngleBrackets`.
+   * An original link text. If provided, it will be used to infer the values of `isEmbed`, `isWikilink`, `useLeadingDot`, and `useAngleBrackets`.
    * These inferred values will be overridden by corresponding settings if specified.
    */
   originalLink?: string;
+
+  /**
+   * Whether to escape the alias. Applicable only if the result link style is {@link LinkStyle.Markdown}. Defaults to `false`.
+   */
+  shouldEscapeAlias?: boolean;
 
   /**
    * Indicates if the link should be relative. If not provided or `false`, it will be inferred based on the Obsidian settings.
@@ -68,17 +68,47 @@ export interface GenerateMarkdownLinkOptions {
   shouldUseLeadingDot?: boolean;
 
   /**
-   * The source path of the link.
+   * A source path of the link.
    */
   sourcePathOrFile: PathOrFile;
 
   /**
-   * The subpath of the link.
+   * A subpath of the link.
    */
   subpath?: string;
 
   /**
-   * The target path or file.
+   * A target path or file.
    */
   targetPathOrFile: PathOrFile;
 }
+
+/**
+ * A style of the link.
+ */
+export enum LinkStyle {
+  /**
+   * Force the link to be in markdown format.
+   */
+  Markdown = 'Markdown',
+
+  /**
+   * Use the default link style defined in Obsidian settings.
+   */
+  ObsidianSettingsDefault = 'ObsidianSettingsDefault',
+
+  /**
+   * Preserve the existing link style.
+   */
+  PreserveExisting = 'PreserveExisting',
+
+  /**
+   * Force the link to be in wikilink format.
+   */
+  Wikilink = 'Wikilink'
+}
+
+/**
+ * Represents a path or a file.
+ */
+export type PathOrFile = string | TFile;
