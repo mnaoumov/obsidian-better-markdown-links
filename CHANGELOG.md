@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.13.9
+
+- Update libs (#22)
+- Update types
+
 ## 2.13.8
 
 - Minor changes
