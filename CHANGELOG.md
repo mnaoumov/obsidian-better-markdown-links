@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.13.19
+
+- Minor changes
+
 ## 2.13.18
 
 - Minor changes
