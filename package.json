@@ -8,6 +8,7 @@
     "build:compile": "obsidian-dev-utils build:compile",
     "build:compile:svelte": "obsidian-dev-utils build:compile:svelte",
     "build:compile:typescript": "obsidian-dev-utils build:compile:typescript",
+    "commit": "cz",
     "dev": "obsidian-dev-utils dev",
     "format": "obsidian-dev-utils format",
     "format:check": "obsidian-dev-utils format:check",
