@@ -17,6 +17,21 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
       });
 
     new SettingEx(this.containerEl)
+      .setName('Should use leading slash for absolute paths')
+      .setDesc(createFragment((f) => {
+        f.appendText('Whether to use a leading slash in absolute paths.');
+        f.createEl('br');
+        f.appendText('If enabled: ');
+        appendCodeBlock(f, '[[/absolute/path/to/target]]');
+        f.createEl('br');
+        f.appendText('If disabled: ');
+        appendCodeBlock(f, '[[absolute/path/to/target]]');
+      }))
+      .addToggle((toggle) => {
+        this.bind(toggle, 'shouldUseLeadingSlashForAbsolutePaths');
+      });
+
+    new SettingEx(this.containerEl)
       .setName('Should use angle brackets')
       .setDesc('Whether to use angle brackets in links.')
       .addToggle((toggle) => {

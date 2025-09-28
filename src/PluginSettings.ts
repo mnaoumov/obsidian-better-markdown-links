@@ -13,6 +13,7 @@ export class PluginSettings {
   public shouldPreserveExistingLinkStyle = false;
   public shouldUseAngleBrackets = true;
   public shouldUseLeadingDot = true;
+  public shouldUseLeadingSlashForAbsolutePaths = true;
 
   public get excludePaths(): string[] {
     return this._excludePaths;

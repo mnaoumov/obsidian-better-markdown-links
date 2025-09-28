@@ -57,6 +57,7 @@ function getDefaultOptions(plugin: Plugin): Partial<GenerateMarkdownLinkFullOpti
     linkStyle: plugin.settings.getLinkStyle(false),
     shouldIncludeAttachmentExtensionToEmbedAlias: plugin.settings.shouldIncludeAttachmentExtensionToEmbedAlias,
     shouldUseAngleBrackets: plugin.settings.shouldUseAngleBrackets,
-    shouldUseLeadingDotForRelativePaths: plugin.settings.shouldUseLeadingDot
+    shouldUseLeadingDotForRelativePaths: plugin.settings.shouldUseLeadingDot,
+    shouldUseLeadingSlashForAbsolutePaths: plugin.settings.shouldUseLeadingSlashForAbsolutePaths
   });
 }
