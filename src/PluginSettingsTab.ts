@@ -83,10 +83,6 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
         f.appendText('If enabled, the existing link style will be preserved when converting links.');
         f.createEl('br');
         f.appendText('If disabled, the existing links style will be changed to the default link style defined in Obsidian settings.');
-        f.createEl('br');
-        f.appendText('If disabled and ');
-        appendCodeBlock(f, 'Should ignore incompatible Obsidian settings');
-        f.appendText(' setting is set, the existing link style will be changed to the markdown link style.');
       }))
       .addToggle((toggle) => {
         this.bind(toggle, 'shouldPreserveExistingLinkStyle');
