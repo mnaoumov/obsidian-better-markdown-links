@@ -1,5 +1,5 @@
 import {
-  shouldUseRelativeLinks,
+  getNewLinkFormat,
   shouldUseWikilinks
 } from 'obsidian-dev-utils/obsidian/ObsidianSettings';
 
@@ -12,7 +12,7 @@ export function checkObsidianSettingsCompatibility(plugin: Plugin): boolean {
     return true;
   }
 
-  if (!shouldUseWikilinks(app) && shouldUseRelativeLinks(app)) {
+  if (!shouldUseWikilinks(app) && getNewLinkFormat(app) === 'relative') {
     return true;
   }
 
