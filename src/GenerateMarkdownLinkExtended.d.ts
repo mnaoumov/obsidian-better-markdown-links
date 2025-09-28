@@ -22,7 +22,7 @@ export enum LinkPathStyle {
   /**
    * Use the absolute path in the vault.
    *
-   * @example `[[path/from/the/vault/root/link]]`
+   * @example `[[path/from/the/vault/root/target]]`
    */
   AbsolutePathInVault = 'AbsolutePathInVault',
 
@@ -32,16 +32,16 @@ export enum LinkPathStyle {
   ObsidianSettingsDefault = 'ObsidianSettingsDefault',
 
   /**
-   * Use the relative path to the note.
+   * Use the relative path to the source.
    *
-   * @example `[[../../relative/path/to/link]]`
+   * @example `[[../../relative/path/to/target]]`
    */
-  RelativePathToTheNote = 'RelativePathToTheNote',
+  RelativePathToTheSource = 'RelativePathToTheSource',
 
   /**
    * Use the shortest path when possible.
    *
-   * @example `[[shortest-path-to-link]]`
+   * @example `[[shortest-path-to-target]]`
    */
   ShortestPathWhenPossible = 'ShortestPathWhenPossible'
 }
@@ -53,7 +53,7 @@ export enum LinkStyle {
   /**
    * Force the link to be in markdown format.
    *
-   * @example `[alias](path/to/link.md)`
+   * @example `[alias](path/to/target.md)`
    */
   Markdown = 'Markdown',
 
@@ -70,8 +70,8 @@ export enum LinkStyle {
   /**
    * Force the link to be in wikilink format.
    *
-   * @example `[[path/to/link]]`
-   * @example `[[path/to/link|alias]]`
+   * @example `[[path/to/target]]`
+   * @example `[[path/to/target|alias]]`
    */
   Wikilink = 'Wikilink'
 }
@@ -99,9 +99,9 @@ export interface GenerateMarkdownLinkExtendedOptions {
   /**
    * Indicates if the link should be embedded. If not provided, it will be inferred based on the file type.
    *
-   * If `true`: `![[link]]`.
+   * If `true`: `![[target]]`.
    *
-   * If `false`: `[[link]]`.
+   * If `false`: `[[target]]`.
    */
   isEmbed?: boolean;
 
@@ -195,7 +195,7 @@ export interface GenerateMarkdownLinkExtendedOptions {
   /**
    * Indicates if the link should use a leading dot. Defaults to `false`.
    *
-   * Applicable only if {@link linkPathStyle} is {@link LinkPathStyle.RelativePathToTheNote}.
+   * Applicable only if {@link linkPathStyle} is {@link LinkPathStyle.RelativePathToSource}.
    *
    * If `true`: `[[./relative/path/to/target]]`
    *
@@ -224,7 +224,7 @@ export interface GenerateMarkdownLinkExtendedOptions {
    *
    * Should be empty or start with `#`.
    *
-   * @example `[[link-without-subpath]]`
+   * @example `[[link-with-empty-subpath]]`
    * @example `[[link-with-subpath#subpath]]`
    * @example `[[link-with-subpath#subpath#nested-subpath]]`
    */
