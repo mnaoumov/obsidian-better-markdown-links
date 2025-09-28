@@ -16,8 +16,6 @@ import { getMarkdownFilesSorted } from 'obsidian-dev-utils/obsidian/Vault';
 
 import type { Plugin } from './Plugin.ts';
 
-import { checkObsidianSettingsCompatibility } from './ObsidianSettings.ts';
-
 export async function applyLinkChangeUpdates(plugin: Plugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
   let processFileAbortController = plugin.processFileAbortControllers.get(file.path);
   processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
@@ -55,10 +53,6 @@ export function convertLinksInCurrentFile(plugin: Plugin, checking: boolean): bo
 }
 
 export async function convertLinksInEntireVault(plugin: Plugin, abortSignal: AbortSignal): Promise<void> {
-  if (!checkObsidianSettingsCompatibility(plugin)) {
-    return;
-  }
-
   await loop({
     abortSignal,
     buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,

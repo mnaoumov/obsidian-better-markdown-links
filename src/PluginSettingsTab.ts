@@ -62,23 +62,6 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
       });
 
     new SettingEx(this.containerEl)
-      .setName('Should ignore incompatible Obsidian settings')
-      .setDesc(createFragment((f) => {
-        f.appendText('Current plugin makes sense only if you have ');
-        appendCodeBlock(f, 'Use [[Wikilinks]]');
-        f.appendText(' disabled and ');
-        appendCodeBlock(f, 'New link format');
-        f.appendText(' set to ');
-        appendCodeBlock(f, 'Relative path to file');
-        f.appendText(' in Obsidian settings.');
-        f.createEl('br');
-        f.appendText('If you enable current setting, it will override incompatible Obsidian settings and will work as expected.');
-      }))
-      .addToggle((toggle) => {
-        this.bind(toggle, 'shouldIgnoreIncompatibleObsidianSettings');
-      });
-
-    new SettingEx(this.containerEl)
       .setName('Should allow empty embed alias')
       .setDesc('Whether to allow empty embed alias. If disabled, empty alias will be replaced with the attachment name.')
       .addToggle((toggle) => {

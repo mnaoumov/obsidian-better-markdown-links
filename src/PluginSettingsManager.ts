@@ -11,7 +11,6 @@ class LegacySettings {
   public allowEmptyEmbedAlias = true;
   public automaticallyConvertNewLinks = true;
   public automaticallyUpdateLinksOnRenameOrMove = true;
-  public ignoreIncompatibleObsidianSettings = false;
   public includeAttachmentExtensionToEmbedAlias = false;
   public useAngleBrackets = true;
   public useLeadingDot = true;
@@ -34,10 +33,6 @@ export class PluginSettingsManager extends PluginSettingsManagerBase<PluginTypes
 
       if (legacySettings.automaticallyUpdateLinksOnRenameOrMove !== undefined) {
         legacySettings.shouldAutomaticallyUpdateLinksOnRenameOrMove = legacySettings.automaticallyUpdateLinksOnRenameOrMove;
-      }
-
-      if (legacySettings.ignoreIncompatibleObsidianSettings !== undefined) {
-        legacySettings.shouldIgnoreIncompatibleObsidianSettings = legacySettings.ignoreIncompatibleObsidianSettings;
       }
 
       if (legacySettings.includeAttachmentExtensionToEmbedAlias !== undefined) {
