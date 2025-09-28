@@ -1,4 +1,3 @@
-import type { GenerateMarkdownLinkDefaultOptionsWrapper } from 'obsidian-dev-utils/obsidian/Link';
 import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
 import {
@@ -19,14 +18,12 @@ import {
   getAllLinks,
   getCacheSafe
 } from 'obsidian-dev-utils/obsidian/MetadataCache';
-import { registerPatch } from 'obsidian-dev-utils/obsidian/MonkeyAround';
 import { PluginBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginBase';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
-import type { GenerateMarkdownLinkFn } from './GenerateMarkdownLink.ts';
 import type { PluginTypes } from './PluginTypes.ts';
 
-import { getPatchedGenerateMarkdownLink } from './GenerateMarkdownLink.ts';
+import { patchGenerateMarkdownLink } from './GenerateMarkdownLinkExtendedImpl.ts';
 import {
   applyLinkChangeUpdates,
   convertLinksInCurrentFile,
@@ -52,9 +49,7 @@ export class Plugin extends PluginBase<PluginTypes> {
   protected override async onLayoutReady(): Promise<void> {
     await super.onLayoutReady();
 
-    registerPatch(this, this.app.fileManager, {
-      generateMarkdownLink: (): GenerateMarkdownLinkDefaultOptionsWrapper & GenerateMarkdownLinkFn => getPatchedGenerateMarkdownLink(this)
-    });
+    patchGenerateMarkdownLink(this);
 
     this.addCommand({
       checkCallback: (checking) => convertLinksInCurrentFile(this, checking),
