@@ -41,17 +41,6 @@ export class Plugin extends PluginBase<PluginTypes> {
 
   private warningNotice!: Notice;
 
-  public showCompatibilityWarning(): void {
-    const message =
-      'Your Obsidian settings are incompatible with the "Better Markdown Links" plugin. Please disable "Use [[Wikilinks]]" and set "New link format" to "Relative path to file" in Obsidian settings.\nAlternatively, you can enable the "Ignore incompatible Obsidian settings" option in the plugin settings.';
-    console.warn(message);
-
-    if (this.warningNotice.messageEl.style.opacity === '0') {
-      const WARNING_NOTICE_DURATION_IN_MILLISECONDS = 10_000;
-      this.warningNotice = new Notice(message, WARNING_NOTICE_DURATION_IN_MILLISECONDS);
-    }
-  }
-
   protected override createSettingsManager(): PluginSettingsManager {
     return new PluginSettingsManager(this);
   }
