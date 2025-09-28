@@ -8,7 +8,6 @@ export class PluginSettings {
   public shouldAllowEmptyEmbedAlias = true;
   public shouldAutomaticallyConvertNewLinks = true;
   public shouldAutomaticallyUpdateLinksOnRenameOrMove = true;
-  public shouldIgnoreIncompatibleObsidianSettings = false;
   public shouldIncludeAttachmentExtensionToEmbedAlias = false;
   public shouldPreserveExistingLinkStyle = false;
   public shouldUseAngleBrackets = true;
@@ -41,10 +40,6 @@ export class PluginSettings {
   public getLinkStyle(isExistingLink: boolean): LinkStyle {
     if (isExistingLink && this.shouldPreserveExistingLinkStyle) {
       return LinkStyle.PreserveExisting;
-    }
-
-    if (this.shouldIgnoreIncompatibleObsidianSettings) {
-      return LinkStyle.Markdown;
     }
 
     return LinkStyle.ObsidianSettingsDefault;

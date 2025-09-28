@@ -7,10 +7,7 @@ import type { Except } from 'type-fest';
 
 import { TFile } from 'obsidian';
 import { normalizeOptionalProperties } from 'obsidian-dev-utils/ObjectUtils';
-import {
-  generateMarkdownLink as generateMarkdownLinkFull,
-  LinkPathStyle
-} from 'obsidian-dev-utils/obsidian/Link';
+import { generateMarkdownLink as generateMarkdownLinkFull } from 'obsidian-dev-utils/obsidian/Link';
 
 import type { Plugin } from './Plugin.ts';
 
@@ -53,7 +50,6 @@ function generateMarkdownLinkForPlugin(
 function getDefaultOptions(plugin: Plugin): Partial<GenerateMarkdownLinkFullOptions> {
   return normalizeOptionalProperties<Partial<GenerateMarkdownLinkFullOptions>>({
     isEmptyEmbedAliasAllowed: plugin.settings.shouldAllowEmptyEmbedAlias,
-    linkPathStyle: plugin.settings.shouldIgnoreIncompatibleObsidianSettings ? LinkPathStyle.RelativePathToTheNote : undefined,
     linkStyle: plugin.settings.getLinkStyle(false),
     shouldIncludeAttachmentExtensionToEmbedAlias: plugin.settings.shouldIncludeAttachmentExtensionToEmbedAlias,
     shouldUseAngleBrackets: plugin.settings.shouldUseAngleBrackets,
