@@ -1,12 +1,14 @@
 import type { FileManager } from 'obsidian';
-import type { GenerateMarkdownLinkOptions } from 'obsidian-dev-utils/obsidian/Link';
 
 import { TFile } from 'obsidian';
 import {
   normalizeOptionalProperties,
   removeUndefinedProperties
 } from 'obsidian-dev-utils/ObjectUtils';
-import { generateMarkdownLink } from 'obsidian-dev-utils/obsidian/Link';
+import {
+  generateMarkdownLink,
+  registerGenerateMarkdownLinkDefaultOptionsFn
+} from 'obsidian-dev-utils/obsidian/Link';
 import { registerPatch } from 'obsidian-dev-utils/obsidian/MonkeyAround';
 
 import type {
@@ -31,19 +33,21 @@ export function patchGenerateMarkdownLink(plugin: Plugin): void {
       }
     }
   });
-}
 
-function generateMarkdownLinkExtended(plugin: Plugin, options: GenerateMarkdownLinkExtendedOptions): string {
-  const fullOptions: GenerateMarkdownLinkOptions = {
-    app: plugin.app,
+  registerGenerateMarkdownLinkDefaultOptionsFn(plugin, () => ({
     isEmptyEmbedAliasAllowed: plugin.settings.shouldAllowEmptyEmbedAlias,
     shouldIncludeAttachmentExtensionToEmbedAlias: plugin.settings.shouldIncludeAttachmentExtensionToEmbedAlias,
     shouldUseAngleBrackets: plugin.settings.shouldUseAngleBrackets,
     shouldUseLeadingDotForRelativePaths: plugin.settings.shouldUseLeadingDot,
-    shouldUseLeadingSlashForAbsolutePaths: plugin.settings.shouldUseLeadingSlashForAbsolutePaths,
+    shouldUseLeadingSlashForAbsolutePaths: plugin.settings.shouldUseLeadingSlashForAbsolutePaths
+  }));
+}
+
+function generateMarkdownLinkExtended(plugin: Plugin, options: GenerateMarkdownLinkExtendedOptions): string {
+  return generateMarkdownLink({
+    app: plugin.app,
     ...options
-  };
-  return generateMarkdownLink(fullOptions);
+  });
 }
 
 function generateMarkdownLinkNative(plugin: Plugin, file: TFile, sourcePath: string, subpath?: string, alias?: string): string {
