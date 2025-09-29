@@ -23,11 +23,12 @@ import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/Rename
 
 import type { PluginTypes } from './PluginTypes.ts';
 
+import { ConvertLinksInEntireVaultCommand } from './Commands/ConvertLinksInEntireVaultCommand.ts';
+import { ConvertLinksInFileCommand } from './Commands/ConvertLinksInFileCommand.ts';
+import { ConvertLinksInFolderCommand } from './Commands/ConvertLinksInFolderCommand.ts';
 import { patchGenerateMarkdownLink } from './GenerateMarkdownLinkExtendedImpl.ts';
 import {
   applyLinkChangeUpdates,
-  convertLinksInCurrentFile,
-  convertLinksInEntireVault,
   convertLinksInFile
 } from './LinkConverter.ts';
 import { PluginSettingsManager } from './PluginSettingsManager.ts';
@@ -51,17 +52,9 @@ export class Plugin extends PluginBase<PluginTypes> {
 
     patchGenerateMarkdownLink(this);
 
-    this.addCommand({
-      checkCallback: (checking) => convertLinksInCurrentFile(this, checking),
-      id: 'convert-links-in-current-file',
-      name: 'Convert links in current file'
-    });
-
-    this.addCommand({
-      callback: () => convertLinksInEntireVault(this, this.abortSignal),
-      id: 'convert-links-in-entire-vault',
-      name: 'Convert links in entire vault'
-    });
+    new ConvertLinksInFileCommand(this).register();
+    new ConvertLinksInFolderCommand(this).register();
+    new ConvertLinksInEntireVaultCommand(this).register();
 
     this.registerEvent(this.app.vault.on('modify', convertAsyncToSync(this.handleModify.bind(this))));
 

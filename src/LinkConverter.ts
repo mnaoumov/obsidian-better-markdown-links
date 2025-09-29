@@ -1,9 +1,15 @@
-import type { TFile } from 'obsidian';
+import type {
+  TFile,
+  TFolder
+} from 'obsidian';
 import type { LinkChangeUpdate } from 'obsidian-typings';
 
 import { SilentError } from 'obsidian-dev-utils/Error';
 import { applyFileChanges } from 'obsidian-dev-utils/obsidian/FileChange';
-import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/FileSystem';
+import {
+  getMarkdownFiles,
+  isMarkdownFile
+} from 'obsidian-dev-utils/obsidian/FileSystem';
 import {
   generateMarkdownLink,
   splitSubpath,
@@ -12,7 +18,6 @@ import {
 import { loop } from 'obsidian-dev-utils/obsidian/Loop';
 import { confirm } from 'obsidian-dev-utils/obsidian/Modals/Confirm';
 import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
-import { getMarkdownFilesSorted } from 'obsidian-dev-utils/obsidian/Vault';
 
 import type { Plugin } from './Plugin.ts';
 
@@ -52,20 +57,6 @@ export function convertLinksInCurrentFile(plugin: Plugin, checking: boolean): bo
   return true;
 }
 
-export async function convertLinksInEntireVault(plugin: Plugin, abortSignal: AbortSignal): Promise<void> {
-  await loop({
-    abortSignal,
-    buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,
-    items: getMarkdownFilesSorted(plugin.app),
-    processItem: async (file) => {
-      await convertLinksInFile(plugin, file, abortSignal);
-    },
-    progressBarTitle: 'Better Markdown Links: Converting links in entire vault...',
-    shouldContinueOnError: true,
-    shouldShowProgressBar: true
-  });
-}
-
 export async function convertLinksInFile(plugin: Plugin, file: TFile, abortSignal: AbortSignal, shouldPromptForExcludedFile?: boolean): Promise<void> {
   abortSignal.throwIfAborted();
 
@@ -88,6 +79,22 @@ export async function convertLinksInFile(plugin: Plugin, file: TFile, abortSigna
     app: plugin.app,
     linkStyle: plugin.settings.getLinkStyle(true),
     newSourcePathOrFile: file
+  });
+}
+
+export async function convertLinksInFolder(plugin: Plugin, folder: TFolder, abortSignal: AbortSignal): Promise<void> {
+  await loop({
+    abortSignal,
+    buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,
+    items: getMarkdownFiles(plugin.app, folder, true),
+    processItem: async (file) => {
+      await convertLinksInFile(plugin, file, abortSignal);
+    },
+    progressBarTitle: folder.path === '/'
+      ? 'Better Markdown Links: Converting links in entire vault...'
+      : `Better Markdown Links: Converting links in folder "${folder.path}" ...`,
+    shouldContinueOnError: true,
+    shouldShowProgressBar: true
   });
 }
 
