@@ -86,7 +86,7 @@ export class Plugin extends PluginBase<PluginTypes> {
     };
 
     this.register(() => {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- This is a valid use of delete.
       delete this.app.fileManager.linkUpdaters[MARKDOWN_FILE_EXTENSION];
     });
   }
