@@ -12,6 +12,7 @@ class LegacySettings {
   public automaticallyConvertNewLinks = true;
   public automaticallyUpdateLinksOnRenameOrMove = true;
   public includeAttachmentExtensionToEmbedAlias = false;
+  public shouldUseLeadingDot = true;
   public useAngleBrackets = true;
   public useLeadingDot = true;
 }
@@ -44,7 +45,11 @@ export class PluginSettingsManager extends PluginSettingsManagerBase<PluginTypes
       }
 
       if (legacySettings.useLeadingDot !== undefined) {
-        legacySettings.shouldUseLeadingDot = legacySettings.useLeadingDot;
+        legacySettings.shouldUseLeadingDotForRelativePaths = legacySettings.useLeadingDot;
+      }
+
+      if (legacySettings.shouldUseLeadingDot !== undefined) {
+        legacySettings.shouldUseLeadingDotForRelativePaths = legacySettings.shouldUseLeadingDot;
       }
     });
   }

@@ -38,7 +38,7 @@ export function patchGenerateMarkdownLink(plugin: Plugin): void {
     isEmptyEmbedAliasAllowed: plugin.settings.shouldAllowEmptyEmbedAlias,
     shouldIncludeAttachmentExtensionToEmbedAlias: plugin.settings.shouldIncludeAttachmentExtensionToEmbedAlias,
     shouldUseAngleBrackets: plugin.settings.shouldUseAngleBrackets,
-    shouldUseLeadingDotForRelativePaths: plugin.settings.shouldUseLeadingDot,
+    shouldUseLeadingDotForRelativePaths: plugin.settings.shouldUseLeadingDotForRelativePaths,
     shouldUseLeadingSlashForAbsolutePaths: plugin.settings.shouldUseLeadingSlashForAbsolutePaths
   }));
 }

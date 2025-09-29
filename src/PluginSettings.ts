@@ -11,7 +11,7 @@ export class PluginSettings {
   public shouldIncludeAttachmentExtensionToEmbedAlias = false;
   public shouldPreserveExistingLinkStyle = false;
   public shouldUseAngleBrackets = true;
-  public shouldUseLeadingDot = true;
+  public shouldUseLeadingDotForRelativePaths = true;
   public shouldUseLeadingSlashForAbsolutePaths = true;
 
   public get excludePaths(): string[] {
