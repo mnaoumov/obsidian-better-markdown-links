@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.1.1
+
+- docs: fix example typo
+
 ## 3.1.0
 
 - feat: improve docs
