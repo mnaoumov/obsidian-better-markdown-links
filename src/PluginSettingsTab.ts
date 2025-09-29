@@ -10,10 +10,18 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
     this.containerEl.empty();
 
     new SettingEx(this.containerEl)
-      .setName('Should use leading dot')
-      .setDesc('Whether to use a leading dot in relative links.')
+      .setName('Should use leading dot for relative paths')
+      .setDesc(createFragment((f) => {
+        f.appendText('Whether to use a leading dot in relative links.');
+        f.createEl('br');
+        f.appendText('If enabled: ');
+        appendCodeBlock(f, '[[./relative/path/to/target]]');
+        f.createEl('br');
+        f.appendText('If disabled: ');
+        appendCodeBlock(f, '[[relative/path/to/target]]');
+      }))
       .addToggle((toggle) => {
-        this.bind(toggle, 'shouldUseLeadingDot');
+        this.bind(toggle, 'shouldUseLeadingDotForRelativePaths');
       });
 
     new SettingEx(this.containerEl)
@@ -33,7 +41,18 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
 
     new SettingEx(this.containerEl)
       .setName('Should use angle brackets')
-      .setDesc('Whether to use angle brackets in links.')
+      .setDesc(createFragment((f) => {
+        f.appendText('Whether to use angle brackets in links. Applicable only if ');
+        f.createEl('br');
+        appendCodeBlock(f, 'Use [[Wikilinks]]');
+        f.appendText(' Obsidian setting is disabled.');
+        f.createEl('br');
+        f.appendText('If enabled: ');
+        appendCodeBlock(f, '[alias](<path with spaces.md>)');
+        f.createEl('br');
+        f.appendText('If disabled: ');
+        appendCodeBlock(f, '[alias](path%20with%20spaces.md)');
+      }))
       .addToggle((toggle) => {
         this.bind(toggle, 'shouldUseAngleBrackets');
       });
@@ -63,14 +82,30 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
 
     new SettingEx(this.containerEl)
       .setName('Should allow empty embed alias')
-      .setDesc('Whether to allow empty embed alias. If disabled, empty alias will be replaced with the attachment name.')
+      .setDesc(createFragment((f) => {
+        f.appendText('Whether to allow empty embed alias. If disabled, empty alias will be replaced with the attachment name.');
+        f.createEl('br');
+        f.appendText('If enabled: ');
+        appendCodeBlock(f, '![](path/to/image.png)');
+        f.createEl('br');
+        f.appendText('If disabled: ');
+        appendCodeBlock(f, '![image](path/to/image.png)');
+      }))
       .addToggle((toggle) => {
         this.bind(toggle, 'shouldAllowEmptyEmbedAlias');
       });
 
     new SettingEx(this.containerEl)
       .setName('Should include attachment extension to embed alias')
-      .setDesc('Whether to include the extension of the attachment in the embed alias.')
+      .setDesc(createFragment((f) => {
+        f.appendText('Whether to include the extension of the attachment in the embed alias.');
+        f.createEl('br');
+        f.appendText('If enabled: ');
+        appendCodeBlock(f, '![image.png](path/to/image.png)');
+        f.createEl('br');
+        f.appendText('If disabled: ');
+        appendCodeBlock(f, '![image](path/to/image)');
+      }))
       .addToggle((toggle) => {
         this.bind(toggle, 'shouldIncludeAttachmentExtensionToEmbedAlias');
       });
