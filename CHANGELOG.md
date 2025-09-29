@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.1.0
+
+- feat: improve docs
+
 ## 3.0.0
 
 - refactor: switch to commands
