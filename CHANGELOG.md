@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## 3.0.0
+
+- refactor: switch to commands
+- fix: register default settings
+- chore: update libs
+- chore: lint
+- chore: update libs
+- refactor: copy recent implementation from `obsidian-dev-utils`
+- refactor: extract GenerateMarkdownLinkExtended
+- fix: remove mention of compatibility setting
+- chore: update libs
+- feat: stop overriding Obsidian settings
+  - Now the plugin generates the links according to the current Obsidian settings and does not try override them. Also the warning about incompatible settings is no longer shown
+  - BREAKING CHANGE: It is no longer possible to override the Obsidian settings behavior with the plugin. You need to modify Obsidian settings accordingly.
+- feat: add config setting shouldUseLeadingSlashForAbsolutePath
+  - fix #23
+- fix: compilation
+- chore: add commit script
+- chore: update libs
+- chore: enable conventional commits
+
 ## 2.13.19
 
 - Minor changes
