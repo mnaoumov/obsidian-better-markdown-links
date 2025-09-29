@@ -104,7 +104,7 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
         appendCodeBlock(f, '![image.png](path/to/image.png)');
         f.createEl('br');
         f.appendText('If disabled: ');
-        appendCodeBlock(f, '![image](path/to/image)');
+        appendCodeBlock(f, '![image](path/to/image.png)');
       }))
       .addToggle((toggle) => {
         this.bind(toggle, 'shouldIncludeAttachmentExtensionToEmbedAlias');
