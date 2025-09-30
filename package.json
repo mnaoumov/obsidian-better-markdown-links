@@ -14,9 +14,9 @@
     "format:check": "obsidian-dev-utils format:check",
     "lint": "obsidian-dev-utils lint",
     "lint:fix": "obsidian-dev-utils lint:fix",
+    "prepare": "husky",
     "spellcheck": "obsidian-dev-utils spellcheck",
-    "version": "obsidian-dev-utils version",
-    "prepare": "husky"
+    "version": "obsidian-dev-utils version"
   },
   "keywords": [],
   "author": "mnaoumov",
