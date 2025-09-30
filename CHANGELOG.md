@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.1.2
+
+- chore: clean empty hook
+
 ## 3.1.1
 
 - docs: fix example typo
