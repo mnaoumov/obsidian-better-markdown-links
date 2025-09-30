@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.1.3
+
+- chore: reorder commands
+
 ## 3.1.2
 
 - chore: clean empty hook
