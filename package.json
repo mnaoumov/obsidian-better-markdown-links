@@ -22,7 +22,7 @@
   "author": "mnaoumov",
   "license": "MIT",
   "devDependencies": {
-    "@commitlint/cli": "^20.0.0",
+    "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
     "@commitlint/types": "^20.0.0",
     "@tsconfig/strictest": "latest",
