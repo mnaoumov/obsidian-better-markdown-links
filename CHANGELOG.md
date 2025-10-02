@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 3.1.4
+
+- refactor: remove unused
+- chore: update libs
+
 ## 3.1.3
 
 - chore: reorder commands
