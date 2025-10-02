@@ -1,7 +1,6 @@
 import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
 import {
-  Notice,
   TAbstractFile,
   TFile
 } from 'obsidian';
@@ -37,8 +36,6 @@ import { PluginSettingsTab } from './PluginSettingsTab.ts';
 export class Plugin extends PluginBase<PluginTypes> {
   public readonly processFileAbortControllers = new Map<string, AbortController>();
 
-  private warningNotice!: Notice;
-
   protected override createSettingsManager(): PluginSettingsManager {
     return new PluginSettingsManager(this);
   }
@@ -68,9 +65,6 @@ export class Plugin extends PluginBase<PluginTypes> {
       };
       return settings;
     });
-
-    this.warningNotice = new Notice('');
-    this.warningNotice.hide();
 
     this.app.fileManager.linkUpdaters[MARKDOWN_FILE_EXTENSION] = {
       applyUpdates: (file, updates): Promise<void> => applyLinkChangeUpdates(this, file, updates),
