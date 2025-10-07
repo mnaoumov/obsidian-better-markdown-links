@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 3.1.5
+
+- chore: update libs
+- chore: enable markdownlint
+
 ## 3.1.4
 
 - refactor: remove unused
