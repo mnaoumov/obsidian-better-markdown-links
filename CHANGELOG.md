@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 3.1.10
+
+- chore: format
+- chore: update libs
+- fix: swallow silent error
+- chore: update libs
+
 ## 3.1.9
 
 - chore: update libs
