@@ -33,29 +33,6 @@ export async function applyLinkChangeUpdates(plugin: Plugin, file: TFile, update
   }
 }
 
-async function applyLinkChangeUpdatesImpl(plugin: Plugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
-  let processFileAbortController = plugin.processFileAbortControllers.get(file.path);
-  processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
-  processFileAbortController = new AbortController();
-  plugin.processFileAbortControllers.set(file.path, processFileAbortController);
-
-  await applyFileChanges(
-    plugin.app,
-    file,
-    () => {
-      return updates.map((update) => ({
-        newContent: fixChange(plugin, update.change, file),
-        oldContent: update.reference.original,
-        reference: update.reference
-      }));
-    },
-    {
-      abortSignal: processFileAbortController.signal
-    },
-    false
-  );
-}
-
 export function convertLinksInCurrentFile(plugin: Plugin, checking: boolean): boolean {
   const activeFile = plugin.app.workspace.getActiveFile();
   if (!activeFile || !isMarkdownFile(plugin.app, activeFile)) {
@@ -138,4 +115,27 @@ export function fixChange(plugin: Plugin, change: string, sourceFile: TFile): st
     subpath,
     targetPathOrFile: targetFile
   });
+}
+
+async function applyLinkChangeUpdatesImpl(plugin: Plugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
+  let processFileAbortController = plugin.processFileAbortControllers.get(file.path);
+  processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
+  processFileAbortController = new AbortController();
+  plugin.processFileAbortControllers.set(file.path, processFileAbortController);
+
+  await applyFileChanges(
+    plugin.app,
+    file,
+    () => {
+      return updates.map((update) => ({
+        newContent: fixChange(plugin, update.change, file),
+        oldContent: update.reference.original,
+        reference: update.reference
+      }));
+    },
+    {
+      abortSignal: processFileAbortController.signal
+    },
+    false
+  );
 }
