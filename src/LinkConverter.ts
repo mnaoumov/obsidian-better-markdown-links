@@ -4,6 +4,7 @@ import type {
 } from 'obsidian';
 import type { LinkChangeUpdate } from 'obsidian-typings';
 
+import { handleSilentError } from 'obsidian-dev-utils/Async';
 import { SilentError } from 'obsidian-dev-utils/Error';
 import { applyFileChanges } from 'obsidian-dev-utils/obsidian/FileChange';
 import {
@@ -22,6 +23,17 @@ import { addToQueue } from 'obsidian-dev-utils/obsidian/Queue';
 import type { Plugin } from './Plugin.ts';
 
 export async function applyLinkChangeUpdates(plugin: Plugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
+  try {
+    await applyLinkChangeUpdatesImpl(plugin, file, updates);
+  } catch (error) {
+    if (handleSilentError(error)) {
+      return;
+    }
+    throw error;
+  }
+}
+
+async function applyLinkChangeUpdatesImpl(plugin: Plugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
   let processFileAbortController = plugin.processFileAbortControllers.get(file.path);
   processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
   processFileAbortController = new AbortController();
