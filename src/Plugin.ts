@@ -1,11 +1,19 @@
+import type {
+  OpenViewState,
+  PaneType
+} from 'obsidian';
 import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
 import {
   TAbstractFile,
-  TFile
+  TFile,
+  Workspace
 } from 'obsidian';
 import { abortSignalAny } from 'obsidian-dev-utils/AbortController';
-import { convertAsyncToSync } from 'obsidian-dev-utils/Async';
+import {
+  convertAsyncToSync,
+  handleSilentError
+} from 'obsidian-dev-utils/Async';
 import { SilentError } from 'obsidian-dev-utils/Error';
 import {
   noop,
@@ -17,6 +25,7 @@ import {
   getAllLinks,
   getCacheSafe
 } from 'obsidian-dev-utils/obsidian/MetadataCache';
+import { registerPatch } from 'obsidian-dev-utils/obsidian/MonkeyAround';
 import { PluginBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginBase';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
@@ -32,6 +41,8 @@ import {
 } from './LinkConverter.ts';
 import { PluginSettingsManager } from './PluginSettingsManager.ts';
 import { PluginSettingsTab } from './PluginSettingsTab.ts';
+
+type OpenLinkTextFn = Workspace['openLinkText'];
 
 export class Plugin extends PluginBase<PluginTypes> {
   public readonly processFileAbortControllers = new Map<string, AbortController>();
@@ -75,6 +86,14 @@ export class Plugin extends PluginBase<PluginTypes> {
     this.register(() => {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- This is a valid use of delete.
       delete this.app.fileManager.linkUpdaters[MARKDOWN_FILE_EXTENSION];
+    });
+
+    const that = this;
+    registerPatch(this, Workspace.prototype, {
+      openLinkText: (next: OpenLinkTextFn): OpenLinkTextFn =>
+        function openLinkText(this: Workspace, linktext: string, sourcePath: string, newLeaf?: boolean | PaneType, openViewState?: OpenViewState) {
+          return that.openLinkText(next, this, linktext, sourcePath, newLeaf, openViewState);
+        }
     });
   }
 
@@ -122,6 +141,30 @@ export class Plugin extends PluginBase<PluginTypes> {
       }
     } finally {
       this.processFileAbortControllers.delete(file.path);
+    }
+  }
+
+  private async openLinkText(
+    next: OpenLinkTextFn,
+    workspace: Workspace,
+    linktext: string,
+    sourcePath: string,
+    newLeaf?: boolean | PaneType,
+    openViewState?: OpenViewState
+  ): Promise<void> {
+    await next.call(workspace, linktext, sourcePath, newLeaf, openViewState);
+    const sourceFile = this.app.vault.getFileByPath(sourcePath);
+    if (!sourceFile) {
+      return;
+    }
+
+    try {
+      await this.handleModify(sourceFile);
+    } catch (error) {
+      if (handleSilentError(error)) {
+        return;
+      }
+      throw error;
     }
   }
 }
