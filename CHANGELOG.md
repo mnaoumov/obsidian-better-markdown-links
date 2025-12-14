@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 3.2.0
+
+- feat: ensure links created on click are converted re #31
+- chore: update libs
+
 ## 3.1.14
 
 - chore: update libs
