@@ -40,7 +40,12 @@ export function convertLinksInCurrentFile(plugin: Plugin, checking: boolean): bo
   }
 
   if (!checking) {
-    addToQueue(plugin.app, (abortSignal) => convertLinksInFile(plugin, activeFile, abortSignal, true), plugin.abortSignal);
+    addToQueue({
+      abortSignal: plugin.abortSignal,
+      app: plugin.app,
+      operationFn: (abortSignal) => convertLinksInFile(plugin, activeFile, abortSignal, true),
+      operationName: 'convertLinksInCurrentFile'
+    });
   }
 
   return true;

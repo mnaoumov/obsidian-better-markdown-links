@@ -1,3 +1,5 @@
+import type { TFolder } from 'obsidian';
+
 import {
   FolderCommandBase,
   FolderCommandInvocationBase
@@ -34,8 +36,8 @@ export class ConvertLinksInFolderCommand extends FolderCommandBase<Plugin> {
     });
   }
 
-  protected override createCommandInvocation(): FolderCommandInvocationBase<Plugin> {
-    return new ConvertLinksInFolderCommandInvocation(this.plugin);
+  protected override createCommandInvocationForFolder(folder: null | TFolder): FolderCommandInvocationBase<Plugin> {
+    return new ConvertLinksInFolderCommandInvocation(this.plugin, folder);
   }
 
   protected override shouldAddToFolderMenu(): boolean {
