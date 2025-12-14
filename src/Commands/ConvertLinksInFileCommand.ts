@@ -37,8 +37,8 @@ export class ConvertLinksInFileCommand extends FileCommandBase<Plugin> {
     });
   }
 
-  protected override createCommandInvocation(): FileCommandInvocationBase<Plugin> {
-    return new ConvertLinksInFileCommandInvocation(this.plugin);
+  protected override createCommandInvocationForFile(file: null | TFile): FileCommandInvocationBase<Plugin> {
+    return new ConvertLinksInFileCommandInvocation(this.plugin, file);
   }
 
   protected override shouldAddToFileMenu(file: TFile): boolean {
