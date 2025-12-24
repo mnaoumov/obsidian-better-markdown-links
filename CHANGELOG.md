@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 3.2.1
+
+- chore: update libs
+- fix: suggestion detection in another window re #25
+
 ## 3.2.0
 
 - feat: ensure links created on click are converted re #31
