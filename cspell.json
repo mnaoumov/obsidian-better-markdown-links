@@ -11,6 +11,7 @@
     "Backlinks",
     "collab",
     "creatordate",
+    "excalidraw",
     "hotreload",
     "lezer",
     "Linkpath",
@@ -21,6 +22,7 @@
     "outfile",
     "postversion",
     "preversion",
+    "tldraw",
     "tsbuildinfo",
     "Wikilink",
     "Wikilinks"

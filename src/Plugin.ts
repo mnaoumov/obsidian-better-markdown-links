@@ -117,6 +117,11 @@ export class Plugin extends PluginBase<PluginTypes> {
       return;
     }
 
+    if (this.settings.isPathIgnored(file.path)) {
+      this.consoleDebug(`File ${file.path} is ignored in plugin settings, skipping`);
+      return;
+    }
+
     processFileAbortController = new AbortController();
     this.processFileAbortControllers.set(file.path, processFileAbortController);
     try {
