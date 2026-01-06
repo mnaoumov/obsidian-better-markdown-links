@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.2.3
+
+- feat: show default value for excluded paths
+
 ## 3.2.2
 
 - fix: exclude excalidraw/tldraw files by default
