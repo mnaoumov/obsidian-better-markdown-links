@@ -152,7 +152,9 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginTypes> {
         f.appendText('If the setting is empty, no notes are excluded');
       }))
       .addMultipleText((multipleText) => {
-        this.bind(multipleText, 'excludePaths');
+        this.bind(multipleText, 'excludePaths', {
+          shouldShowPlaceholderForDefaultValues: false
+        });
       });
   }
 }
