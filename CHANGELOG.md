@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.2.2
+
+- fix: exclude excalidraw/tldraw files by default
+  - re <https://github.com/zsviczian/obsidian-excalidraw-plugin/issues/2594>
+  - re <https://github.com/tldraw-in-obsidian/tldraw-in-obsidian/issues/186>
+
 ## 3.2.1
 
 - chore: update libs
