@@ -37,6 +37,10 @@ export class PluginSettings {
   private _includePaths: string[] = [];
   private _includePathsRegExp = ALWAYS_MATCH_REG_EXP;
 
+  public constructor() {
+    this.excludePaths = ['/.+\\.excalidraw\\.md$/', '/.+\\.tldraw\\.md$/'];
+  }
+
   public getLinkStyle(isExistingLink: boolean): LinkStyle {
     if (isExistingLink && this.shouldPreserveExistingLinkStyle) {
       return LinkStyle.PreserveExisting;
