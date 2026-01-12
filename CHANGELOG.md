@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.2.4
+
+- chore: update libs
+
 ## 3.2.3
 
 - feat: show default value for excluded paths
