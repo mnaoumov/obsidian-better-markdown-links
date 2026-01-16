@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.3.0
+
+- refactor: path settings
+
 ## 3.2.4
 
 - chore: update libs
