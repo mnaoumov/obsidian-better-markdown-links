@@ -1,8 +1,5 @@
 import { LinkStyle } from 'obsidian-dev-utils/obsidian/Link';
-import { escapeRegExp } from 'obsidian-dev-utils/RegExp';
-
-const ALWAYS_MATCH_REG_EXP = /(?:)/;
-const NEVER_MATCH_REG_EXP = /$./;
+import { PathSettings } from 'obsidian-dev-utils/obsidian/Plugin/PathSettings';
 
 export class PluginSettings {
   public shouldAllowEmptyEmbedAlias = true;
@@ -15,27 +12,22 @@ export class PluginSettings {
   public shouldUseLeadingSlashForAbsolutePaths = true;
 
   public get excludePaths(): string[] {
-    return this._excludePaths;
+    return this._pathSettings.excludePaths;
   }
 
   public set excludePaths(value: string[]) {
-    this._excludePaths = value.filter(Boolean);
-    this._excludePathsRegExp = makeRegExp(this._excludePaths, NEVER_MATCH_REG_EXP);
+    this._pathSettings.excludePaths = value;
   }
 
   public get includePaths(): string[] {
-    return this._includePaths;
+    return this._pathSettings.includePaths;
   }
 
   public set includePaths(value: string[]) {
-    this._includePaths = value.filter(Boolean);
-    this._includePathsRegExp = makeRegExp(this._includePaths, ALWAYS_MATCH_REG_EXP);
+    this._pathSettings.includePaths = value;
   }
 
-  private _excludePaths: string[] = [];
-  private _excludePathsRegExp = NEVER_MATCH_REG_EXP;
-  private _includePaths: string[] = [];
-  private _includePathsRegExp = ALWAYS_MATCH_REG_EXP;
+  private readonly _pathSettings = new PathSettings();
 
   public constructor() {
     this.excludePaths = ['/.+\\.excalidraw\\.md$/', '/.+\\.tldraw\\.md$/'];
@@ -50,31 +42,6 @@ export class PluginSettings {
   }
 
   public isPathIgnored(path: string): boolean {
-    return !this._includePathsRegExp.test(path) || this._excludePathsRegExp.test(path);
+    return this._pathSettings.isPathIgnored(path);
   }
-}
-
-function makeRegExp(paths: string[], defaultRegExp: RegExp): RegExp {
-  if (paths.length === 0) {
-    return defaultRegExp;
-  }
-
-  const regExpStrCombined = paths.map((path) => {
-    if (path === '/') {
-      return defaultRegExp.source;
-    }
-
-    if (path.startsWith('/') && path.endsWith('/')) {
-      return path.slice(1, -1);
-    }
-
-    if (path.endsWith('/')) {
-      return `^${escapeRegExp(path)}`;
-    }
-
-    return `^${escapeRegExp(path)}(/|$)`;
-  })
-    .map((regExpStr) => `(${regExpStr})`)
-    .join('|');
-  return new RegExp(regExpStrCombined);
 }
