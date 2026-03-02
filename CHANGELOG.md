@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 3.4.0
+
+- fix: remove link update hack
+- feat: add to submenu
+- fix: changed api re #33
+- chore: update libs
+
 ## 3.3.1
 
 - chore: update libs
