@@ -27,12 +27,14 @@ class ConvertLinksInFileCommandInvocation extends FileCommandInvocationBase<Plug
 export class ConvertLinksInFileCommand extends FileCommandBase<Plugin> {
   public constructor(plugin: Plugin) {
     super({
+      fileMenuItemName: 'Convert links in file',
+      fileMenuSubmenuIcon: 'link-2',
+      filesMenuItemName: 'Convert links in files',
       icon: 'link',
       id: 'convert-links-in-current-file',
       name: 'Convert links in current file',
-      fileMenuItemName: 'Convert links in file',
-      filesMenuItemName: 'Convert links in files',
-      plugin
+      plugin,
+      shouldAddCommandToSubmenu: true
     });
   }
 
