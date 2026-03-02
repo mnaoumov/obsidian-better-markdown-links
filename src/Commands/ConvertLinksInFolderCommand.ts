@@ -24,14 +24,13 @@ class ConvertLinksInFolderCommandInvocation extends FolderCommandInvocationBase<
 }
 
 export class ConvertLinksInFolderCommand extends FolderCommandBase<Plugin> {
-  protected override fileMenuItemName = 'Convert links in folder';
-  protected override filesMenuItemName = 'Convert links in folders';
-
   public constructor(plugin: Plugin) {
     super({
       icon: 'link',
       id: 'convert-links-in-current-folder',
       name: 'Convert links in current folder',
+      fileMenuItemName: 'Convert links in folder',
+      filesMenuItemName: 'Convert links in folders',
       plugin
     });
   }
