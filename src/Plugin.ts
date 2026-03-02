@@ -77,7 +77,7 @@ export class Plugin extends PluginBase<PluginTypes> {
       return settings;
     });
 
-    this.app.fileManager.linkUpdaters[MARKDOWN_FILE_EXTENSION] = {
+    this.app.metadataCache.linkUpdaters[MARKDOWN_FILE_EXTENSION] = {
       applyUpdates: (file, updates): Promise<void> => applyLinkChangeUpdates(this, file, updates),
       iterateReferences: noop,
       renameSubpath: noopAsync
@@ -85,7 +85,7 @@ export class Plugin extends PluginBase<PluginTypes> {
 
     this.register(() => {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- This is a valid use of delete.
-      delete this.app.fileManager.linkUpdaters[MARKDOWN_FILE_EXTENSION];
+      delete this.app.metadataCache.linkUpdaters[MARKDOWN_FILE_EXTENSION];
     });
 
     const that = this;
