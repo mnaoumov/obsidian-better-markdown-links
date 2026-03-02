@@ -15,11 +15,6 @@ import {
   handleSilentError
 } from 'obsidian-dev-utils/Async';
 import { SilentError } from 'obsidian-dev-utils/Error';
-import {
-  noop,
-  noopAsync
-} from 'obsidian-dev-utils/Function';
-import { MARKDOWN_FILE_EXTENSION } from 'obsidian-dev-utils/obsidian/FileSystem';
 import { convertLink } from 'obsidian-dev-utils/obsidian/Link';
 import {
   getAllLinks,
@@ -35,10 +30,7 @@ import { ConvertLinksInEntireVaultCommand } from './Commands/ConvertLinksInEntir
 import { ConvertLinksInFileCommand } from './Commands/ConvertLinksInFileCommand.ts';
 import { ConvertLinksInFolderCommand } from './Commands/ConvertLinksInFolderCommand.ts';
 import { patchGenerateMarkdownLink } from './GenerateMarkdownLinkExtendedImpl.ts';
-import {
-  applyLinkChangeUpdates,
-  convertLinksInFile
-} from './LinkConverter.ts';
+import { convertLinksInFile } from './LinkConverter.ts';
 import { PluginSettingsManager } from './PluginSettingsManager.ts';
 import { PluginSettingsTab } from './PluginSettingsTab.ts';
 
@@ -75,17 +67,6 @@ export class Plugin extends PluginBase<PluginTypes> {
         shouldUpdateFileNameAliases: true
       };
       return settings;
-    });
-
-    this.app.metadataCache.linkUpdaters[MARKDOWN_FILE_EXTENSION] = {
-      applyUpdates: (file, updates): Promise<void> => applyLinkChangeUpdates(this, file, updates),
-      iterateReferences: noop,
-      renameSubpath: noopAsync
-    };
-
-    this.register(() => {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- This is a valid use of delete.
-      delete this.app.metadataCache.linkUpdaters[MARKDOWN_FILE_EXTENSION];
     });
 
     const that = this;
