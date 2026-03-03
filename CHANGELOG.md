@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.4.1
+
+- chore: update libs
+
 ## 3.4.0
 
 - fix: remove link update hack
