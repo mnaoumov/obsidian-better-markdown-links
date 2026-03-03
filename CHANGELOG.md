@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.4.2
+
+- resubmit
+
 ## 3.4.1
 
 - chore: update libs
