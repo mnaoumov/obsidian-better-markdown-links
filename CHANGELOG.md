@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.4.4
+
+- chore: update template
+
 ## 3.4.3
 
 - resubmit
