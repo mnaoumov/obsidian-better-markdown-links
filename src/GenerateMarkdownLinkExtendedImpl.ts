@@ -4,12 +4,12 @@ import { TFile } from 'obsidian';
 import {
   normalizeOptionalProperties,
   removeUndefinedProperties
-} from 'obsidian-dev-utils/ObjectUtils';
+} from 'obsidian-dev-utils/object-utils';
 import {
   generateMarkdownLink,
   registerGenerateMarkdownLinkDefaultOptionsFn
 } from 'obsidian-dev-utils/obsidian/Link';
-import { registerPatch } from 'obsidian-dev-utils/obsidian/MonkeyAround';
+import { registerPatch } from 'obsidian-dev-utils/obsidian/monkey-around';
 
 import type {
   GenerateMarkdownLinkExtendedOptions,
