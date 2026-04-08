@@ -13,15 +13,15 @@ import { abortSignalAny } from 'obsidian-dev-utils/AbortController';
 import {
   convertAsyncToSync,
   handleSilentError
-} from 'obsidian-dev-utils/Async';
-import { SilentError } from 'obsidian-dev-utils/Error';
+} from 'obsidian-dev-utils/async';
+import { SilentError } from 'obsidian-dev-utils/error';
 import { convertLink } from 'obsidian-dev-utils/obsidian/Link';
 import {
   getAllLinks,
   getCacheSafe
 } from 'obsidian-dev-utils/obsidian/MetadataCache';
-import { registerPatch } from 'obsidian-dev-utils/obsidian/MonkeyAround';
-import { PluginBase } from 'obsidian-dev-utils/obsidian/Plugin/PluginBase';
+import { registerPatch } from 'obsidian-dev-utils/obsidian/monkey-around';
+import { PluginBase } from 'obsidian-dev-utils/obsidian/plugin/plugin-base';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
 
 import type { PluginTypes } from './PluginTypes.ts';
