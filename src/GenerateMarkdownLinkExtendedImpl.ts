@@ -8,7 +8,7 @@ import {
 import {
   generateMarkdownLink,
   registerGenerateMarkdownLinkDefaultOptionsFn
-} from 'obsidian-dev-utils/obsidian/Link';
+} from 'obsidian-dev-utils/obsidian/link';
 import { registerPatch } from 'obsidian-dev-utils/obsidian/monkey-around';
 
 import type {

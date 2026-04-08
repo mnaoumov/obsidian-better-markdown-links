@@ -3,8 +3,8 @@ import type { TFile } from 'obsidian';
 import {
   FileCommandBase,
   FileCommandInvocationBase
-} from 'obsidian-dev-utils/obsidian/Commands/FileCommandBase';
-import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/FileSystem';
+} from 'obsidian-dev-utils/obsidian/commands/file-command-base';
+import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/file-system';
 
 import type { Plugin } from '../Plugin.ts';
 

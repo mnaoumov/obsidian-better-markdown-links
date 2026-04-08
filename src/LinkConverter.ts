@@ -6,18 +6,18 @@ import type { LinkChangeUpdate } from 'obsidian-typings';
 
 import { handleSilentError } from 'obsidian-dev-utils/async';
 import { SilentError } from 'obsidian-dev-utils/error';
-import { applyFileChanges } from 'obsidian-dev-utils/obsidian/FileChange';
+import { applyFileChanges } from 'obsidian-dev-utils/obsidian/file-change';
 import {
   getMarkdownFiles,
   isMarkdownFile
-} from 'obsidian-dev-utils/obsidian/FileSystem';
+} from 'obsidian-dev-utils/obsidian/file-system';
 import {
   generateMarkdownLink,
   splitSubpath,
   updateLinksInFile
-} from 'obsidian-dev-utils/obsidian/Link';
-import { loop } from 'obsidian-dev-utils/obsidian/Loop';
-import { confirm } from 'obsidian-dev-utils/obsidian/Modals/Confirm';
+} from 'obsidian-dev-utils/obsidian/link';
+import { loop } from 'obsidian-dev-utils/obsidian/loop';
+import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
 import { addToQueue } from 'obsidian-dev-utils/obsidian/queue';
 
 import type { Plugin } from './Plugin.ts';
