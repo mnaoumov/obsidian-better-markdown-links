@@ -1,5 +1,5 @@
-import { LinkStyle } from 'obsidian-dev-utils/obsidian/Link';
-import { PathSettings } from 'obsidian-dev-utils/obsidian/Plugin/PathSettings';
+import { LinkStyle } from 'obsidian-dev-utils/obsidian/link';
+import { PathSettings } from 'obsidian-dev-utils/obsidian/plugin/path-settings';
 
 export class PluginSettings {
   public shouldAllowEmptyEmbedAlias = true;

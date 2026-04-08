@@ -1,7 +1,7 @@
 import type { MaybeReturn } from 'obsidian-dev-utils/type';
 
 import { PluginSettingsManagerBase } from 'obsidian-dev-utils/obsidian/plugin/plugin-settings-manager-base';
-import { isValidRegExp } from 'obsidian-dev-utils/RegExp';
+import { isValidRegExp } from 'obsidian-dev-utils/reg-exp';
 
 import type { PluginTypes } from './PluginTypes.ts';
 

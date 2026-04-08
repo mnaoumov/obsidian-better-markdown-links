@@ -2,27 +2,27 @@ import type {
   OpenViewState,
   PaneType
 } from 'obsidian';
-import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
+import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/rename-delete-handler';
 
 import {
   TAbstractFile,
   TFile,
   Workspace
 } from 'obsidian';
-import { abortSignalAny } from 'obsidian-dev-utils/AbortController';
+import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
 import {
   convertAsyncToSync,
   handleSilentError
 } from 'obsidian-dev-utils/async';
 import { SilentError } from 'obsidian-dev-utils/error';
-import { convertLink } from 'obsidian-dev-utils/obsidian/Link';
+import { convertLink } from 'obsidian-dev-utils/obsidian/link';
 import {
   getAllLinks,
   getCacheSafe
-} from 'obsidian-dev-utils/obsidian/MetadataCache';
+} from 'obsidian-dev-utils/obsidian/metadata-cache';
 import { registerPatch } from 'obsidian-dev-utils/obsidian/monkey-around';
 import { PluginBase } from 'obsidian-dev-utils/obsidian/plugin/plugin-base';
-import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/RenameDeleteHandler';
+import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/rename-delete-handler';
 
 import type { PluginTypes } from './PluginTypes.ts';
 
