@@ -1,5 +1,5 @@
 /**
- * @packageDocumentation
+ * @file
  *
  * A set of types helpers to use the extended implementation of the {@link FileManager.generateMarkdownLink} function from Obsidian.
  *
