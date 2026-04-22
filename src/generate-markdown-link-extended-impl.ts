@@ -1,4 +1,5 @@
 import type { FileManager } from 'obsidian';
+import type { ReadonlyDeep } from 'type-fest';
 
 import { TFile } from 'obsidian';
 import {
@@ -20,7 +21,7 @@ import type { PluginSettings } from './plugin-settings.ts';
 
 export type GenerateMarkdownLinkNativeFn = FileManager['generateMarkdownLink'];
 
-export function patchGenerateMarkdownLink(plugin: Plugin, getSettings: () => PluginSettings): void {
+export function patchGenerateMarkdownLink(plugin: Plugin, getSettings: () => ReadonlyDeep<PluginSettings>): void {
   registerPatch(plugin, plugin.app.fileManager, {
     generateMarkdownLink(): GenerateMarkdownLinkExtendedWrapper & GenerateMarkdownLinkNativeFn {
       return Object.assign(native, { extended });

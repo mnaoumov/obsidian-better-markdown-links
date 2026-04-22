@@ -28,8 +28,6 @@ import { PluginSettingsTabComponent } from 'obsidian-dev-utils/obsidian/plugin/c
 import { PluginBase } from 'obsidian-dev-utils/obsidian/plugin/plugin';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/rename-delete-handler';
 
-import type { PluginSettings } from './plugin-settings.ts';
-
 import { ConvertLinksInEntireVaultCommand } from './commands/convert-links-in-entire-vault-command.ts';
 import { ConvertLinksInFileCommand } from './commands/convert-links-in-file-command.ts';
 import { ConvertLinksInFolderCommand } from './commands/convert-links-in-folder-command.ts';
@@ -43,14 +41,10 @@ type OpenLinkTextFn = Workspace['openLinkText'];
 export class Plugin extends PluginBase {
   public readonly processFileAbortControllers = new Map<string, AbortController>();
 
-  private readonly pluginSettingsComponent: PluginSettingsComponent;
+  public readonly pluginSettingsComponent: PluginSettingsComponent;
 
   public get abortSignal(): AbortSignal {
     return this.abortSignalComponent.abortSignal;
-  }
-
-  public get pluginSettings(): PluginSettings {
-    return this.pluginSettingsComponent.settings as PluginSettings;
   }
 
   public constructor(app: App, manifest: PluginManifest) {
@@ -73,7 +67,7 @@ export class Plugin extends PluginBase {
   protected override async onLayoutReady(): Promise<void> {
     await super.onLayoutReady();
 
-    patchGenerateMarkdownLink(this, () => this.pluginSettings);
+    patchGenerateMarkdownLink(this, () => this.pluginSettingsComponent.settings);
 
     this.registerComponent({ component: new CommandComponent(this, new ConvertLinksInFileCommand(this)) });
     this.registerComponent({ component: new CommandComponent(this, new ConvertLinksInFolderCommand(this)) });
@@ -84,9 +78,9 @@ export class Plugin extends PluginBase {
     registerRenameDeleteHandlers(this, () => {
       const settings: Partial<RenameDeleteHandlerSettings> = {
         isPathIgnored: (path) => {
-          return this.pluginSettings.isPathIgnored(path);
+          return this.pluginSettingsComponent.settings.isPathIgnored(path);
         },
-        shouldHandleRenames: this.pluginSettings.shouldAutomaticallyUpdateLinksOnRenameOrMove,
+        shouldHandleRenames: this.pluginSettingsComponent.settings.shouldAutomaticallyUpdateLinksOnRenameOrMove,
         shouldUpdateFileNameAliases: true
       };
       return settings;
@@ -112,7 +106,7 @@ export class Plugin extends PluginBase {
     processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
     this.processFileAbortControllers.delete(file.path);
 
-    if (!this.pluginSettings.shouldAutomaticallyConvertNewLinks) {
+    if (!this.pluginSettingsComponent.settings.shouldAutomaticallyConvertNewLinks) {
       return;
     }
 
@@ -121,7 +115,7 @@ export class Plugin extends PluginBase {
       return;
     }
 
-    if (this.pluginSettings.isPathIgnored(file.path)) {
+    if (this.pluginSettingsComponent.settings.isPathIgnored(file.path)) {
       this.consoleDebugComponent.debug(`File ${file.path} is ignored in plugin settings, skipping`);
       return;
     }
@@ -141,7 +135,7 @@ export class Plugin extends PluginBase {
           link.original !== convertLink({
             app: this.app,
             link,
-            linkStyle: this.pluginSettings.getLinkStyle(true),
+            linkStyle: this.pluginSettingsComponent.settings.getLinkStyle(true),
             newSourcePathOrFile: file
           })
         )

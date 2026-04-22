@@ -53,7 +53,7 @@ export function convertLinksInCurrentFile(plugin: Plugin, checking: boolean): bo
 
 export async function convertLinksInFile(plugin: Plugin, file: TFile, abortSignal: AbortSignal, shouldPromptForExcludedFile?: boolean): Promise<void> {
   abortSignal.throwIfAborted();
-  const settings = plugin.pluginSettings;
+  const settings = plugin.pluginSettingsComponent.settings;
 
   if (settings.isPathIgnored(file.path)) {
     if (!shouldPromptForExcludedFile) {
@@ -116,7 +116,7 @@ export function fixChange(plugin: Plugin, change: string, sourceFile: TFile): st
     alias,
     app: plugin.app,
     isEmbed,
-    linkStyle: plugin.pluginSettings.getLinkStyle(false),
+    linkStyle: plugin.pluginSettingsComponent.settings.getLinkStyle(false),
     sourcePathOrFile: sourceFile,
     subpath,
     targetPathOrFile: targetFile
