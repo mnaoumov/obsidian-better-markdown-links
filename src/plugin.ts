@@ -50,10 +50,7 @@ export class Plugin extends PluginBase {
   public constructor(app: App, manifest: PluginManifest) {
     super(app, manifest);
     this.pluginSettingsComponent = this.registerComponent({
-      component: new PluginSettingsComponent({
-        loadData: this.loadData.bind(this),
-        saveData: this.saveData.bind(this)
-      }),
+      component: new PluginSettingsComponent(this),
       shouldPreload: true
     });
     this.registerComponent({
