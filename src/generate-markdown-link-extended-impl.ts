@@ -14,12 +14,13 @@ import { registerPatch } from 'obsidian-dev-utils/obsidian/monkey-around';
 import type {
   GenerateMarkdownLinkExtendedOptions,
   GenerateMarkdownLinkExtendedWrapper
-} from './GenerateMarkdownLinkExtended.d.ts';
-import type { Plugin } from './Plugin.ts';
+} from './generate-markdown-link-extended.d.ts';
+import type { Plugin } from './plugin.ts';
+import type { PluginSettings } from './plugin-settings.ts';
 
 export type GenerateMarkdownLinkNativeFn = FileManager['generateMarkdownLink'];
 
-export function patchGenerateMarkdownLink(plugin: Plugin): void {
+export function patchGenerateMarkdownLink(plugin: Plugin, getSettings: () => PluginSettings): void {
   registerPatch(plugin, plugin.app.fileManager, {
     generateMarkdownLink(): GenerateMarkdownLinkExtendedWrapper & GenerateMarkdownLinkNativeFn {
       return Object.assign(native, { extended });
@@ -34,13 +35,16 @@ export function patchGenerateMarkdownLink(plugin: Plugin): void {
     }
   });
 
-  registerGenerateMarkdownLinkDefaultOptionsFn(plugin, () => ({
-    isEmptyEmbedAliasAllowed: plugin.settings.shouldAllowEmptyEmbedAlias,
-    shouldIncludeAttachmentExtensionToEmbedAlias: plugin.settings.shouldIncludeAttachmentExtensionToEmbedAlias,
-    shouldUseAngleBrackets: plugin.settings.shouldUseAngleBrackets,
-    shouldUseLeadingDotForRelativePaths: plugin.settings.shouldUseLeadingDotForRelativePaths,
-    shouldUseLeadingSlashForAbsolutePaths: plugin.settings.shouldUseLeadingSlashForAbsolutePaths
-  }));
+  registerGenerateMarkdownLinkDefaultOptionsFn(plugin, () => {
+    const settings = getSettings();
+    return {
+      isEmptyEmbedAliasAllowed: settings.shouldAllowEmptyEmbedAlias,
+      shouldIncludeAttachmentExtensionToEmbedAlias: settings.shouldIncludeAttachmentExtensionToEmbedAlias,
+      shouldUseAngleBrackets: settings.shouldUseAngleBrackets,
+      shouldUseLeadingDotForRelativePaths: settings.shouldUseLeadingDotForRelativePaths,
+      shouldUseLeadingSlashForAbsolutePaths: settings.shouldUseLeadingSlashForAbsolutePaths
+    };
+  });
 }
 
 function generateMarkdownLinkExtended(plugin: Plugin, options: GenerateMarkdownLinkExtendedOptions): string {

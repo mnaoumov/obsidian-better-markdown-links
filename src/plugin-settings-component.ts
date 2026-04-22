@@ -1,11 +1,9 @@
 import type { MaybeReturn } from 'obsidian-dev-utils/type';
 
-import { PluginSettingsManagerBase } from 'obsidian-dev-utils/obsidian/plugin/plugin-settings-manager-base';
+import { PluginSettingsComponentBase } from 'obsidian-dev-utils/obsidian/plugin/components/plugin-settings-component';
 import { isValidRegExp } from 'obsidian-dev-utils/reg-exp';
 
-import type { PluginTypes } from './PluginTypes.ts';
-
-import { PluginSettings } from './PluginSettings.ts';
+import { PluginSettings } from './plugin-settings.ts';
 
 class LegacySettings {
   public allowEmptyEmbedAlias = true;
@@ -17,7 +15,7 @@ class LegacySettings {
   public useLeadingDot = true;
 }
 
-export class PluginSettingsManager extends PluginSettingsManagerBase<PluginTypes> {
+export class PluginSettingsComponent extends PluginSettingsComponentBase<PluginSettings> {
   protected override createDefaultSettings(): PluginSettings {
     return new PluginSettings();
   }

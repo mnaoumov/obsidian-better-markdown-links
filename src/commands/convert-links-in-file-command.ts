@@ -3,12 +3,12 @@ import type { TFile } from 'obsidian';
 import {
   FileCommandBase,
   FileCommandInvocationBase
-} from 'obsidian-dev-utils/obsidian/commands/file-command-base';
+} from 'obsidian-dev-utils/obsidian/commands/file-command';
 import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/file-system';
 
-import type { Plugin } from '../Plugin.ts';
+import type { Plugin } from '../plugin.ts';
 
-import { convertLinksInFile } from '../LinkConverter.ts';
+import { convertLinksInFile } from '../link-converter.ts';
 
 class ConvertLinksInFileCommandInvocation extends FileCommandInvocationBase<Plugin> {
   protected override canExecute(): boolean {

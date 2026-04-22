@@ -1,6 +1,8 @@
 import type {
+  App,
   OpenViewState,
-  PaneType
+  PaneType,
+  PluginManifest
 } from 'obsidian';
 import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/rename-delete-handler';
 
@@ -21,49 +23,70 @@ import {
   getCacheSafe
 } from 'obsidian-dev-utils/obsidian/metadata-cache';
 import { registerPatch } from 'obsidian-dev-utils/obsidian/monkey-around';
-import { PluginBase } from 'obsidian-dev-utils/obsidian/plugin/plugin-base';
+import { CommandComponent } from 'obsidian-dev-utils/obsidian/plugin/components/command-component';
+import { PluginSettingsTabComponent } from 'obsidian-dev-utils/obsidian/plugin/components/plugin-settings-tab-component';
+import { PluginBase } from 'obsidian-dev-utils/obsidian/plugin/plugin';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/rename-delete-handler';
 
-import type { PluginTypes } from './PluginTypes.ts';
+import type { PluginSettings } from './plugin-settings.ts';
 
-import { ConvertLinksInEntireVaultCommand } from './Commands/ConvertLinksInEntireVaultCommand.ts';
-import { ConvertLinksInFileCommand } from './Commands/ConvertLinksInFileCommand.ts';
-import { ConvertLinksInFolderCommand } from './Commands/ConvertLinksInFolderCommand.ts';
-import { patchGenerateMarkdownLink } from './GenerateMarkdownLinkExtendedImpl.ts';
-import { convertLinksInFile } from './LinkConverter.ts';
-import { PluginSettingsManager } from './PluginSettingsManager.ts';
-import { PluginSettingsTab } from './PluginSettingsTab.ts';
+import { ConvertLinksInEntireVaultCommand } from './commands/convert-links-in-entire-vault-command.ts';
+import { ConvertLinksInFileCommand } from './commands/convert-links-in-file-command.ts';
+import { ConvertLinksInFolderCommand } from './commands/convert-links-in-folder-command.ts';
+import { patchGenerateMarkdownLink } from './generate-markdown-link-extended-impl.ts';
+import { convertLinksInFile } from './link-converter.ts';
+import { PluginSettingsComponent } from './plugin-settings-component.ts';
+import { PluginSettingsTab } from './plugin-settings-tab.ts';
 
 type OpenLinkTextFn = Workspace['openLinkText'];
 
-export class Plugin extends PluginBase<PluginTypes> {
+export class Plugin extends PluginBase {
   public readonly processFileAbortControllers = new Map<string, AbortController>();
 
-  protected override createSettingsManager(): PluginSettingsManager {
-    return new PluginSettingsManager(this);
+  private readonly pluginSettingsComponent: PluginSettingsComponent;
+
+  public get abortSignal(): AbortSignal {
+    return this.abortSignalComponent.abortSignal;
   }
 
-  protected override createSettingsTab(): null | PluginSettingsTab {
-    return new PluginSettingsTab(this);
+  public get pluginSettings(): PluginSettings {
+    return this.pluginSettingsComponent.settings as PluginSettings;
+  }
+
+  public constructor(app: App, manifest: PluginManifest) {
+    super(app, manifest);
+    this.pluginSettingsComponent = this.registerComponent({
+      component: new PluginSettingsComponent({
+        loadData: this.loadData.bind(this),
+        saveData: this.saveData.bind(this)
+      }),
+      shouldPreload: true
+    });
+    this.registerComponent({
+      component: new PluginSettingsTabComponent(this, new PluginSettingsTab({
+        plugin: this,
+        settingsComponent: this.pluginSettingsComponent
+      }))
+    });
   }
 
   protected override async onLayoutReady(): Promise<void> {
     await super.onLayoutReady();
 
-    patchGenerateMarkdownLink(this);
+    patchGenerateMarkdownLink(this, () => this.pluginSettings);
 
-    new ConvertLinksInFileCommand(this).register();
-    new ConvertLinksInFolderCommand(this).register();
-    new ConvertLinksInEntireVaultCommand(this).register();
+    this.registerComponent({ component: new CommandComponent(this, new ConvertLinksInFileCommand(this)) });
+    this.registerComponent({ component: new CommandComponent(this, new ConvertLinksInFolderCommand(this)) });
+    this.registerComponent({ component: new CommandComponent(this, new ConvertLinksInEntireVaultCommand(this)) });
 
     this.registerEvent(this.app.vault.on('modify', convertAsyncToSync(this.handleModify.bind(this))));
 
     registerRenameDeleteHandlers(this, () => {
       const settings: Partial<RenameDeleteHandlerSettings> = {
         isPathIgnored: (path) => {
-          return this.settings.isPathIgnored(path);
+          return this.pluginSettings.isPathIgnored(path);
         },
-        shouldHandleRenames: this.settings.shouldAutomaticallyUpdateLinksOnRenameOrMove,
+        shouldHandleRenames: this.pluginSettings.shouldAutomaticallyUpdateLinksOnRenameOrMove,
         shouldUpdateFileNameAliases: true
       };
       return settings;
@@ -79,7 +102,7 @@ export class Plugin extends PluginBase<PluginTypes> {
   }
 
   private async handleModify(file: TAbstractFile): Promise<void> {
-    this.abortSignal.throwIfAborted();
+    this.abortSignalComponent.abortSignal.throwIfAborted();
 
     if (!(file instanceof TFile)) {
       return;
@@ -89,7 +112,7 @@ export class Plugin extends PluginBase<PluginTypes> {
     processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
     this.processFileAbortControllers.delete(file.path);
 
-    if (!this.settings.shouldAutomaticallyConvertNewLinks) {
+    if (!this.pluginSettings.shouldAutomaticallyConvertNewLinks) {
       return;
     }
 
@@ -98,15 +121,15 @@ export class Plugin extends PluginBase<PluginTypes> {
       return;
     }
 
-    if (this.settings.isPathIgnored(file.path)) {
-      this.consoleDebug(`File ${file.path} is ignored in plugin settings, skipping`);
+    if (this.pluginSettings.isPathIgnored(file.path)) {
+      this.consoleDebugComponent.debug(`File ${file.path} is ignored in plugin settings, skipping`);
       return;
     }
 
     processFileAbortController = new AbortController();
     this.processFileAbortControllers.set(file.path, processFileAbortController);
     try {
-      const combinedAbortSignal = abortSignalAny(this.abortSignal, processFileAbortController.signal);
+      const combinedAbortSignal = abortSignalAny(this.abortSignalComponent.abortSignal, processFileAbortController.signal);
       const cache = await getCacheSafe(this.app, file);
       combinedAbortSignal.throwIfAborted();
       if (!cache) {
@@ -118,7 +141,7 @@ export class Plugin extends PluginBase<PluginTypes> {
           link.original !== convertLink({
             app: this.app,
             link,
-            linkStyle: this.settings.getLinkStyle(true),
+            linkStyle: this.pluginSettings.getLinkStyle(true),
             newSourcePathOrFile: file
           })
         )

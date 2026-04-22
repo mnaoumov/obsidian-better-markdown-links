@@ -1,9 +1,9 @@
-import { CommandInvocationBase } from 'obsidian-dev-utils/obsidian/commands/command-base';
-import { NonEditorCommandBase } from 'obsidian-dev-utils/obsidian/commands/non-editor-command-base';
+import { CommandInvocationBase } from 'obsidian-dev-utils/obsidian/commands/command';
+import { NonEditorCommandBase } from 'obsidian-dev-utils/obsidian/commands/non-editor-command';
 
-import type { Plugin } from '../Plugin.ts';
+import type { Plugin } from '../plugin.ts';
 
-import { convertLinksInFolder } from '../LinkConverter.ts';
+import { convertLinksInFolder } from '../link-converter.ts';
 
 class ConvertLinksInEntireVaultCommandInvocation extends CommandInvocationBase<Plugin> {
   protected override async execute(): Promise<void> {

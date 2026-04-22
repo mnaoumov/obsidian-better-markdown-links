@@ -3,11 +3,11 @@ import type { TFolder } from 'obsidian';
 import {
   FolderCommandBase,
   FolderCommandInvocationBase
-} from 'obsidian-dev-utils/obsidian/commands/folder-command-base';
+} from 'obsidian-dev-utils/obsidian/commands/folder-command';
 
-import type { Plugin } from '../Plugin.ts';
+import type { Plugin } from '../plugin.ts';
 
-import { convertLinksInFolder } from '../LinkConverter.ts';
+import { convertLinksInFolder } from '../link-converter.ts';
 
 class ConvertLinksInFolderCommandInvocation extends FolderCommandInvocationBase<Plugin> {
   protected override canExecute(): boolean {

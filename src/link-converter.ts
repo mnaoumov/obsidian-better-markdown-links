@@ -20,7 +20,7 @@ import { loop } from 'obsidian-dev-utils/obsidian/loop';
 import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
 import { addToQueue } from 'obsidian-dev-utils/obsidian/queue';
 
-import type { Plugin } from './Plugin.ts';
+import type { Plugin } from './plugin.ts';
 
 export async function applyLinkChangeUpdates(plugin: Plugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
   try {
@@ -53,8 +53,9 @@ export function convertLinksInCurrentFile(plugin: Plugin, checking: boolean): bo
 
 export async function convertLinksInFile(plugin: Plugin, file: TFile, abortSignal: AbortSignal, shouldPromptForExcludedFile?: boolean): Promise<void> {
   abortSignal.throwIfAborted();
+  const settings = plugin.pluginSettings;
 
-  if (plugin.settings.isPathIgnored(file.path)) {
+  if (settings.isPathIgnored(file.path)) {
     if (!shouldPromptForExcludedFile) {
       return;
     }
@@ -71,7 +72,7 @@ export async function convertLinksInFile(plugin: Plugin, file: TFile, abortSigna
   await updateLinksInFile({
     abortSignal,
     app: plugin.app,
-    linkStyle: plugin.settings.getLinkStyle(true),
+    linkStyle: settings.getLinkStyle(true),
     newSourcePathOrFile: file
   });
 }
@@ -115,7 +116,7 @@ export function fixChange(plugin: Plugin, change: string, sourceFile: TFile): st
     alias,
     app: plugin.app,
     isEmbed,
-    linkStyle: plugin.settings.getLinkStyle(false),
+    linkStyle: plugin.pluginSettings.getLinkStyle(false),
     sourcePathOrFile: sourceFile,
     subpath,
     targetPathOrFile: targetFile
