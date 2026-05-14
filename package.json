@@ -2,6 +2,10 @@
   "name": "better-markdown-links",
   "version": "3.4.4",
   "description": "Adds support for angle bracket links and manages relative links properly",
+  "keywords": [],
+  "license": "MIT",
+  "author": "mnaoumov",
+  "type": "module",
   "scripts": {
     "build": "jiti scripts/build.ts",
     "build:clean": "jiti scripts/build-clean.ts",
@@ -19,9 +23,14 @@
     "spellcheck": "jiti scripts/spellcheck.ts",
     "version": "jiti scripts/version.ts"
   },
-  "keywords": [],
-  "author": "mnaoumov",
-  "license": "MIT",
+  "overrides": {
+    "@antfu/utils": "9.2.0",
+    "boolean": "npm:dry-uninstall",
+    "dompurify": "3.0.1",
+    "eslint": "latest",
+    "type-fest": "latest",
+    "typescript": "latest"
+  },
   "devDependencies": {
     "@commitlint/cli": "latest",
     "@commitlint/config-conventional": "latest",
@@ -30,8 +39,7 @@
     "@tsconfig/strictest": "latest",
     "@types/node": "25.0.3",
     "better-typescript-lib": "latest",
-    "commitizen": "latest",
-    "cz-conventional-changelog": "latest",
+    "czg": "latest",
     "eslint": "latest",
     "husky": "latest",
     "jiti": "latest",
@@ -41,14 +49,5 @@
     "obsidian-typings": "obsidian-public-latest",
     "type-fest": "latest",
     "typescript": "latest"
-  },
-  "overrides": {
-    "@antfu/utils": "9.2.0",
-    "boolean": "npm:dry-uninstall",
-    "dompurify": "3.0.1",
-    "eslint": "latest",
-    "type-fest": "latest",
-    "typescript": "latest"
-  },
-  "type": "module"
+  }
 }
