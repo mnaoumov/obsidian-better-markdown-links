@@ -2,7 +2,7 @@ import type {
   TFile,
   TFolder
 } from 'obsidian';
-import type { LinkChangeUpdate } from 'obsidian-typings';
+import type { LinkChangeUpdate } from '@obsidian-typings/obsidian-public-latest';
 
 import { handleSilentError } from 'obsidian-dev-utils/async';
 import { SilentError } from 'obsidian-dev-utils/error';

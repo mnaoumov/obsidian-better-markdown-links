@@ -27,6 +27,7 @@ import { CommandComponent } from 'obsidian-dev-utils/obsidian/plugin/components/
 import { PluginSettingsTabComponent } from 'obsidian-dev-utils/obsidian/plugin/components/plugin-settings-tab-component';
 import { PluginBase } from 'obsidian-dev-utils/obsidian/plugin/plugin';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/rename-delete-handler';
+import { PluginDataHandler } from 'obsidian-dev-utils/obsidian/data-handler';
 
 import { ConvertLinksInEntireVaultCommand } from './commands/convert-links-in-entire-vault-command.ts';
 import { ConvertLinksInFileCommand } from './commands/convert-links-in-file-command.ts';
@@ -49,16 +50,14 @@ export class Plugin extends PluginBase {
 
   public constructor(app: App, manifest: PluginManifest) {
     super(app, manifest);
-    this.pluginSettingsComponent = this.registerComponent({
-      component: new PluginSettingsComponent(this),
-      shouldPreload: true
-    });
-    this.registerComponent({
-      component: new PluginSettingsTabComponent(this, new PluginSettingsTab({
+    this.pluginSettingsComponent = this.addChild(new PluginSettingsComponent(new PluginDataHandler(this)));
+    this.addChild(new PluginSettingsTabComponent({
+      plugin: this,
+      pluginSettingsTab: new PluginSettingsTab({
         plugin: this,
         settingsComponent: this.pluginSettingsComponent
-      }))
-    });
+      })
+    }));
   }
 
   protected override async onLayoutReady(): Promise<void> {
@@ -66,9 +65,9 @@ export class Plugin extends PluginBase {
 
     patchGenerateMarkdownLink(this, () => this.pluginSettingsComponent.settings);
 
-    this.registerComponent({ component: new CommandComponent(this, new ConvertLinksInFileCommand(this)) });
-    this.registerComponent({ component: new CommandComponent(this, new ConvertLinksInFolderCommand(this)) });
-    this.registerComponent({ component: new CommandComponent(this, new ConvertLinksInEntireVaultCommand(this)) });
+    this.addChild(new CommandComponent(this, new ConvertLinksInFileCommand(this)));
+    this.addChild(new CommandComponent(this, new ConvertLinksInFolderCommand(this)));
+    this.addChild(new CommandComponent(this, new ConvertLinksInEntireVaultCommand(this)));
 
     this.registerEvent(this.app.vault.on('modify', convertAsyncToSync(this.handleModify.bind(this))));
 
