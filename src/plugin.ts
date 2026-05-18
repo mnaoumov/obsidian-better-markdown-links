@@ -23,8 +23,8 @@ import {
   getCacheSafe
 } from 'obsidian-dev-utils/obsidian/metadata-cache';
 import { registerPatch } from 'obsidian-dev-utils/obsidian/monkey-around';
-import { CommandComponent } from 'obsidian-dev-utils/obsidian/plugin/components/command-component';
-import { PluginSettingsTabComponent } from 'obsidian-dev-utils/obsidian/plugin/components/plugin-settings-tab-component';
+import { CommandComponent } from 'obsidian-dev-utils/obsidian/components/command-component';
+import { PluginSettingsTabComponent } from 'obsidian-dev-utils/obsidian/components/plugin-settings-tab-component';
 import { PluginBase } from 'obsidian-dev-utils/obsidian/plugin/plugin';
 import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/rename-delete-handler';
 import { PluginDataHandler } from 'obsidian-dev-utils/obsidian/data-handler';

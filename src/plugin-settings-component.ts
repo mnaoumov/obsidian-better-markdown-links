@@ -1,6 +1,6 @@
 import type { MaybeReturn } from 'obsidian-dev-utils/type';
 
-import { PluginSettingsComponentBase } from 'obsidian-dev-utils/obsidian/plugin/components/plugin-settings-component';
+import { PluginSettingsComponentBase } from 'obsidian-dev-utils/obsidian/components/plugin-settings-component';
 import { isValidRegExp } from 'obsidian-dev-utils/reg-exp';
 
 import { PluginSettings } from './plugin-settings.ts';
