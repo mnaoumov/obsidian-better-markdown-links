@@ -94,7 +94,7 @@ export interface GenerateMarkdownLinkExtendedOptions {
    * @example `[[alias|link]]`
    * @example `[alias](link.md)`
    */
-  alias?: string;
+  readonly alias?: string;
 
   /**
    * Indicates if the link should be embedded. If not provided, it will be inferred based on the file type.
@@ -103,7 +103,7 @@ export interface GenerateMarkdownLinkExtendedOptions {
    *
    * If `false`: `[[target]]`.
    */
-  isEmbed?: boolean;
+  readonly isEmbed?: boolean;
 
   /**
    * Whether to allow an empty alias for embeds. Defaults to `true`.
@@ -114,14 +114,14 @@ export interface GenerateMarkdownLinkExtendedOptions {
    *
    * If `false`: `![foo](foo.png)`.
    */
-  isEmptyEmbedAliasAllowed?: boolean;
+  readonly isEmptyEmbedAliasAllowed?: boolean;
 
   /**
    * Whether to allow non-existing files. Defaults to `false`.
    *
    * If `false` and {@link targetPathOrFile} is a non-existing file, an error will be thrown.
    */
-  isNonExistingFileAllowed?: boolean;
+  readonly isNonExistingFileAllowed?: boolean;
 
   /**
    * Whether to allow a single subpath. Defaults to `true`.
@@ -132,17 +132,17 @@ export interface GenerateMarkdownLinkExtendedOptions {
    *
    * If `false`: `[[source#subpath]]`
    */
-  isSingleSubpathAllowed?: boolean;
+  readonly isSingleSubpathAllowed?: boolean;
 
   /**
    * A style of the link path.
    */
-  linkPathStyle?: LinkPathStyle;
+  readonly linkPathStyle?: LinkPathStyle;
 
   /**
    * A style of the link.
    */
-  linkStyle?: LinkStyle;
+  readonly linkStyle?: LinkStyle;
 
   /**
    * An original link text.
@@ -157,7 +157,7 @@ export interface GenerateMarkdownLinkExtendedOptions {
    *
    * These inferred values will be overridden by corresponding settings if specified.
    */
-  originalLink?: string;
+  readonly originalLink?: string;
 
   /**
    * Whether to escape the alias. Defaults to `false`.
@@ -168,7 +168,7 @@ export interface GenerateMarkdownLinkExtendedOptions {
    *
    * If `false`: `[**alias**](link.md)`.
    */
-  shouldEscapeAlias?: boolean;
+  readonly shouldEscapeAlias?: boolean;
 
   /**
    * Whether to include the attachment extension in the embed alias. Defaults to `false`.
@@ -179,7 +179,7 @@ export interface GenerateMarkdownLinkExtendedOptions {
    *
    * If `false`: `[foo](foo.png)`.
    */
-  shouldIncludeAttachmentExtensionToEmbedAlias?: boolean;
+  readonly shouldIncludeAttachmentExtensionToEmbedAlias?: boolean;
 
   /**
    * Indicates if the link should use angle brackets. Defaults to `false`.
@@ -190,7 +190,7 @@ export interface GenerateMarkdownLinkExtendedOptions {
    *
    * If `false`: `[alias](path%20with%20spaces.md)`.
    */
-  shouldUseAngleBrackets?: boolean;
+  readonly shouldUseAngleBrackets?: boolean;
 
   /**
    * Indicates if the link should use a leading dot. Defaults to `false`.
@@ -201,7 +201,7 @@ export interface GenerateMarkdownLinkExtendedOptions {
    *
    * If `false`: `[[relative/path/to/target]]`
    */
-  shouldUseLeadingDotForRelativePaths?: boolean;
+  readonly shouldUseLeadingDotForRelativePaths?: boolean;
 
   /**
    * Indicates if the link should use a leading slash. Defaults to `false`.
@@ -212,12 +212,12 @@ export interface GenerateMarkdownLinkExtendedOptions {
    *
    * If `false`: `[[absolute/path/to/target]]`
    */
-  shouldUseLeadingSlashForAbsolutePaths?: boolean;
+  readonly shouldUseLeadingSlashForAbsolutePaths?: boolean;
 
   /**
    * A source path of the link.
    */
-  sourcePathOrFile: PathOrFile;
+  readonly sourcePathOrFile: PathOrFile;
 
   /**
    * A subpath of the link.
@@ -228,12 +228,12 @@ export interface GenerateMarkdownLinkExtendedOptions {
    * @example `[[link-with-subpath#subpath]]`
    * @example `[[link-with-subpath#subpath#nested-subpath]]`
    */
-  subpath?: string;
+  readonly subpath?: string;
 
   /**
    * A target path or file.
    */
-  targetPathOrFile: PathOrFile;
+  readonly targetPathOrFile: PathOrFile;
 }
 
 export interface GenerateMarkdownLinkExtendedWrapper {

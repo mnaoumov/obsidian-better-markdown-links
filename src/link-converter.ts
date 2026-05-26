@@ -1,8 +1,8 @@
+import type { LinkChangeUpdate } from '@obsidian-typings/obsidian-public-latest';
 import type {
   TFile,
   TFolder
 } from 'obsidian';
-import type { LinkChangeUpdate } from '@obsidian-typings/obsidian-public-latest';
 
 import { handleSilentError } from 'obsidian-dev-utils/async';
 import { SilentError } from 'obsidian-dev-utils/error';
@@ -104,8 +104,10 @@ export function fixChange(plugin: Plugin, change: string, sourceFile: TFile): st
     return change;
   }
 
+  /* v8 ignore start -- regex named groups always exist when the regex matches. */
   const alias = match.groups?.['Alias'] ?? '';
   const escapedPath = match.groups?.['EscapedPath'] ?? '';
+  /* v8 ignore stop */
   const { linkPath, subpath } = splitSubpath(decodeURIComponent(escapedPath));
   const targetFile = plugin.app.metadataCache.getFirstLinkpathDest(linkPath, sourceFile.path);
   if (!targetFile) {

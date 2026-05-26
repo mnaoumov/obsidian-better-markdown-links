@@ -6,23 +6,24 @@ import {
   normalizeOptionalProperties,
   removeUndefinedProperties
 } from 'obsidian-dev-utils/object-utils';
+import { MonkeyAroundComponent } from 'obsidian-dev-utils/obsidian/components/monkey-around-component';
 import {
   generateMarkdownLink,
   registerGenerateMarkdownLinkDefaultOptionsFn
 } from 'obsidian-dev-utils/obsidian/link';
-import { registerPatch } from 'obsidian-dev-utils/obsidian/monkey-around';
 
 import type {
   GenerateMarkdownLinkExtendedOptions,
   GenerateMarkdownLinkExtendedWrapper
 } from './generate-markdown-link-extended.d.ts';
-import type { Plugin } from './plugin.ts';
 import type { PluginSettings } from './plugin-settings.ts';
+import type { Plugin } from './plugin.ts';
 
 export type GenerateMarkdownLinkNativeFn = FileManager['generateMarkdownLink'];
 
 export function patchGenerateMarkdownLink(plugin: Plugin, getSettings: () => ReadonlyDeep<PluginSettings>): void {
-  registerPatch(plugin, plugin.app.fileManager, {
+  const patch = plugin.addChild(new MonkeyAroundComponent());
+  patch.registerPatch(plugin.app.fileManager, {
     generateMarkdownLink(): GenerateMarkdownLinkExtendedWrapper & GenerateMarkdownLinkNativeFn {
       return Object.assign(native, { extended });
 
