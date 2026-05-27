@@ -12,12 +12,12 @@ import {
 } from 'obsidian';
 import { handleSilentError } from 'obsidian-dev-utils/async';
 import { CallbackLayoutReadyComponent } from 'obsidian-dev-utils/obsidian/components/layout-ready-component';
+import { RenameDeleteHandlerComponent } from 'obsidian-dev-utils/obsidian/components/rename-delete-handler-component';
 import { convertLink } from 'obsidian-dev-utils/obsidian/link';
 import {
   getAllLinks,
   getCacheSafe
 } from 'obsidian-dev-utils/obsidian/metadata-cache';
-import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/rename-delete-handler';
 import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
 import {
   afterEach,
@@ -119,8 +119,8 @@ vi.mock('./link-converter.ts', () => ({
   convertLinksInFile: vi.fn().mockResolvedValue(undefined)
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/rename-delete-handler', () => ({
-  registerRenameDeleteHandlers: vi.fn()
+vi.mock('obsidian-dev-utils/obsidian/components/rename-delete-handler-component', () => ({
+  RenameDeleteHandlerComponent: vi.fn()
 }));
 
 vi.mock('obsidian-dev-utils/obsidian/metadata-cache', () => ({
@@ -252,6 +252,31 @@ describe('Plugin', () => {
       expect(factories).toHaveProperty('openLinkText');
     });
 
+    it('should pass settingsBuilder to RenameDeleteHandlerComponent that returns correct settings', () => {
+      const plugin = createPlugin();
+
+      plugin['onLayoutReady']();
+
+      const params = vi.mocked(RenameDeleteHandlerComponent).mock.calls[0]?.[0];
+      const settings = params?.settingsBuilder();
+
+      expect(settings?.shouldHandleRenames).toBe(plugin.pluginSettingsComponent.settings.shouldAutomaticallyUpdateLinksOnRenameOrMove);
+      expect(settings?.shouldUpdateFileNameAliases).toBe(true);
+    });
+
+    it('should pass settingsBuilder with isPathIgnored that delegates to plugin settings', () => {
+      const plugin = createPlugin();
+
+      plugin['onLayoutReady']();
+
+      const params = vi.mocked(RenameDeleteHandlerComponent).mock.calls[0]?.[0];
+      const settings = params?.settingsBuilder();
+
+      const result = settings?.isPathIgnored?.('test.excalidraw.md');
+
+      expect(result).toBe(plugin.pluginSettingsComponent.settings.isPathIgnored('test.excalidraw.md'));
+    });
+
     it('should create a working openLinkText wrapper via monkey-around that delegates to plugin', () => {
       const plugin = createPlugin();
 
@@ -269,39 +294,6 @@ describe('Plugin', () => {
       const result = wrappedFn.call(workspace, 'link', 'source.md');
 
       expect(result).toBeDefined();
-    });
-
-    it('should register rename delete handlers', () => {
-      const plugin = createPlugin();
-
-      plugin['onLayoutReady']();
-
-      expect(vi.mocked(registerRenameDeleteHandlers)).toHaveBeenCalledOnce();
-    });
-
-    it('should invoke rename handler settings callback with correct settings', () => {
-      const plugin = createPlugin();
-
-      plugin['onLayoutReady']();
-
-      const mockedRegister = vi.mocked(registerRenameDeleteHandlers);
-      const settingsFn = mockedRegister.mock.calls[0]?.[1];
-      const settings = settingsFn?.();
-
-      expect(settings).toHaveProperty('shouldUpdateFileNameAliases', true);
-    });
-
-    it('should provide isPathIgnored in rename handler settings', () => {
-      const plugin = createPlugin();
-
-      plugin['onLayoutReady']();
-
-      const mockedRegister = vi.mocked(registerRenameDeleteHandlers);
-      const settingsFn = mockedRegister.mock.calls[0]?.[1];
-      const settings = settingsFn?.();
-      const isIgnored = settings?.isPathIgnored?.('test.excalidraw.md');
-
-      expect(isIgnored).toBe(true);
     });
   });
 

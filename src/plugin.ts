@@ -4,7 +4,7 @@ import type {
   PaneType,
   PluginManifest
 } from 'obsidian';
-import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/rename-delete-handler';
+import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/components/rename-delete-handler-component';
 
 import {
   TAbstractFile,
@@ -24,6 +24,7 @@ import { CallbackLayoutReadyComponent } from 'obsidian-dev-utils/obsidian/compon
 import { MenuEventRegistrarComponent } from 'obsidian-dev-utils/obsidian/components/menu-event-registrar-component';
 import { MonkeyAroundComponent } from 'obsidian-dev-utils/obsidian/components/monkey-around-component';
 import { PluginSettingsTabComponent } from 'obsidian-dev-utils/obsidian/components/plugin-settings-tab-component';
+import { RenameDeleteHandlerComponent } from 'obsidian-dev-utils/obsidian/components/rename-delete-handler-component';
 import { PluginDataHandler } from 'obsidian-dev-utils/obsidian/data-handler';
 import { convertLink } from 'obsidian-dev-utils/obsidian/link';
 import {
@@ -32,7 +33,6 @@ import {
 } from 'obsidian-dev-utils/obsidian/metadata-cache';
 import { PluginBase } from 'obsidian-dev-utils/obsidian/plugin/plugin';
 import { PluginEventSourceImpl } from 'obsidian-dev-utils/obsidian/plugin/plugin-event-source';
-import { registerRenameDeleteHandlers } from 'obsidian-dev-utils/obsidian/rename-delete-handler';
 
 import { ConvertLinksInEntireVaultCommandHandler } from './commands/convert-links-in-entire-vault-command-handler.ts';
 import { ConvertLinksInFileCommandHandler } from './commands/convert-links-in-file-command-handler.ts';
@@ -153,16 +153,22 @@ export class Plugin extends PluginBase {
 
     this.registerEvent(this.app.vault.on('modify', convertAsyncToSync(this.handleModify.bind(this))));
 
-    registerRenameDeleteHandlers(this, () => {
-      const settings: Partial<RenameDeleteHandlerSettings> = {
-        isPathIgnored: (path) => {
-          return this.pluginSettingsComponent.settings.isPathIgnored(path);
-        },
-        shouldHandleRenames: this.pluginSettingsComponent.settings.shouldAutomaticallyUpdateLinksOnRenameOrMove,
-        shouldUpdateFileNameAliases: true
-      };
-      return settings;
-    });
+    this.addChild(
+      new RenameDeleteHandlerComponent({
+        abortSignalComponent: this.abortSignalComponent,
+        app: this.app,
+        pluginId: this.manifest.id,
+        settingsBuilder: (): Partial<RenameDeleteHandlerSettings> => {
+          return {
+            isPathIgnored: (path): boolean => {
+              return this.pluginSettingsComponent.settings.isPathIgnored(path);
+            },
+            shouldHandleRenames: this.pluginSettingsComponent.settings.shouldAutomaticallyUpdateLinksOnRenameOrMove,
+            shouldUpdateFileNameAliases: true
+          };
+        }
+      })
+    );
 
     const that = this;
     const patch = this.addChild(new MonkeyAroundComponent());
