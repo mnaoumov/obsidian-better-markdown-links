@@ -1,6 +1,8 @@
+import type { AsyncEventRef } from 'obsidian-dev-utils/async-events';
 import type { DataHandler } from 'obsidian-dev-utils/obsidian/data-handler';
 import type { PluginEventSource } from 'obsidian-dev-utils/obsidian/plugin/plugin-event-source';
 
+import { castTo } from 'obsidian-dev-utils/object-utils';
 import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
 import {
   describe,
@@ -25,10 +27,10 @@ function createComponent(options?: CreateComponentOptions): PluginSettingsCompon
     off: vi.fn(),
     offref: vi.fn(),
     on() {
-      return { id: 0 } as never;
+      return castTo<AsyncEventRef>({ id: 0 });
     },
     once() {
-      return { id: 0 } as never;
+      return castTo<AsyncEventRef>({ id: 0 });
     }
   });
   return new PluginSettingsComponent({ dataHandler, pluginEventSource });

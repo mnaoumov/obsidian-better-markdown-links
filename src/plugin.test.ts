@@ -2,7 +2,8 @@ import type {
   App,
   CachedMetadata,
   EventRef,
-  PluginManifest
+  PluginManifest,
+  Workspace
 } from 'obsidian';
 import type { Mock } from 'vitest';
 
@@ -11,6 +12,7 @@ import {
   TFile as TFileCls
 } from 'obsidian';
 import { handleSilentError } from 'obsidian-dev-utils/async';
+import { castTo } from 'obsidian-dev-utils/object-utils';
 import { CallbackLayoutReadyComponent } from 'obsidian-dev-utils/obsidian/components/layout-ready-component';
 import { RenameDeleteHandlerComponent } from 'obsidian-dev-utils/obsidian/components/rename-delete-handler-component';
 import { convertLink } from 'obsidian-dev-utils/obsidian/link';
@@ -286,7 +288,7 @@ describe('Plugin', () => {
       const next = vi.fn().mockResolvedValue(undefined);
       type OpenLinkTextFn = (linkText: string, sourcePath: string) => unknown;
 
-      const wrappedFn = factories?.['openLinkText']?.(next as never) as OpenLinkTextFn;
+      const wrappedFn = castTo<OpenLinkTextFn>(factories?.['openLinkText']?.(castTo<never>(next)));
 
       expect(wrappedFn).toBeInstanceOf(Function);
 
@@ -427,9 +429,9 @@ describe('Plugin', () => {
     it('should call next and return when no source file found', async () => {
       const plugin = createPlugin();
       const next = vi.fn().mockResolvedValue(undefined);
-      const workspace = {} as never;
+      const workspace = strictProxy<Workspace>({});
 
-      await plugin['openLinkText'](next, workspace, 'link', 'source.md');
+      await plugin['openLinkText'](castTo<Workspace['openLinkText']>(next), workspace, 'link', 'source.md');
 
       expect(next).toHaveBeenCalled();
     });
@@ -440,11 +442,11 @@ describe('Plugin', () => {
       sourceFile.path = 'source.md';
       (plugin.app.vault.getFileByPath as Mock).mockReturnValue(sourceFile);
       const next = vi.fn().mockResolvedValue(undefined);
-      const workspace = {} as never;
+      const workspace = strictProxy<Workspace>({});
 
       vi.spyOn(activeDocument, 'querySelector').mockReturnValue(null);
 
-      await plugin['openLinkText'](next, workspace, 'link', 'source.md');
+      await plugin['openLinkText'](castTo<Workspace['openLinkText']>(next), workspace, 'link', 'source.md');
 
       expect(next).toHaveBeenCalled();
     });
@@ -463,9 +465,9 @@ describe('Plugin', () => {
       });
 
       const next = vi.fn().mockResolvedValue(undefined);
-      const workspace = {} as never;
+      const workspace = strictProxy<Workspace>({});
 
-      await expect(plugin['openLinkText'](next, workspace, 'link', 'source.md')).resolves.toBeUndefined();
+      await expect(plugin['openLinkText'](castTo<Workspace['openLinkText']>(next), workspace, 'link', 'source.md')).resolves.toBeUndefined();
     });
 
     it('should rethrow non-silent errors from handleModify', async () => {
@@ -482,9 +484,9 @@ describe('Plugin', () => {
       });
 
       const next = vi.fn().mockResolvedValue(undefined);
-      const workspace = {} as never;
+      const workspace = strictProxy<Workspace>({});
 
-      await expect(plugin['openLinkText'](next, workspace, 'link', 'source.md')).rejects.toThrow('real error');
+      await expect(plugin['openLinkText'](castTo<Workspace['openLinkText']>(next), workspace, 'link', 'source.md')).rejects.toThrow('real error');
     });
   });
 });
