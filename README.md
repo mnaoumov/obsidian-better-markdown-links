@@ -39,9 +39,9 @@ To improve performance, consider installing [Backlink Cache](https://obsidian.md
 
 ## Extend [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink]
 
-This plugin enhances the [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] function by adding an [additional overload](./src/GenerateMarkdownLinkExtended.d.ts).
+This plugin enhances the [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] function by adding an [additional overload](./src/generate-markdown-link-extended.d.ts).
 
-If you want to use the updated functions from your plugin, you can copy [GenerateMarkdownLinkExtended.d.ts](./src/GenerateMarkdownLinkExtended.d.ts) into your code.
+If you want to use the updated functions from your plugin, you can copy [GenerateMarkdownLinkExtended.d.ts](./src/generate-markdown-link-extended.d.ts) into your code.
 
 ## Integration with other plugins
 

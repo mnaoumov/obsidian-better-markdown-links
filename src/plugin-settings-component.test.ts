@@ -113,7 +113,7 @@ describe('PluginSettingsComponent', () => {
       const component = createComponent({
         loadDataReturnValue: { allowEmptyEmbedAlias: false }
       });
-      await component.loadFromFile(true);
+      await component.loadWithPromises();
 
       expect(component.settings.shouldAllowEmptyEmbedAlias).toBe(false);
     });
@@ -122,7 +122,7 @@ describe('PluginSettingsComponent', () => {
       const component = createComponent({
         loadDataReturnValue: { automaticallyConvertNewLinks: false }
       });
-      await component.loadFromFile(true);
+      await component.loadWithPromises();
 
       expect(component.settings.shouldAutomaticallyConvertNewLinks).toBe(false);
     });
@@ -131,7 +131,7 @@ describe('PluginSettingsComponent', () => {
       const component = createComponent({
         loadDataReturnValue: { automaticallyUpdateLinksOnRenameOrMove: false }
       });
-      await component.loadFromFile(true);
+      await component.loadWithPromises();
 
       expect(component.settings.shouldAutomaticallyUpdateLinksOnRenameOrMove).toBe(false);
     });
@@ -140,7 +140,7 @@ describe('PluginSettingsComponent', () => {
       const component = createComponent({
         loadDataReturnValue: { includeAttachmentExtensionToEmbedAlias: true }
       });
-      await component.loadFromFile(true);
+      await component.loadWithPromises();
 
       expect(component.settings.shouldIncludeAttachmentExtensionToEmbedAlias).toBe(true);
     });
@@ -149,7 +149,7 @@ describe('PluginSettingsComponent', () => {
       const component = createComponent({
         loadDataReturnValue: { useAngleBrackets: false }
       });
-      await component.loadFromFile(true);
+      await component.loadWithPromises();
 
       expect(component.settings.shouldUseAngleBrackets).toBe(false);
     });
@@ -158,7 +158,7 @@ describe('PluginSettingsComponent', () => {
       const component = createComponent({
         loadDataReturnValue: { useLeadingDot: false }
       });
-      await component.loadFromFile(true);
+      await component.loadWithPromises();
 
       expect(component.settings.shouldUseLeadingDotForRelativePaths).toBe(false);
     });
@@ -167,7 +167,7 @@ describe('PluginSettingsComponent', () => {
       const component = createComponent({
         loadDataReturnValue: { shouldUseLeadingDot: false }
       });
-      await component.loadFromFile(true);
+      await component.loadWithPromises();
 
       expect(component.settings.shouldUseLeadingDotForRelativePaths).toBe(false);
     });
@@ -176,7 +176,7 @@ describe('PluginSettingsComponent', () => {
       const component = createComponent({
         loadDataReturnValue: {}
       });
-      await component.loadFromFile(true);
+      await component.loadWithPromises();
 
       const defaults = new PluginSettings();
       expect(component.settings.shouldAllowEmptyEmbedAlias).toBe(defaults.shouldAllowEmptyEmbedAlias);

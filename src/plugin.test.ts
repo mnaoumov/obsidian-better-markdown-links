@@ -44,7 +44,7 @@ vi.mock('obsidian-dev-utils/obsidian/plugin/plugin', () => {
     };
 
     protected consoleDebugComponent = {
-      debug: vi.fn()
+      consoleDebug: vi.fn()
     };
 
     public constructor(app: App, manifest: PluginManifest) {
@@ -360,7 +360,7 @@ describe('Plugin', () => {
       await plugin['handleModify'](file);
 
       expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
-      expect(plugin['consoleDebugComponent'].debug).toHaveBeenCalled();
+      expect(plugin['consoleDebugComponent'].consoleDebug).toHaveBeenCalled();
     });
 
     it('should return early when cache is null', async () => {

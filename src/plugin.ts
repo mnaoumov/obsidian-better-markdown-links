@@ -100,7 +100,7 @@ export class Plugin extends PluginBase {
     }
 
     if (this.pluginSettingsComponent.settings.isPathIgnored(file.path)) {
-      this.consoleDebugComponent.debug(`File ${file.path} is ignored in plugin settings, skipping`);
+      this.consoleDebugComponent.consoleDebug(`File ${file.path} is ignored in plugin settings, skipping`);
       return;
     }
 
