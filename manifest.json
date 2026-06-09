@@ -1,11 +1,11 @@
 {
   "id": "better-markdown-links",
   "name": "Better Markdown Links",
-  "version": "3.4.4",
+  "version": "3.4.5",
   "description": "Adds support for angle bracket links and manages relative links properly",
   "author": "mnaoumov",
   "authorUrl": "https://github.com/mnaoumov/",
   "isDesktopOnly": false,
-  "minAppVersion": "1.12.4",
+  "minAppVersion": "1.12.7",
   "fundingUrl": "https://www.buymeacoffee.com/mnaoumov"
 }
