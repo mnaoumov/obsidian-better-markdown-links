@@ -54,6 +54,8 @@ describe('ConvertLinksInFileCommandHandler', () => {
 
   it('should not execute for non-markdown files', () => {
     vi.mocked(isMarkdownFile).mockReturnValue(false);
+    // @ts-expect-error -- spying on protected method not visible in public type
+    vi.spyOn(FileCommandHandler.prototype, 'canExecute').mockReturnValue(false);
     const plugin = createMockPlugin();
     const handler = new ConvertLinksInFileCommandHandler(plugin);
     const file = createMockFile('test.txt');

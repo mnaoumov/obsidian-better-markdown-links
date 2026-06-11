@@ -2,23 +2,7 @@
 
 ## 3.4.5
 
-- chore: update libs
-- chore: upgrade dependencies and green up all checks
-- refactor: new template
 - chore: update template
-- chore: update libs
-- refactor: migrate to @obsidian-typings/obsidian-public-latest - Replace obsidian-typings with @obsidian-typings/obsidian-public-latest - Update vitest config: replace ssr.noExternal with server.deps.inline - Add DOM.Iterable to tsconfig lib - Remove obsolete overrides (@antfu/utils, boolean, dompurify) - Upgrade dependencies via npm-check-updates
-- build: replace commitizen with czg Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
-- refactor: simplify PluginSettingsComponent constructor to accept plugin directly Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
-- refactor: pass pluginSettingsComponent instead of pluginSettings getter Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
-- refactor!: migrate to obsidian-dev-utils v2 component architecture - Remove PluginTypes.ts and generic from PluginBase - Convert PluginSettingsManager to PluginSettingsComponent - Use constructor registerComponent() pattern - Convert 3 commands to new command module paths - Rename all files to kebab-case - Inject settings via callbacks instead of plugin reference Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
-- chore: update libs
-- chore: update libs
-- chore: update template
-- chore: update libs Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
-- chore: add @total-typescript/ts-reset, better-typescript-lib, and libReplacement Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
-- chore: unify rules
-- chore: add English language requirement to issue templates Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 
 ## 3.4.4
 
