@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.4.8
+
+- chore: update manifest
+
 ## 3.4.7
 
 - chore: update libs
