@@ -6,14 +6,18 @@ import type {
 import { FileCommandHandler } from 'obsidian-dev-utils/obsidian/command-handlers/file-command-handler';
 import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/file-system';
 
-import type { Plugin } from '../plugin.ts';
+import type { LinkConverter } from '../link-converter.ts';
 
-import { convertLinksInFile } from '../link-converter.ts';
+interface ConvertLinksInFileCommandHandlerConstructorParams {
+  readonly app: App;
+  readonly linkConverter: LinkConverter;
+}
 
 export class ConvertLinksInFileCommandHandler extends FileCommandHandler {
   private readonly app: App;
+  private readonly linkConverter: LinkConverter;
 
-  public constructor(private readonly plugin: Plugin) {
+  public constructor(params: ConvertLinksInFileCommandHandlerConstructorParams) {
     super({
       fileMenuItemName: 'Convert links in file',
       fileMenuSubmenuIcon: 'link-2',
@@ -23,7 +27,9 @@ export class ConvertLinksInFileCommandHandler extends FileCommandHandler {
       name: 'Convert links in current file',
       shouldAddCommandToSubmenu: true
     });
-    this.app = this.plugin.app;
+
+    this.app = params.app;
+    this.linkConverter = params.linkConverter;
   }
 
   protected override canExecuteFile(file: TFile): boolean {
@@ -35,7 +41,10 @@ export class ConvertLinksInFileCommandHandler extends FileCommandHandler {
 
   protected override async executeFile(file: TFile): Promise<void> {
     await super.execute();
-    await convertLinksInFile(this.plugin, file, this.plugin.abortSignal, true);
+    await this.linkConverter.convertLinksInFile({
+      file,
+      shouldPromptForExcludedFile: true
+    });
   }
 
   protected override shouldAddToFileMenu(file: TFile): boolean {

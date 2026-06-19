@@ -92,8 +92,7 @@ describe('PluginSettingsTab', () => {
     const pluginSettingsComponent = createMockSettingsComponent();
     const tab = new PluginSettingsTab({ plugin, pluginSettingsComponent });
 
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- super.display() calls the PluginSettingsTabBase override; the inherited @deprecated tag on Obsidian's SettingTab.display propagates via TS getJsDocTags.
-    tab.display();
+    tab.displayLegacy();
 
     expect(tab.containerEl).toBeDefined();
   });

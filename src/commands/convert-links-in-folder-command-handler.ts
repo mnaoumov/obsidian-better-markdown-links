@@ -2,12 +2,16 @@ import type { TFolder } from 'obsidian';
 
 import { FolderCommandHandler } from 'obsidian-dev-utils/obsidian/command-handlers/folder-command-handler';
 
-import type { Plugin } from '../plugin.ts';
+import { LinkConverter } from '../link-converter.ts';
 
-import { convertLinksInFolder } from '../link-converter.ts';
+interface ConvertLinksInFolderCommandHandlerConstructorParams {
+  readonly linkConverter: LinkConverter;
+}
 
 export class ConvertLinksInFolderCommandHandler extends FolderCommandHandler {
-  public constructor(private readonly plugin: Plugin) {
+  private readonly linkConverter: LinkConverter;
+
+  public constructor(params: ConvertLinksInFolderCommandHandlerConstructorParams) {
     super({
       fileMenuItemName: 'Convert links in folder',
       fileMenuSubmenuIcon: 'link-2',
@@ -17,6 +21,8 @@ export class ConvertLinksInFolderCommandHandler extends FolderCommandHandler {
       name: 'Convert links in current folder',
       shouldAddCommandToSubmenu: true
     });
+
+    this.linkConverter = params.linkConverter;
   }
 
   protected override canExecuteFolder(): boolean {
@@ -25,7 +31,9 @@ export class ConvertLinksInFolderCommandHandler extends FolderCommandHandler {
 
   protected override async executeFolder(folder: TFolder): Promise<void> {
     await super.execute();
-    await convertLinksInFolder(this.plugin, folder, this.plugin.abortSignal);
+    await this.linkConverter.convertLinksInFolder({
+      folder
+    });
   }
 
   protected override shouldAddToFolderMenu(): boolean {

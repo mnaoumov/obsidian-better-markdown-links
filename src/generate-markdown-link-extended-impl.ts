@@ -1,5 +1,7 @@
-import type { FileManager } from 'obsidian';
-import type { ReadonlyDeep } from 'type-fest';
+import type {
+  App,
+  FileManager
+} from 'obsidian';
 
 import { TFile } from 'obsidian';
 import {
@@ -7,58 +9,49 @@ import {
   removeUndefinedProperties
 } from 'obsidian-dev-utils/object-utils';
 import { MonkeyAroundComponent } from 'obsidian-dev-utils/obsidian/components/monkey-around-component';
-import {
-  generateMarkdownLink,
-  registerGenerateMarkdownLinkDefaultOptionsFn
-} from 'obsidian-dev-utils/obsidian/link';
+import { generateMarkdownLink } from 'obsidian-dev-utils/obsidian/link';
 
 import type {
   GenerateMarkdownLinkExtendedOptions,
   GenerateMarkdownLinkExtendedWrapper
 } from './generate-markdown-link-extended.d.ts';
-import type { PluginSettings } from './plugin-settings.ts';
-import type { Plugin } from './plugin.ts';
 
 export type GenerateMarkdownLinkNativeFn = FileManager['generateMarkdownLink'];
 
-export function patchGenerateMarkdownLink(plugin: Plugin, getSettings: () => ReadonlyDeep<PluginSettings>): void {
-  const patch = plugin.addChild(new MonkeyAroundComponent());
-  patch.registerPatch(plugin.app.fileManager, {
-    generateMarkdownLink(): GenerateMarkdownLinkExtendedWrapper & GenerateMarkdownLinkNativeFn {
-      return Object.assign(native, { extended });
+export class GenerateMarkdownLinkPatchComponent extends MonkeyAroundComponent {
+  public constructor(private readonly app: App) {
+    super();
+  }
 
-      function native(file: TFile, sourcePath: string, subpath?: string, alias?: string): string {
-        return generateMarkdownLinkNative(plugin, file, sourcePath, subpath, alias);
+  public override onload(): void {
+    const app = this.app;
+
+    this.registerPatch(this.app.fileManager, {
+      generateMarkdownLink(): GenerateMarkdownLinkExtendedWrapper & GenerateMarkdownLinkNativeFn {
+        return Object.assign(native, { extended });
+
+        function native(file: TFile, sourcePath: string, subpath?: string, alias?: string): string {
+          return generateMarkdownLinkNative(app, file, sourcePath, subpath, alias);
+        }
+
+        function extended(options: GenerateMarkdownLinkExtendedOptions): string {
+          return generateMarkdownLinkExtended(app, options);
+        }
       }
-
-      function extended(options: GenerateMarkdownLinkExtendedOptions): string {
-        return generateMarkdownLinkExtended(plugin, options);
-      }
-    }
-  });
-
-  registerGenerateMarkdownLinkDefaultOptionsFn(plugin, () => {
-    const settings = getSettings();
-    return {
-      isEmptyEmbedAliasAllowed: settings.shouldAllowEmptyEmbedAlias,
-      shouldIncludeAttachmentExtensionToEmbedAlias: settings.shouldIncludeAttachmentExtensionToEmbedAlias,
-      shouldUseAngleBrackets: settings.shouldUseAngleBrackets,
-      shouldUseLeadingDotForRelativePaths: settings.shouldUseLeadingDotForRelativePaths,
-      shouldUseLeadingSlashForAbsolutePaths: settings.shouldUseLeadingSlashForAbsolutePaths
-    };
-  });
+    });
+  }
 }
 
-function generateMarkdownLinkExtended(plugin: Plugin, options: GenerateMarkdownLinkExtendedOptions): string {
+function generateMarkdownLinkExtended(app: App, options: GenerateMarkdownLinkExtendedOptions): string {
   return generateMarkdownLink({
-    app: plugin.app,
+    app,
     ...options
   });
 }
 
-function generateMarkdownLinkNative(plugin: Plugin, file: TFile, sourcePath: string, subpath?: string, alias?: string): string {
+function generateMarkdownLinkNative(app: App, file: TFile, sourcePath: string, subpath?: string, alias?: string): string {
   return generateMarkdownLinkExtended(
-    plugin,
+    app,
     removeUndefinedProperties(normalizeOptionalProperties<GenerateMarkdownLinkExtendedOptions>({
       alias,
       sourcePathOrFile: sourcePath,

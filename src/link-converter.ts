@@ -1,149 +1,117 @@
-import type { LinkChangeUpdate } from '@obsidian-typings/obsidian-public-latest';
 import type {
+  App,
   TFile,
   TFolder
 } from 'obsidian';
+import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
 
-import { handleSilentError } from 'obsidian-dev-utils/async';
-import { SilentError } from 'obsidian-dev-utils/error';
-import { applyFileChanges } from 'obsidian-dev-utils/obsidian/file-change';
+import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
 import {
   getMarkdownFiles,
   isMarkdownFile
 } from 'obsidian-dev-utils/obsidian/file-system';
-import {
-  generateMarkdownLink,
-  splitSubpath,
-  updateLinksInFile
-} from 'obsidian-dev-utils/obsidian/link';
+import { updateLinksInFile } from 'obsidian-dev-utils/obsidian/link';
 import { loop } from 'obsidian-dev-utils/obsidian/loop';
 import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
 import { addToQueue } from 'obsidian-dev-utils/obsidian/queue';
 
-import type { Plugin } from './plugin.ts';
+import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 
-export async function applyLinkChangeUpdates(plugin: Plugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
-  try {
-    await applyLinkChangeUpdatesImpl(plugin, file, updates);
-  } catch (error) {
-    if (handleSilentError(error)) {
-      return;
-    }
-    throw error;
-  }
+interface LinkConverterConstructorParams {
+  readonly abortSignalComponent: AbortSignalComponent;
+  readonly app: App;
+  readonly pluginSettingsComponent: PluginSettingsComponent;
 }
 
-export function convertLinksInCurrentFile(plugin: Plugin, checking: boolean): boolean {
-  const activeFile = plugin.app.workspace.getActiveFile();
-  if (!activeFile || !isMarkdownFile(plugin.app, activeFile)) {
-    return false;
+interface LinkConverterConvertLinksInFileParams {
+  readonly abortSignal?: AbortSignal;
+  readonly file: TFile;
+  readonly shouldPromptForExcludedFile?: boolean;
+}
+
+interface LinkConverterConvertLinksInFolderParams {
+  readonly abortSignal?: AbortSignal;
+  readonly folder: TFolder;
+}
+
+export class LinkConverter {
+  private readonly abortSignalComponent: AbortSignalComponent;
+  private readonly app: App;
+  private readonly pluginSettingsComponent: PluginSettingsComponent;
+
+  public constructor(params: LinkConverterConstructorParams) {
+    this.abortSignalComponent = params.abortSignalComponent;
+    this.app = params.app;
+    this.pluginSettingsComponent = params.pluginSettingsComponent;
   }
 
-  if (!checking) {
-    addToQueue({
-      abortSignal: plugin.abortSignal,
-      app: plugin.app,
-      operationFn: (abortSignal) => convertLinksInFile(plugin, activeFile, abortSignal, true),
-      operationName: 'convertLinksInCurrentFile'
+  public convertLinksInCurrentFile(checking: boolean): boolean {
+    const activeFile = this.app.workspace.getActiveFile();
+    if (!activeFile || !isMarkdownFile(this.app, activeFile)) {
+      return false;
+    }
+
+    if (!checking) {
+      addToQueue({
+        abortSignal: this.abortSignalComponent.abortSignal,
+        app: this.app,
+        operationFn: (abortSignal) =>
+          this.convertLinksInFile({
+            abortSignal,
+            file: activeFile,
+            shouldPromptForExcludedFile: true
+          }),
+        operationName: 'convertLinksInCurrentFile'
+      });
+    }
+
+    return true;
+  }
+
+  public async convertLinksInFile(params: LinkConverterConvertLinksInFileParams): Promise<void> {
+    const abortSignal = abortSignalAny(this.abortSignalComponent.abortSignal, params.abortSignal);
+    abortSignal.throwIfAborted();
+    const settings = this.pluginSettingsComponent.settings;
+
+    if (settings.isPathIgnored(params.file.path)) {
+      if (!params.shouldPromptForExcludedFile) {
+        return;
+      }
+
+      const shouldConvert = await confirm({
+        app: this.app,
+        message: `Note '${params.file.path}' is excluded from the conversion in plugin settings. Do you want to convert it anyway?`
+      });
+      if (!shouldConvert) {
+        return;
+      }
+    }
+
+    await updateLinksInFile({
+      abortSignal,
+      app: this.app,
+      linkStyle: settings.getLinkStyle(true),
+      newSourcePathOrFile: params.file
     });
   }
 
-  return true;
-}
-
-export async function convertLinksInFile(plugin: Plugin, file: TFile, abortSignal: AbortSignal, shouldPromptForExcludedFile?: boolean): Promise<void> {
-  abortSignal.throwIfAborted();
-  const settings = plugin.pluginSettingsComponent.settings;
-
-  if (settings.isPathIgnored(file.path)) {
-    if (!shouldPromptForExcludedFile) {
-      return;
-    }
-
-    const shouldConvert = await confirm({
-      app: plugin.app,
-      message: `Note '${file.path}' is excluded from the conversion in plugin settings. Do you want to convert it anyway?`
+  public async convertLinksInFolder(params: LinkConverterConvertLinksInFolderParams): Promise<void> {
+    const abortSignal = abortSignalAny(this.abortSignalComponent.abortSignal, params.abortSignal);
+    await loop({
+      abortSignal,
+      buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,
+      items: getMarkdownFiles(this.app, params.folder, true),
+      processItem: async (file) => {
+        await this.convertLinksInFile({
+          abortSignal,
+          file
+        });
+      },
+      progressBarTitle: params.folder.path === '/'
+        ? 'Better Markdown Links: Converting links in entire vault...'
+        : `Better Markdown Links: Converting links in folder "${params.folder.path}" ...`,
+      shouldContinueOnError: true,
+      shouldShowProgressBar: true
     });
-    if (!shouldConvert) {
-      return;
-    }
   }
-
-  await updateLinksInFile({
-    abortSignal,
-    app: plugin.app,
-    linkStyle: settings.getLinkStyle(true),
-    newSourcePathOrFile: file
-  });
-}
-
-export async function convertLinksInFolder(plugin: Plugin, folder: TFolder, abortSignal: AbortSignal): Promise<void> {
-  await loop({
-    abortSignal,
-    buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,
-    items: getMarkdownFiles(plugin.app, folder, true),
-    processItem: async (file) => {
-      await convertLinksInFile(plugin, file, abortSignal);
-    },
-    progressBarTitle: folder.path === '/'
-      ? 'Better Markdown Links: Converting links in entire vault...'
-      : `Better Markdown Links: Converting links in folder "${folder.path}" ...`,
-    shouldContinueOnError: true,
-    shouldShowProgressBar: true
-  });
-}
-
-/**
- * BUG: https://forum.obsidian.md/t/update-internal-link-breaks-links-with-angle-brackets/85598
- */
-export function fixChange(plugin: Plugin, change: string, sourceFile: TFile): string {
-  const match = /^!?\[(?<Alias>.*?)\]\((?<EscapedPath>[^<]+?) .+?>\)$/.exec(change);
-  const isEmbed = change.startsWith('!');
-
-  if (!match) {
-    return change;
-  }
-
-  /* v8 ignore start -- regex named groups always exist when the regex matches. */
-  const alias = match.groups?.['Alias'] ?? '';
-  const escapedPath = match.groups?.['EscapedPath'] ?? '';
-  /* v8 ignore stop */
-  const { linkPath, subpath } = splitSubpath(decodeURIComponent(escapedPath));
-  const targetFile = plugin.app.metadataCache.getFirstLinkpathDest(linkPath, sourceFile.path);
-  if (!targetFile) {
-    return `${isEmbed ? '!' : ''}[${alias}](${escapedPath})`;
-  }
-
-  return generateMarkdownLink({
-    alias,
-    app: plugin.app,
-    isEmbed,
-    linkStyle: plugin.pluginSettingsComponent.settings.getLinkStyle(false),
-    sourcePathOrFile: sourceFile,
-    subpath,
-    targetPathOrFile: targetFile
-  });
-}
-
-async function applyLinkChangeUpdatesImpl(plugin: Plugin, file: TFile, updates: LinkChangeUpdate[]): Promise<void> {
-  let processFileAbortController = plugin.processFileAbortControllers.get(file.path);
-  processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
-  processFileAbortController = new AbortController();
-  plugin.processFileAbortControllers.set(file.path, processFileAbortController);
-
-  await applyFileChanges(
-    plugin.app,
-    file,
-    () => {
-      return updates.map((update) => ({
-        newContent: fixChange(plugin, update.change, file),
-        oldContent: update.reference.original,
-        reference: update.reference
-      }));
-    },
-    {
-      abortSignal: processFileAbortController.signal
-    },
-    false
-  );
 }
