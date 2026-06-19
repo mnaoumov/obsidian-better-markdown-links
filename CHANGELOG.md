@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 3.4.9
+
+- refactor: new template
+- chore: update version script
+
 ## 3.4.8
 
 - chore: update manifest
