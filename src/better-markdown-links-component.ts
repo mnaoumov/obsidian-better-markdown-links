@@ -5,18 +5,13 @@ import type { GenerateMarkdownLinkParams } from 'obsidian-dev-utils/obsidian/lin
 
 import {
   TAbstractFile,
-  TFile,
-  Workspace
+  TFile
 } from 'obsidian';
 import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
-import {
-  convertAsyncToSync,
-  handleSilentError
-} from 'obsidian-dev-utils/async';
+import { convertAsyncToSync } from 'obsidian-dev-utils/async';
 import { SilentError } from 'obsidian-dev-utils/error';
 import { GenerateMarkdownLinkDefaultParamsComponent } from 'obsidian-dev-utils/obsidian/components/generate-markdown-link-default-params-component';
 import { LayoutReadyComponent } from 'obsidian-dev-utils/obsidian/components/layout-ready-component';
-import { MonkeyAroundComponent } from 'obsidian-dev-utils/obsidian/components/monkey-around-component';
 import { convertLink } from 'obsidian-dev-utils/obsidian/link';
 import {
   getAllLinks,
@@ -27,6 +22,7 @@ import type { LinkConverter } from './link-converter.ts';
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 
 import { GenerateMarkdownLinkPatchComponent } from './generate-markdown-link-extended-impl.ts';
+import { WorkspaceOpenLinkTextPatchComponent } from './patches/workspace-open-link-text-patch-component.ts';
 
 interface BetterMarkdownLinksComponentConstructorParams {
   readonly abortSignalComponent: AbortSignalComponent;
@@ -52,46 +48,7 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     this.linkConverter = params.linkConverter;
   }
 
-  protected override onLayoutReady(): void {
-    this.addChild(new GenerateMarkdownLinkPatchComponent(this.app));
-    this.addChild(
-      new GenerateMarkdownLinkDefaultParamsComponent({
-        app: this.app,
-        getDefaultParams: (): Partial<GenerateMarkdownLinkParams> => {
-          return this.pluginSettingsComponent.settings;
-        }
-      })
-    );
-
-    this.registerEvent(this.app.vault.on('modify', convertAsyncToSync(this.handleModify.bind(this))));
-
-    const patch = this.addChild(new MonkeyAroundComponent());
-    patch.registerMethodPatch({
-      methodName: 'openLinkText',
-      obj: Workspace.prototype,
-      patchHandler: async ({
-        fallback,
-        originalArgs: [, sourcePath]
-      }) => {
-        await fallback();
-        const sourceFile = this.app.vault.getFileByPath(sourcePath);
-        if (!sourceFile) {
-          return;
-        }
-
-        try {
-          await this.handleModify(sourceFile);
-        } catch (error) {
-          if (handleSilentError(error)) {
-            return;
-          }
-          throw error;
-        }
-      }
-    });
-  }
-
-  private async handleModify(file: TAbstractFile): Promise<void> {
+  public async handleModify(file: TAbstractFile): Promise<void> {
     this.abortSignalComponent.abortSignal.throwIfAborted();
 
     if (!(file instanceof TFile)) {
@@ -144,5 +101,26 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     } finally {
       this.processFileAbortControllers.delete(file.path);
     }
+  }
+
+  protected override onLayoutReady(): void {
+    this.addChild(new GenerateMarkdownLinkPatchComponent(this.app));
+    this.addChild(
+      new GenerateMarkdownLinkDefaultParamsComponent({
+        app: this.app,
+        getDefaultParams: (): Partial<GenerateMarkdownLinkParams> => {
+          return this.pluginSettingsComponent.settings;
+        }
+      })
+    );
+
+    this.registerEvent(this.app.vault.on('modify', convertAsyncToSync(this.handleModify.bind(this))));
+
+    this.addChild(
+      new WorkspaceOpenLinkTextPatchComponent({
+        app: this.app,
+        betterMarkdownLinksComponent: this
+      })
+    );
   }
 }
