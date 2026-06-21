@@ -1,10 +1,7 @@
-import type {
-  App,
-  TFolder
-} from 'obsidian';
+import type { App as AppOriginal } from 'obsidian';
 
-import { castTo } from 'obsidian-dev-utils/object-utils';
 import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
+import { App } from 'obsidian-test-mocks/obsidian';
 import {
   beforeEach,
   describe,
@@ -15,35 +12,16 @@ import {
 
 import type { LinkConverter } from '../link-converter.ts';
 
-vi.mock('obsidian-dev-utils/obsidian/command-handlers/global-command-handler', () => ({
-  GlobalCommandHandler: vi.fn()
-}));
-
-// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { ConvertLinksInEntireVaultCommandHandler } from './convert-links-in-entire-vault-command-handler.ts';
 
-interface CommandHandlerPrivate {
-  execute(): Promise<void>;
-}
-
-function asPrivate(handler: ConvertLinksInEntireVaultCommandHandler): CommandHandlerPrivate {
-  return castTo<CommandHandlerPrivate>(handler);
-}
-
 describe('ConvertLinksInEntireVaultCommandHandler', () => {
+  let app: AppOriginal;
   let convertLinksInFolder: ReturnType<typeof vi.fn<LinkConverter['convertLinksInFolder']>>;
-  let root: TFolder;
   let handler: ConvertLinksInEntireVaultCommandHandler;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    app = App.createConfigured__().asOriginalType__();
     convertLinksInFolder = vi.fn<LinkConverter['convertLinksInFolder']>().mockResolvedValue(undefined);
-    root = strictProxy<TFolder>({ path: '/' });
-    const app = strictProxy<App>({
-      vault: {
-        getRoot: vi.fn().mockReturnValue(root)
-      }
-    });
     const linkConverter = strictProxy<LinkConverter>({ convertLinksInFolder });
     handler = new ConvertLinksInEntireVaultCommandHandler({ app, linkConverter });
   });
@@ -53,8 +31,11 @@ describe('ConvertLinksInEntireVaultCommandHandler', () => {
   });
 
   it('should convert links in the vault root folder on execute', async () => {
-    await asPrivate(handler).execute();
+    const root = app.vault.getRoot();
+    handler.buildCommand().checkCallback?.(false);
 
-    expect(convertLinksInFolder).toHaveBeenCalledExactlyOnceWith({ folder: root });
+    await vi.waitFor(() => {
+      expect(convertLinksInFolder).toHaveBeenCalledExactlyOnceWith({ folder: root });
+    });
   });
 });

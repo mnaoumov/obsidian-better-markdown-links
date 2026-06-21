@@ -16,84 +16,69 @@ vi.mock('obsidian-dev-utils/html-element', () => ({
   appendCodeBlock: vi.fn()
 }));
 
-type CallbackFn = (...args: unknown[]) => unknown;
+const EXPECTED_BOUND_PROPERTIES = [
+  'shouldUseLeadingDotForRelativePaths',
+  'shouldUseLeadingSlashForAbsolutePaths',
+  'shouldUseAngleBrackets',
+  'shouldAutomaticallyConvertNewLinks',
+  'shouldAutomaticallyUpdateLinksOnRenameOrMove',
+  'shouldAllowEmptyEmbedAlias',
+  'shouldIncludeAttachmentExtensionToEmbedAlias',
+  'shouldPreserveExistingLinkStyle',
+  'includePaths',
+  'excludePaths'
+];
 
-vi.mock('obsidian-dev-utils/obsidian/setting-ex', () => {
-  function createMockValueComponent(): Record<string, CallbackFn> {
-    const component: Record<string, CallbackFn> = {
-      getValue: vi.fn().mockReturnValue(false),
-      onChange: vi.fn().mockReturnThis(),
-      setPlaceholder: vi.fn().mockReturnThis(),
-      setTooltip: vi.fn().mockReturnThis(),
-      setValue: vi.fn().mockReturnThis()
-    };
-    return component;
-  }
-  class SettingEx {
-    public addMultipleText(cb: CallbackFn): this {
-      cb(createMockValueComponent());
-      return this;
-    }
-
-    public addToggle(cb: CallbackFn): this {
-      cb(createMockValueComponent());
-      return this;
-    }
-
-    public setDesc(_desc: unknown): this {
-      return this;
-    }
-
-    public setName(_name: string): this {
-      return this;
-    }
-  }
-  return { SettingEx };
-});
-
-function createMockSettingsComponent(): PluginSettingsComponentBase<PluginSettings> {
-  // eslint-disable-next-line no-restricted-syntax -- strictProxy blocks dynamic property access needed by PluginSettingsTabBase.bind()
-  return {
+function createTab(): PluginSettingsTab {
+  const pluginSettingsComponent = strictProxy<PluginSettingsComponentBase<PluginSettings>>({
     defaultSettings: new PluginSettings(),
-    on: vi.fn().mockReturnValue({ id: 0 }),
+    on: vi.fn().mockReturnValue({ id: 'ref' }),
     settings: new PluginSettings(),
     settingsState: {
       effectiveValues: new PluginSettings(),
       inputValues: new PluginSettings(),
-      validationMessages: {} as Record<string, string>
+      validationMessages: {
+        excludePaths: '',
+        includePaths: '',
+        shouldAllowEmptyEmbedAlias: '',
+        shouldAutomaticallyConvertNewLinks: '',
+        shouldAutomaticallyUpdateLinksOnRenameOrMove: '',
+        shouldIncludeAttachmentExtensionToEmbedAlias: '',
+        shouldPreserveExistingLinkStyle: '',
+        shouldUseAngleBrackets: '',
+        shouldUseLeadingDotForRelativePaths: '',
+        shouldUseLeadingSlashForAbsolutePaths: ''
+      }
     }
-  } as unknown as PluginSettingsComponentBase<PluginSettings>;
+  });
+
+  const plugin = strictProxy<Plugin>({
+    app: {
+      workspace: {
+        on: vi.fn().mockReturnValue({ id: 'test' })
+      }
+    }
+  });
+
+  const tab = new PluginSettingsTab({ plugin, pluginSettingsComponent });
+  tab.containerEl = activeDocument.createElement('div');
+  return tab;
 }
 
 describe('PluginSettingsTab', () => {
-  it('should create tab and display settings', () => {
-    const plugin = strictProxy<Plugin>({
-      app: {
-        workspace: {
-          on: vi.fn().mockReturnValue({})
-        }
-      }
-    });
-    const pluginSettingsComponent = createMockSettingsComponent();
+  it('should create the tab instance', () => {
+    const tab = createTab();
 
-    const tab = new PluginSettingsTab({ plugin, pluginSettingsComponent });
-
-    expect(tab).toBeDefined();
+    expect(tab).toBeInstanceOf(PluginSettingsTab);
   });
 
-  it('should render all settings in display()', () => {
-    const plugin = strictProxy<Plugin>({
-      app: {
-        workspace: {
-          on: vi.fn().mockReturnValue({})
-        }
-      }
-    });
-    const pluginSettingsComponent = createMockSettingsComponent();
-    const tab = new PluginSettingsTab({ plugin, pluginSettingsComponent });
+  it('should render every setting in displayLegacy() and bind it to the correct property', () => {
+    const tab = createTab();
+    const bindSpy = vi.spyOn(tab, 'bind').mockReturnValue(undefined);
 
     tab.displayLegacy();
 
-    expect(tab.containerEl).toBeDefined();
+    expect(bindSpy.mock.calls.map((call) => call[1])).toEqual(EXPECTED_BOUND_PROPERTIES);
+    expect(tab.containerEl.children.length).toBe(EXPECTED_BOUND_PROPERTIES.length);
   });
 });

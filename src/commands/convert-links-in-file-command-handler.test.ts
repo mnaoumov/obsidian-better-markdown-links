@@ -1,10 +1,24 @@
 import type {
-  App,
-  TFile
+  App as AppOriginal,
+  Menu as MenuOriginal,
+  TFile as TFileOriginal
 } from 'obsidian';
+import type { ActiveFileProvider } from 'obsidian-dev-utils/obsidian/active-file-provider';
+import type {
+  CommandHandler,
+  CommandHandlerRegistrationContext
+} from 'obsidian-dev-utils/obsidian/command-handlers/command-handler';
+import type {
+  FileMenuEventHandler,
+  FilesMenuEventHandler
+} from 'obsidian-dev-utils/obsidian/menu-event-registrar';
 
 import { castTo } from 'obsidian-dev-utils/object-utils';
 import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
+import {
+  App,
+  TFile
+} from 'obsidian-test-mocks/obsidian';
 import {
   beforeEach,
   describe,
@@ -15,24 +29,8 @@ import {
 
 import type { LinkConverter } from '../link-converter.ts';
 
-const { mockBaseCanExecute, mockBaseExecute } = vi.hoisted(() => ({
-  mockBaseCanExecute: vi.fn<() => boolean>(),
-  mockBaseExecute: vi.fn<() => Promise<void>>()
-}));
-
-vi.mock('obsidian-dev-utils/obsidian/command-handlers/file-command-handler', () => ({
-  FileCommandHandler: class {
-    protected canExecute(): boolean {
-      return mockBaseCanExecute();
-    }
-
-    protected async execute(): Promise<void> {
-      await mockBaseExecute();
-    }
-  }
-}));
-
-vi.mock('obsidian-dev-utils/obsidian/file-system', () => ({
+vi.mock('obsidian-dev-utils/obsidian/file-system', async (importOriginal) => ({
+  ...await importOriginal<typeof import('obsidian-dev-utils/obsidian/file-system')>(),
   isMarkdownFile: vi.fn()
 }));
 
@@ -42,86 +40,139 @@ import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/file-system';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { ConvertLinksInFileCommandHandler } from './convert-links-in-file-command-handler.ts';
 
-interface CommandHandlerPrivate {
-  canExecuteFile(file: TFile): boolean;
-  executeFile(file: TFile): Promise<void>;
-  shouldAddToFileMenu(file: TFile): boolean;
+let app: AppOriginal;
+
+interface MenuItemMock {
+  onClick(callback: () => void): MenuItemMock;
+  setIcon(): MenuItemMock;
+  setSection(): MenuItemMock;
+  setTitle(): MenuItemMock;
 }
 
-function asPrivate(handler: ConvertLinksInFileCommandHandler): CommandHandlerPrivate {
-  return castTo<CommandHandlerPrivate>(handler);
+interface MenuMock {
+  addItem: ReturnType<typeof vi.fn>;
+  menu: MenuOriginal;
 }
 
 describe('ConvertLinksInFileCommandHandler', () => {
+  let activeFile: null | TFileOriginal;
   let convertLinksInFile: ReturnType<typeof vi.fn<LinkConverter['convertLinksInFile']>>;
-  let app: App;
+  let fileMenuHandlers: FileMenuEventHandler[];
   let handler: ConvertLinksInFileCommandHandler;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    mockBaseCanExecute.mockReturnValue(true);
-    mockBaseExecute.mockResolvedValue(undefined);
     vi.mocked(isMarkdownFile).mockReturnValue(true);
+    app = App.createConfigured__().asOriginalType__();
     convertLinksInFile = vi.fn<LinkConverter['convertLinksInFile']>().mockResolvedValue(undefined);
-    app = strictProxy<App>({});
     const linkConverter = strictProxy<LinkConverter>({ convertLinksInFile });
     handler = new ConvertLinksInFileCommandHandler({ app, linkConverter });
+
+    activeFile = null;
+    fileMenuHandlers = [];
+    const activeFileProvider: ActiveFileProvider = { getActiveFile: () => activeFile };
+    const context: CommandHandlerRegistrationContext = {
+      activeFileProvider,
+      menuEventRegistrar: {
+        registerEditorMenuEventHandler: vi.fn(),
+        registerFileMenuEventHandler: (menuHandler: FileMenuEventHandler): void => {
+          fileMenuHandlers.push(menuHandler);
+        },
+        registerFilesMenuEventHandler: (_menuHandler: FilesMenuEventHandler): void => {
+          // The handler under test does not use the multi-file menu.
+        }
+      },
+      pluginName: 'Better Markdown Links'
+    };
+    // Call through the base `CommandHandler` type, whose `onRegistered` accurately declares an awaitable `Promise`-like return that the `AbstractFileCommandHandler` types narrow to `void`.
+    await castTo<CommandHandler>(handler).onRegistered(context);
   });
 
   it('should create an instance', () => {
     expect(handler).toBeInstanceOf(ConvertLinksInFileCommandHandler);
   });
 
-  describe('canExecuteFile', () => {
-    it('should return false when the base handler cannot execute', () => {
-      mockBaseCanExecute.mockReturnValue(false);
-      const file = strictProxy<TFile>({ path: 'note.md' });
+  it('should allow executing when the active file is a markdown file', () => {
+    vi.mocked(isMarkdownFile).mockReturnValue(true);
+    activeFile = createFile('note.md');
 
-      expect(asPrivate(handler).canExecuteFile(file)).toBe(false);
-      expect(vi.mocked(isMarkdownFile)).not.toHaveBeenCalled();
-    });
+    const canExecute = handler.buildCommand().checkCallback?.(true);
 
-    it('should return true for a markdown file when the base handler can execute', () => {
-      const file = strictProxy<TFile>({ path: 'note.md' });
-
-      expect(asPrivate(handler).canExecuteFile(file)).toBe(true);
-      expect(vi.mocked(isMarkdownFile)).toHaveBeenCalledWith(app, file);
-    });
-
-    it('should return false for a non-markdown file when the base handler can execute', () => {
-      vi.mocked(isMarkdownFile).mockReturnValue(false);
-      const file = strictProxy<TFile>({ path: 'image.png' });
-
-      expect(asPrivate(handler).canExecuteFile(file)).toBe(false);
-    });
+    expect(canExecute).toBe(true);
+    expect(vi.mocked(isMarkdownFile)).toHaveBeenCalledWith(app, activeFile);
   });
 
-  describe('shouldAddToFileMenu', () => {
-    it('should add markdown files to the file menu', () => {
-      const file = strictProxy<TFile>({ path: 'note.md' });
+  it('should not allow executing when the active file is not a markdown file', () => {
+    vi.mocked(isMarkdownFile).mockReturnValue(false);
+    activeFile = createFile('image.png');
 
-      expect(asPrivate(handler).shouldAddToFileMenu(file)).toBe(true);
-    });
+    const canExecute = handler.buildCommand().checkCallback?.(true);
 
-    it('should not add non-markdown files to the file menu', () => {
-      vi.mocked(isMarkdownFile).mockReturnValue(false);
-      const file = strictProxy<TFile>({ path: 'image.png' });
-
-      expect(asPrivate(handler).shouldAddToFileMenu(file)).toBe(false);
-    });
+    expect(canExecute).toBe(false);
   });
 
-  describe('executeFile', () => {
-    it('should convert links in the file prompting for excluded files', async () => {
-      const file = strictProxy<TFile>({ path: 'note.md' });
+  it('should add markdown files to the file menu', () => {
+    vi.mocked(isMarkdownFile).mockReturnValue(true);
+    const file = createFile('note.md');
+    const { addItem, menu } = createMenu();
 
-      await asPrivate(handler).executeFile(file);
+    fileMenuHandlers[0]?.(menu, file, 'file-explorer-context-menu');
 
-      expect(mockBaseExecute).toHaveBeenCalledOnce();
-      expect(convertLinksInFile).toHaveBeenCalledExactlyOnceWith({
+    expect(addItem).toHaveBeenCalledOnce();
+    expect(vi.mocked(isMarkdownFile)).toHaveBeenCalledWith(app, file);
+  });
+
+  it('should not add non-markdown files to the file menu', () => {
+    vi.mocked(isMarkdownFile).mockReturnValue(false);
+    const file = createFile('image.png');
+    const { addItem, menu } = createMenu();
+
+    fileMenuHandlers[0]?.(menu, file, 'file-explorer-context-menu');
+
+    expect(addItem).not.toHaveBeenCalled();
+  });
+
+  it('should convert links in the file when the menu item is clicked', async () => {
+    vi.mocked(isMarkdownFile).mockReturnValue(true);
+    const file = createFile('note.md');
+    const { menu } = createMenu();
+
+    fileMenuHandlers[0]?.(menu, file, 'file-explorer-context-menu');
+
+    await vi.waitFor(() => {
+      expect(convertLinksInFile).toHaveBeenCalledWith({
         file,
         shouldPromptForExcludedFile: true
       });
     });
   });
+
+  function createFile(path: string): TFileOriginal {
+    return TFile.create__(castTo(app.vault), path).asOriginalType2__();
+  }
+
+  function createMenu(): MenuMock {
+    const menu = strictProxy<MenuOriginal>({});
+    const addItem = vi.fn((callback: (item: MenuItemMock) => void) => {
+      const item: MenuItemMock = {
+        onClick: vi.fn((clickCallback: () => void): MenuItemMock => {
+          clickCallback();
+          return item;
+        }),
+        setIcon: vi.fn((): MenuItemMock => item),
+        setSection: vi.fn((): MenuItemMock => item),
+        setTitle: vi.fn((): MenuItemMock => item)
+      };
+      callback(item);
+      return menu;
+    });
+    Object.assign(menu, {
+      addItem,
+      setSectionSubmenu: vi.fn()
+    });
+    return {
+      addItem,
+      menu
+    };
+  }
 });

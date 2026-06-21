@@ -1,11 +1,11 @@
 import type {
-  App,
-  FileManager,
-  TFile
+  App as AppOriginal,
+  TFile as TFileOriginal
 } from 'obsidian';
 
 import { castTo } from 'obsidian-dev-utils/object-utils';
 import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
+import { App } from 'obsidian-test-mocks/obsidian';
 import {
   beforeEach,
   describe,
@@ -20,16 +20,6 @@ import type {
   GenerateMarkdownLinkExtendedWrapper
 } from './generate-markdown-link-extended.d.ts';
 
-const { mockRegisterPatch } = vi.hoisted(() => ({
-  mockRegisterPatch: vi.fn<(obj: object, factories: PatchFactories) => void>()
-}));
-
-vi.mock('obsidian-dev-utils/obsidian/components/monkey-around-component', () => ({
-  MonkeyAroundComponent: class {
-    public registerPatch = mockRegisterPatch;
-  }
-}));
-
 vi.mock('obsidian-dev-utils/obsidian/link', () => ({
   generateMarkdownLink: vi.fn().mockReturnValue('[generated](link.md)')
 }));
@@ -42,52 +32,36 @@ import { GenerateMarkdownLinkPatchComponent } from './generate-markdown-link-ext
 
 type PatchedGenerateMarkdownLink = GenerateMarkdownLinkExtendedWrapper & GenerateMarkdownLinkNativeFn;
 
-interface PatchFactories {
-  readonly generateMarkdownLink: WrapperFactory;
-}
-
-type WrapperFactory = (next: GenerateMarkdownLinkNativeFn) => PatchedGenerateMarkdownLink;
-
-function buildPatched(app: App): PatchedGenerateMarkdownLink {
+function loadPatched(app: AppOriginal): PatchedGenerateMarkdownLink {
   const component = new GenerateMarkdownLinkPatchComponent(app);
-  component.onload();
-
-  const [patchedObj, factories] = mockRegisterPatch.mock.calls[0] ?? [];
-  expect(patchedObj).toBe(app.fileManager);
-  const factory = castTo<PatchFactories>(factories).generateMarkdownLink;
-  return factory(castTo<GenerateMarkdownLinkNativeFn>(vi.fn()));
-}
-
-function createApp(): App {
-  return strictProxy<App>({
-    fileManager: strictProxy<FileManager>({})
-  });
+  component.load();
+  return castTo<PatchedGenerateMarkdownLink>(app.fileManager.generateMarkdownLink);
 }
 
 describe('GenerateMarkdownLinkPatchComponent', () => {
-  let app: App;
-  let file: TFile;
+  let app: AppOriginal;
+  let file: TFileOriginal;
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(generateMarkdownLink).mockReturnValue('[generated](link.md)');
-    app = createApp();
-    file = strictProxy<TFile>({ path: 'target.md' });
+    app = App.createConfigured__().asOriginalType__();
+    file = strictProxy<TFileOriginal>({ path: 'target.md' });
   });
 
   it('should register a patch on the file manager generateMarkdownLink', () => {
+    const original = app.fileManager.generateMarkdownLink;
     const component = new GenerateMarkdownLinkPatchComponent(app);
-    component.onload();
+    component.load();
 
-    expect(mockRegisterPatch).toHaveBeenCalledOnce();
-    const [patchedObj, factories] = mockRegisterPatch.mock.calls[0] ?? [];
-    expect(patchedObj).toBe(app.fileManager);
-    expect(typeof factories?.generateMarkdownLink).toBe('function');
+    expect(app.fileManager.generateMarkdownLink).not.toBe(original);
+    const patched = castTo<PatchedGenerateMarkdownLink>(app.fileManager.generateMarkdownLink);
+    expect(typeof patched.extended).toBe('function');
   });
 
   describe('native', () => {
     it('should generate a link forwarding all native arguments', () => {
-      const patched = buildPatched(app);
+      const patched = loadPatched(app);
 
       const result = patched(file, 'source.md', '#heading', 'My Alias');
 
@@ -102,7 +76,7 @@ describe('GenerateMarkdownLinkPatchComponent', () => {
     });
 
     it('should omit undefined optional arguments', () => {
-      const patched = buildPatched(app);
+      const patched = loadPatched(app);
 
       patched(file, 'source.md');
 
@@ -116,7 +90,7 @@ describe('GenerateMarkdownLinkPatchComponent', () => {
 
   describe('extended', () => {
     it('should generate a link forwarding the extended options', () => {
-      const patched = buildPatched(app);
+      const patched = loadPatched(app);
       const options: GenerateMarkdownLinkExtendedOptions = {
         isEmbed: true,
         sourcePathOrFile: 'source.md',
