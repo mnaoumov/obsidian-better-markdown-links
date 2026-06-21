@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 3.4.10
+
+- refactor: monkey around
+- chore: unify tsconfig
+- test: reuse real obsidian-dev-utils/obsidian-test-mocks base classes
+- fix: prevent command-handler stack overflow from redundant super calls
+- refactor: monkey around
+
 ## 3.4.9
 
 - refactor: new template
