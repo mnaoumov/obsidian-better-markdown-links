@@ -41,7 +41,8 @@ export const config = defineConfig({
           },
           setupFiles: [
             'obsidian-test-mocks/vitest-setup',
-            'obsidian-test-mocks/obsidian-typings/vitest-setup'
+            'obsidian-test-mocks/obsidian-typings/vitest-setup',
+            'obsidian-dev-utils/vitest-setup'
           ]
         }
       },

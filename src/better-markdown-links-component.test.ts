@@ -215,7 +215,7 @@ describe('BetterMarkdownLinksComponent', () => {
 
       loadComponent(context);
 
-      const fns = getGenerateMarkdownLinkDefaultParamsFns(context.app);
+      const fns = getGenerateMarkdownLinkDefaultParamsFns();
       const lastFn = fns.at(-1);
       expect(lastFn?.()).toBe(context.settings);
     });

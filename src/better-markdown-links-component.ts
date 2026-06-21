@@ -112,7 +112,6 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     );
     this.addChild(
       new GenerateMarkdownLinkDefaultParamsComponent({
-        app: this.app,
         getDefaultParams: (): Partial<GenerateMarkdownLinkParams> => {
           return this.pluginSettingsComponent.settings;
         }

@@ -54,7 +54,6 @@ export class LinkConverter {
     if (!checking) {
       addToQueue({
         abortSignal: this.abortSignalComponent.abortSignal,
-        app: this.app,
         operationFn: (abortSignal) =>
           this.convertLinksInFile({
             abortSignal,

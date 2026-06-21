@@ -156,7 +156,6 @@ describe('LinkConverter', () => {
       expect(context.converter.convertLinksInCurrentFile(false)).toBe(true);
       expect(vi.mocked(addToQueue)).toHaveBeenCalledOnce();
       const queueParams = vi.mocked(addToQueue).mock.calls[0]?.[0];
-      expect(queueParams?.app).toBe(context.app);
       expect(queueParams?.operationName).toBe('convertLinksInCurrentFile');
     });
 
