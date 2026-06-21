@@ -33,7 +33,10 @@ import { GenerateMarkdownLinkPatchComponent } from './generate-markdown-link-ext
 type PatchedGenerateMarkdownLink = GenerateMarkdownLinkExtendedWrapper & GenerateMarkdownLinkNativeFn;
 
 function loadPatched(app: AppOriginal): PatchedGenerateMarkdownLink {
-  const component = new GenerateMarkdownLinkPatchComponent(app);
+  const component = new GenerateMarkdownLinkPatchComponent({
+    app,
+    fileManager: app.fileManager
+  });
   component.load();
   return castTo<PatchedGenerateMarkdownLink>(app.fileManager.generateMarkdownLink);
 }
@@ -51,7 +54,10 @@ describe('GenerateMarkdownLinkPatchComponent', () => {
 
   it('should register a patch on the file manager generateMarkdownLink', () => {
     const original = app.fileManager.generateMarkdownLink;
-    const component = new GenerateMarkdownLinkPatchComponent(app);
+    const component = new GenerateMarkdownLinkPatchComponent({
+      app,
+      fileManager: app.fileManager
+    });
     component.load();
 
     expect(app.fileManager.generateMarkdownLink).not.toBe(original);

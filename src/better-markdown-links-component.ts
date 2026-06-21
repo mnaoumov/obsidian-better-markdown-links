@@ -104,7 +104,12 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
   }
 
   protected override onLayoutReady(): void {
-    this.addChild(new GenerateMarkdownLinkPatchComponent(this.app));
+    this.addChild(
+      new GenerateMarkdownLinkPatchComponent({
+        app: this.app,
+        fileManager: this.app.fileManager
+      })
+    );
     this.addChild(
       new GenerateMarkdownLinkDefaultParamsComponent({
         app: this.app,
