@@ -33,14 +33,10 @@ export class ConvertLinksInFileCommandHandler extends FileCommandHandler {
   }
 
   protected override canExecuteFile(file: TFile): boolean {
-    if (!super.canExecute()) {
-      return false;
-    }
     return isMarkdownFile(this.app, file);
   }
 
   protected override async executeFile(file: TFile): Promise<void> {
-    await super.execute();
     await this.linkConverter.convertLinksInFile({
       file,
       shouldPromptForExcludedFile: true

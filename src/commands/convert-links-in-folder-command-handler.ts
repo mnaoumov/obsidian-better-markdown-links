@@ -30,7 +30,6 @@ export class ConvertLinksInFolderCommandHandler extends FolderCommandHandler {
   }
 
   protected override async executeFolder(folder: TFolder): Promise<void> {
-    await super.execute();
     await this.linkConverter.convertLinksInFolder({
       folder
     });
