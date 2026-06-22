@@ -140,12 +140,6 @@ beforeEach(() => {
 });
 
 describe('Plugin', () => {
-  it('should expose a map of per-file abort controllers', async () => {
-    const plugin = await createLoadedPlugin();
-
-    expect(plugin.processFileAbortControllers).toBeInstanceOf(Map);
-  });
-
   it('should wire up the rename/delete handler once on load', async () => {
     await createLoadedPlugin();
 

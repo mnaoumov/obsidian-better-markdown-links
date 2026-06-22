@@ -19,8 +19,6 @@ import { PluginSettingsComponent } from './plugin-settings-component.ts';
 import { PluginSettingsTab } from './plugin-settings-tab.ts';
 
 export class Plugin extends PluginBase {
-  public readonly processFileAbortControllers = new Map<string, AbortController>();
-
   protected override onloadImpl(): void {
     const pluginSettingsComponent = this.addChild(
       new PluginSettingsComponent({
