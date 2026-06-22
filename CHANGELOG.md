@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 3.4.11
+
+- refactor: remove unused
+- chore: update libs
+
 ## 3.4.10
 
 - refactor: monkey around
