@@ -66,7 +66,7 @@ describe('ConvertLinksInFileCommandHandler', () => {
     app = App.createConfigured__().asOriginalType__();
     convertLinksInFile = vi.fn<LinkConverter['convertLinksInFile']>().mockResolvedValue(undefined);
     const linkConverter = strictProxy<LinkConverter>({ convertLinksInFile });
-    handler = new ConvertLinksInFileCommandHandler({ app, linkConverter });
+    handler = new ConvertLinksInFileCommandHandler({ linkConverter });
 
     activeFile = null;
     fileMenuHandlers = [];
@@ -99,7 +99,7 @@ describe('ConvertLinksInFileCommandHandler', () => {
     const canExecute = handler.buildCommand().checkCallback?.(true);
 
     expect(canExecute).toBe(true);
-    expect(vi.mocked(isMarkdownFile)).toHaveBeenCalledWith(app, activeFile);
+    expect(vi.mocked(isMarkdownFile)).toHaveBeenCalledWith(activeFile);
   });
 
   it('should not allow executing when the active file is not a markdown file', () => {
@@ -119,7 +119,7 @@ describe('ConvertLinksInFileCommandHandler', () => {
     fileMenuHandlers[0]?.(menu, file, 'file-explorer-context-menu');
 
     expect(addItem).toHaveBeenCalledOnce();
-    expect(vi.mocked(isMarkdownFile)).toHaveBeenCalledWith(app, file);
+    expect(vi.mocked(isMarkdownFile)).toHaveBeenCalledWith(file);
   });
 
   it('should not add non-markdown files to the file menu', () => {

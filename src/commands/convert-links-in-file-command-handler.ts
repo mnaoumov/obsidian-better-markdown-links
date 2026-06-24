@@ -1,7 +1,4 @@
-import type {
-  App,
-  TFile
-} from 'obsidian';
+import type { TFile } from 'obsidian';
 
 import { FileCommandHandler } from 'obsidian-dev-utils/obsidian/command-handlers/file-command-handler';
 import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/file-system';
@@ -9,12 +6,10 @@ import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/file-system';
 import type { LinkConverter } from '../link-converter.ts';
 
 interface ConvertLinksInFileCommandHandlerConstructorParams {
-  readonly app: App;
   readonly linkConverter: LinkConverter;
 }
 
 export class ConvertLinksInFileCommandHandler extends FileCommandHandler {
-  private readonly app: App;
   private readonly linkConverter: LinkConverter;
 
   public constructor(params: ConvertLinksInFileCommandHandlerConstructorParams) {
@@ -28,12 +23,11 @@ export class ConvertLinksInFileCommandHandler extends FileCommandHandler {
       shouldAddCommandToSubmenu: true
     });
 
-    this.app = params.app;
     this.linkConverter = params.linkConverter;
   }
 
   protected override canExecuteFile(file: TFile): boolean {
-    return isMarkdownFile(this.app, file);
+    return isMarkdownFile(file);
   }
 
   protected override async executeFile(file: TFile): Promise<void> {
@@ -44,6 +38,6 @@ export class ConvertLinksInFileCommandHandler extends FileCommandHandler {
   }
 
   protected override shouldAddToFileMenu(file: TFile): boolean {
-    return isMarkdownFile(this.app, file);
+    return isMarkdownFile(file);
   }
 }

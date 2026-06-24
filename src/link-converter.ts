@@ -47,7 +47,7 @@ export class LinkConverter {
 
   public convertLinksInCurrentFile(checking: boolean): boolean {
     const activeFile = this.app.workspace.getActiveFile();
-    if (!activeFile || !isMarkdownFile(this.app, activeFile)) {
+    if (!activeFile || !isMarkdownFile(activeFile)) {
       return false;
     }
 

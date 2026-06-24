@@ -75,7 +75,6 @@ export class Plugin extends PluginBase {
         activeFileProvider: new AppActiveFileProvider(this.app),
         commandHandlers: [
           new ConvertLinksInFileCommandHandler({
-            app: this.app,
             linkConverter
           }),
           new ConvertLinksInFolderCommandHandler({
