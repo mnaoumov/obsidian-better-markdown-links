@@ -12,8 +12,6 @@ import { generateMarkdownLink } from 'obsidian-dev-utils/obsidian/link';
 
 import type { GenerateMarkdownLinkExtendedOptions } from './generate-markdown-link-extended.d.ts';
 
-export type GenerateMarkdownLinkNativeFn = FileManager['generateMarkdownLink'];
-
 interface GenerateMarkdownLinkPatchComponentConstructorParams {
   readonly app: App;
   readonly fileManager: FileManager;
