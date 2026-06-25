@@ -1,5 +1,6 @@
 import type {
   App as AppOriginal,
+  FileManager,
   TFile as TFileOriginal
 } from 'obsidian';
 
@@ -14,11 +15,12 @@ import {
   vi
 } from 'vitest';
 
-import type { GenerateMarkdownLinkNativeFn } from './generate-markdown-link-extended-impl.ts';
 import type {
   GenerateMarkdownLinkExtendedOptions,
   GenerateMarkdownLinkExtendedWrapper
 } from './generate-markdown-link-extended.d.ts';
+
+type GenerateMarkdownLinkNativeFn = FileManager['generateMarkdownLink'];
 
 vi.mock('obsidian-dev-utils/obsidian/link', () => ({
   generateMarkdownLink: vi.fn().mockReturnValue('[generated](link.md)')
