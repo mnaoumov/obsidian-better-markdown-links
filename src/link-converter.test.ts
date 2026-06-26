@@ -4,6 +4,7 @@ import type {
   TFolder
 } from 'obsidian';
 import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
+import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
 import type { LinkStyle } from 'obsidian-dev-utils/obsidian/link';
 
 import { castTo } from 'obsidian-dev-utils/object-utils';
@@ -90,10 +91,12 @@ function createConverter(): CreateConverterResult {
     isPathIgnored
   });
   const pluginSettingsComponent = strictProxy<PluginSettingsComponent>({ settings });
+  const pluginNoticeComponent = strictProxy<PluginNoticeComponent>({});
 
   const converter = new LinkConverter({
     abortSignalComponent,
     app,
+    pluginNoticeComponent,
     pluginSettingsComponent
   });
 
@@ -251,7 +254,11 @@ describe('LinkConverter', () => {
 
       const loopParams = vi.mocked(loop).mock.calls[0]?.[0];
       expect(loopParams?.progressBarTitle).toBe('Better Markdown Links: Converting links in entire vault...');
-      expect(vi.mocked(getMarkdownFiles)).toHaveBeenCalledWith(context.app, folder, true);
+      expect(vi.mocked(getMarkdownFiles)).toHaveBeenCalledWith({
+        app: context.app,
+        isRecursive: true,
+        pathOrFolder: folder
+      });
     });
 
     it('should use the folder-specific progress title for a non-root folder', async () => {

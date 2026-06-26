@@ -78,7 +78,7 @@ describe('PluginSettingsTab', () => {
 
     tab.displayLegacy();
 
-    expect(bindSpy.mock.calls.map((call) => call[1])).toEqual(EXPECTED_BOUND_PROPERTIES);
+    expect(bindSpy.mock.calls.map((call) => call[0].propertyName)).toEqual(EXPECTED_BOUND_PROPERTIES);
     expect(tab.containerEl.children.length).toBe(EXPECTED_BOUND_PROPERTIES.length);
   });
 });

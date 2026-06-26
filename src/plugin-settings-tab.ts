@@ -20,7 +20,7 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         appendCodeBlock(f, '[[relative/path/to/target]]');
       }))
       .addToggle((toggle) => {
-        this.bind(toggle, 'shouldUseLeadingDotForRelativePaths');
+        this.bind({ propertyName: 'shouldUseLeadingDotForRelativePaths', valueComponent: toggle });
       });
 
     new SettingEx(this.containerEl)
@@ -35,7 +35,7 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         appendCodeBlock(f, '[[absolute/path/to/target]]');
       }))
       .addToggle((toggle) => {
-        this.bind(toggle, 'shouldUseLeadingSlashForAbsolutePaths');
+        this.bind({ propertyName: 'shouldUseLeadingSlashForAbsolutePaths', valueComponent: toggle });
       });
 
     new SettingEx(this.containerEl)
@@ -53,14 +53,14 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         appendCodeBlock(f, '[alias](path%20with%20spaces.md)');
       }))
       .addToggle((toggle) => {
-        this.bind(toggle, 'shouldUseAngleBrackets');
+        this.bind({ propertyName: 'shouldUseAngleBrackets', valueComponent: toggle });
       });
 
     new SettingEx(this.containerEl)
       .setName('Should automatically convert new links')
       .setDesc('Whether to automatically convert new links entered manually to the selected format.')
       .addToggle((toggle) => {
-        this.bind(toggle, 'shouldAutomaticallyConvertNewLinks');
+        this.bind({ propertyName: 'shouldAutomaticallyConvertNewLinks', valueComponent: toggle });
       });
 
     new SettingEx(this.containerEl)
@@ -76,7 +76,7 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         f.appendText(' plugin to improve performance.');
       }))
       .addToggle((toggle) => {
-        this.bind(toggle, 'shouldAutomaticallyUpdateLinksOnRenameOrMove');
+        this.bind({ propertyName: 'shouldAutomaticallyUpdateLinksOnRenameOrMove', valueComponent: toggle });
       });
 
     new SettingEx(this.containerEl)
@@ -91,7 +91,7 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         appendCodeBlock(f, '![image](path/to/image.png)');
       }))
       .addToggle((toggle) => {
-        this.bind(toggle, 'shouldAllowEmptyEmbedAlias');
+        this.bind({ propertyName: 'shouldAllowEmptyEmbedAlias', valueComponent: toggle });
       });
 
     new SettingEx(this.containerEl)
@@ -106,7 +106,7 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         appendCodeBlock(f, '![image](path/to/image.png)');
       }))
       .addToggle((toggle) => {
-        this.bind(toggle, 'shouldIncludeAttachmentExtensionToEmbedAlias');
+        this.bind({ propertyName: 'shouldIncludeAttachmentExtensionToEmbedAlias', valueComponent: toggle });
       });
 
     new SettingEx(this.containerEl)
@@ -119,7 +119,7 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         f.appendText('If disabled, the existing links style will be changed to the default link style defined in Obsidian settings.');
       }))
       .addToggle((toggle) => {
-        this.bind(toggle, 'shouldPreserveExistingLinkStyle');
+        this.bind({ propertyName: 'shouldPreserveExistingLinkStyle', valueComponent: toggle });
       });
 
     new SettingEx(this.containerEl)
@@ -135,7 +135,7 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         f.appendText('If the setting is empty, all notes are included');
       }))
       .addMultipleText((multipleText) => {
-        this.bind(multipleText, 'includePaths');
+        this.bind({ propertyName: 'includePaths', valueComponent: multipleText });
       });
 
     new SettingEx(this.containerEl)
@@ -151,8 +151,10 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         f.appendText('If the setting is empty, no notes are excluded');
       }))
       .addMultipleText((multipleText) => {
-        this.bind(multipleText, 'excludePaths', {
-          shouldShowPlaceholderForDefaultValues: false
+        this.bind({
+          propertyName: 'excludePaths',
+          shouldShowPlaceholderForDefaultValues: false,
+          valueComponent: multipleText
         });
       });
   }

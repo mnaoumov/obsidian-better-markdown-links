@@ -4,6 +4,7 @@ import type {
   TFolder
 } from 'obsidian';
 import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
+import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
 
 import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
 import {
@@ -20,6 +21,7 @@ import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 interface LinkConverterConstructorParams {
   readonly abortSignalComponent: AbortSignalComponent;
   readonly app: App;
+  readonly pluginNoticeComponent: PluginNoticeComponent;
   readonly pluginSettingsComponent: PluginSettingsComponent;
 }
 
@@ -37,11 +39,13 @@ interface LinkConverterConvertLinksInFolderParams {
 export class LinkConverter {
   private readonly abortSignalComponent: AbortSignalComponent;
   private readonly app: App;
+  private readonly pluginNoticeComponent: PluginNoticeComponent;
   private readonly pluginSettingsComponent: PluginSettingsComponent;
 
   public constructor(params: LinkConverterConstructorParams) {
     this.abortSignalComponent = params.abortSignalComponent;
     this.app = params.app;
+    this.pluginNoticeComponent = params.pluginNoticeComponent;
     this.pluginSettingsComponent = params.pluginSettingsComponent;
   }
 
@@ -99,7 +103,12 @@ export class LinkConverter {
     await loop({
       abortSignal,
       buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,
-      items: getMarkdownFiles(this.app, params.folder, true),
+      items: getMarkdownFiles({
+        app: this.app,
+        isRecursive: true,
+        pathOrFolder: params.folder
+      }),
+      pluginNoticeComponent: this.pluginNoticeComponent,
       processItem: async (file) => {
         await this.convertLinksInFile({
           abortSignal,

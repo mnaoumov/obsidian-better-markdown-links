@@ -1,4 +1,5 @@
 import type { TFile } from 'obsidian';
+import type { FileCommandHandlerShouldAddToFileMenuParams } from 'obsidian-dev-utils/obsidian/command-handlers/file-command-handler';
 
 import { FileCommandHandler } from 'obsidian-dev-utils/obsidian/command-handlers/file-command-handler';
 import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/file-system';
@@ -37,7 +38,8 @@ export class ConvertLinksInFileCommandHandler extends FileCommandHandler {
     });
   }
 
-  protected override shouldAddToFileMenu(file: TFile): boolean {
-    return isMarkdownFile(file);
+  // eslint-disable-next-line obsidian-dev-utils/params-options-name-match -- Override must keep the base param type.
+  protected override shouldAddToFileMenu(params: FileCommandHandlerShouldAddToFileMenuParams): boolean {
+    return isMarkdownFile(params.file);
   }
 }
