@@ -7,14 +7,10 @@ import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/component
 import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
 
 import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
-import {
-  getMarkdownFiles,
-  isMarkdownFile
-} from 'obsidian-dev-utils/obsidian/file-system';
+import { getMarkdownFiles } from 'obsidian-dev-utils/obsidian/file-system';
 import { updateLinksInFile } from 'obsidian-dev-utils/obsidian/link';
 import { loop } from 'obsidian-dev-utils/obsidian/loop';
 import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
-import { addToQueue } from 'obsidian-dev-utils/obsidian/queue';
 
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 
@@ -47,28 +43,6 @@ export class LinkConverter {
     this.app = params.app;
     this.pluginNoticeComponent = params.pluginNoticeComponent;
     this.pluginSettingsComponent = params.pluginSettingsComponent;
-  }
-
-  public convertLinksInCurrentFile(checking: boolean): boolean {
-    const activeFile = this.app.workspace.getActiveFile();
-    if (!activeFile || !isMarkdownFile(activeFile)) {
-      return false;
-    }
-
-    if (!checking) {
-      addToQueue({
-        abortSignal: this.abortSignalComponent.abortSignal,
-        operationFn: (abortSignal) =>
-          this.convertLinksInFile({
-            abortSignal,
-            file: activeFile,
-            shouldPromptForExcludedFile: true
-          }),
-        operationName: 'convertLinksInCurrentFile'
-      });
-    }
-
-    return true;
   }
 
   public async convertLinksInFile(params: LinkConverterConvertLinksInFileParams): Promise<void> {

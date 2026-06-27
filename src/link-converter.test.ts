@@ -25,8 +25,7 @@ vi.mock('obsidian-dev-utils/abort-controller', () => ({
 }));
 
 vi.mock('obsidian-dev-utils/obsidian/file-system', () => ({
-  getMarkdownFiles: vi.fn(),
-  isMarkdownFile: vi.fn()
+  getMarkdownFiles: vi.fn()
 }));
 
 vi.mock('obsidian-dev-utils/obsidian/link', () => ({
@@ -41,25 +40,16 @@ vi.mock('obsidian-dev-utils/obsidian/modals/confirm', () => ({
   confirm: vi.fn()
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/queue', () => ({
-  addToQueue: vi.fn()
-}));
-
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import {
-  getMarkdownFiles,
-  isMarkdownFile
-} from 'obsidian-dev-utils/obsidian/file-system';
+import { getMarkdownFiles } from 'obsidian-dev-utils/obsidian/file-system';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { updateLinksInFile } from 'obsidian-dev-utils/obsidian/link';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { loop } from 'obsidian-dev-utils/obsidian/loop';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
-// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { addToQueue } from 'obsidian-dev-utils/obsidian/queue';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { LinkConverter } from './link-converter.ts';
@@ -123,61 +113,6 @@ beforeEach(() => {
 });
 
 describe('LinkConverter', () => {
-  describe('convertLinksInCurrentFile', () => {
-    it('should return false when there is no active file', () => {
-      const context = createConverter();
-      context.getActiveFile.mockReturnValue(null);
-
-      expect(context.converter.convertLinksInCurrentFile(true)).toBe(false);
-      expect(vi.mocked(addToQueue)).not.toHaveBeenCalled();
-    });
-
-    it('should return false when the active file is not a markdown file', () => {
-      const context = createConverter();
-      context.getActiveFile.mockReturnValue(createFile('image.png'));
-      vi.mocked(isMarkdownFile).mockReturnValue(false);
-
-      expect(context.converter.convertLinksInCurrentFile(true)).toBe(false);
-      expect(vi.mocked(addToQueue)).not.toHaveBeenCalled();
-    });
-
-    it('should return true without queuing when only checking', () => {
-      const context = createConverter();
-      context.getActiveFile.mockReturnValue(createFile('note.md'));
-      vi.mocked(isMarkdownFile).mockReturnValue(true);
-
-      expect(context.converter.convertLinksInCurrentFile(true)).toBe(true);
-      expect(vi.mocked(addToQueue)).not.toHaveBeenCalled();
-    });
-
-    it('should queue the conversion when not checking', () => {
-      const context = createConverter();
-      const activeFile = createFile('note.md');
-      context.getActiveFile.mockReturnValue(activeFile);
-      vi.mocked(isMarkdownFile).mockReturnValue(true);
-
-      expect(context.converter.convertLinksInCurrentFile(false)).toBe(true);
-      expect(vi.mocked(addToQueue)).toHaveBeenCalledOnce();
-      const queueParams = vi.mocked(addToQueue).mock.calls[0]?.[0];
-      expect(queueParams?.operationName).toBe('convertLinksInCurrentFile');
-    });
-
-    it('should convert the active file when the queued operation runs', async () => {
-      const context = createConverter();
-      const activeFile = createFile('note.md');
-      context.getActiveFile.mockReturnValue(activeFile);
-      vi.mocked(isMarkdownFile).mockReturnValue(true);
-
-      context.converter.convertLinksInCurrentFile(false);
-      const queueParams = vi.mocked(addToQueue).mock.calls[0]?.[0];
-      const operationAbortSignal = new AbortController().signal;
-      await queueParams?.operationFn(operationAbortSignal);
-
-      expect(vi.mocked(updateLinksInFile)).toHaveBeenCalledOnce();
-      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].newSourcePathOrFile).toBe(activeFile);
-    });
-  });
-
   describe('convertLinksInFile', () => {
     it('should throw when the combined abort signal is already aborted', async () => {
       const context = createConverter();
