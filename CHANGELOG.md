@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.4.12
+
+- refactor: new template
+
 ## 3.4.11
 
 - refactor: remove unused
