@@ -39,6 +39,7 @@ export class Plugin extends PluginBase {
     const linkConverter = new LinkConverter({
       abortSignalComponent: this.abortSignalComponent,
       app: this.app,
+      editorLockComponent: this.editorLockComponent,
       pluginNoticeComponent: this.pluginNoticeComponent,
       pluginSettingsComponent
     });
@@ -57,6 +58,7 @@ export class Plugin extends PluginBase {
       new RenameDeleteHandlerComponent({
         abortSignalComponent: this.abortSignalComponent,
         app: this.app,
+        editorLockComponent: this.editorLockComponent,
         pluginId: this.manifest.id,
         pluginNoticeComponent: this.pluginNoticeComponent,
         settingsBuilder(): Partial<RenameDeleteHandlerSettings> {
