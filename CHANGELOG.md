@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 3.4.13
+
+- fix: apply shouldAllowEmptyEmbedAlias setting to generateMarkdownLink
+- test: wire integration-testing vitest-setup into integration projects
+- chore: update libs
+- chore: sort tsconfig types
+
 ## 3.4.12
 
 - refactor: new template
