@@ -113,7 +113,14 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     this.addChild(
       new GenerateMarkdownLinkDefaultParamsComponent({
         getDefaultParams: (): Partial<GenerateMarkdownLinkParams> => {
-          return this.pluginSettingsComponent.settings;
+          const settings = this.pluginSettingsComponent.settings;
+          return {
+            isEmptyEmbedAliasAllowed: settings.shouldAllowEmptyEmbedAlias,
+            shouldIncludeAttachmentExtensionToEmbedAlias: settings.shouldIncludeAttachmentExtensionToEmbedAlias,
+            shouldUseAngleBrackets: settings.shouldUseAngleBrackets,
+            shouldUseLeadingDotForRelativePaths: settings.shouldUseLeadingDotForRelativePaths,
+            shouldUseLeadingSlashForAbsolutePaths: settings.shouldUseLeadingSlashForAbsolutePaths
+          };
         }
       })
     );

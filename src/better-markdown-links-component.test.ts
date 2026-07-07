@@ -120,7 +120,12 @@ function createContext(files: ConfiguredFiles = {}): TestContext {
   const settings = strictProxy<PluginSettings>({
     getLinkStyle: vi.fn().mockReturnValue('ObsidianSettingsDefault'),
     isPathIgnored,
-    shouldAutomaticallyConvertNewLinks: true
+    shouldAllowEmptyEmbedAlias: false,
+    shouldAutomaticallyConvertNewLinks: true,
+    shouldIncludeAttachmentExtensionToEmbedAlias: true,
+    shouldUseAngleBrackets: false,
+    shouldUseLeadingDotForRelativePaths: false,
+    shouldUseLeadingSlashForAbsolutePaths: true
   });
   const pluginSettingsComponent = strictProxy<PluginSettingsComponent>({ settings });
   const convertLinksInFile = vi.fn<LinkConverter['convertLinksInFile']>().mockResolvedValue(undefined);
@@ -210,14 +215,22 @@ describe('BetterMarkdownLinksComponent', () => {
       expect(onSpy).toHaveBeenCalledWith('modify', expect.any(Function));
     });
 
-    it('should expose the plugin settings as default link generation params', () => {
+    it('should map the plugin settings to default link generation params', () => {
       const context = createContext();
 
       loadComponent(context);
 
       const fns = getGenerateMarkdownLinkDefaultParamsFns();
       const lastFn = fns.at(-1);
-      expect(lastFn?.()).toBe(context.settings);
+      // `shouldAllowEmptyEmbedAlias` must be exposed under the dev-utils name `isEmptyEmbedAliasAllowed`;
+      // Returning the settings object verbatim silently dropped it (the field names differ).
+      expect(lastFn?.()).toEqual({
+        isEmptyEmbedAliasAllowed: false,
+        shouldIncludeAttachmentExtensionToEmbedAlias: true,
+        shouldUseAngleBrackets: false,
+        shouldUseLeadingDotForRelativePaths: false,
+        shouldUseLeadingSlashForAbsolutePaths: true
+      });
     });
   });
 
