@@ -20,7 +20,7 @@ const EXPECTED_BOUND_PROPERTIES = [
   'shouldUseLeadingDotForRelativePaths',
   'shouldUseLeadingSlashForAbsolutePaths',
   'shouldUseAngleBrackets',
-  'shouldAutomaticallyConvertNewLinks',
+  'linkConversionMode',
   'shouldAutomaticallyUpdateLinksOnRenameOrMove',
   'shouldAllowEmptyEmbedAlias',
   'shouldIncludeAttachmentExtensionToEmbedAlias',
@@ -40,8 +40,8 @@ function createTab(): PluginSettingsTab {
       validationMessages: {
         excludePaths: '',
         includePaths: '',
+        linkConversionMode: '',
         shouldAllowEmptyEmbedAlias: '',
-        shouldAutomaticallyConvertNewLinks: '',
         shouldAutomaticallyUpdateLinksOnRenameOrMove: '',
         shouldIncludeAttachmentExtensionToEmbedAlias: '',
         shouldPreserveExistingLinkStyle: '',
@@ -61,7 +61,7 @@ function createTab(): PluginSettingsTab {
   });
 
   const tab = new PluginSettingsTab({ plugin, pluginSettingsComponent });
-  tab.containerEl = activeDocument.createElement('div');
+  tab.containerEl = activeWindow.createDiv();
   return tab;
 }
 

@@ -5,6 +5,7 @@ import type { MaybeReturn } from 'obsidian-dev-utils/type';
 import { PluginSettingsComponentBase } from 'obsidian-dev-utils/obsidian/components/plugin-settings-component';
 import { isValidRegExp } from 'obsidian-dev-utils/reg-exp';
 
+import { LinkConversionMode } from './link-conversion-mode.ts';
 import { PluginSettings } from './plugin-settings.ts';
 
 interface PluginSettingsComponentConstructorParams {
@@ -17,6 +18,7 @@ class LegacySettings {
   public automaticallyConvertNewLinks = true;
   public automaticallyUpdateLinksOnRenameOrMove = true;
   public includeAttachmentExtensionToEmbedAlias = false;
+  public shouldAutomaticallyConvertNewLinks = true;
   public shouldUseLeadingDot = true;
   public useAngleBrackets = true;
   public useLeadingDot = true;
@@ -38,6 +40,12 @@ export class PluginSettingsComponent extends PluginSettingsComponentBase<PluginS
 
       if (legacySettings.automaticallyConvertNewLinks !== undefined) {
         legacySettings.shouldAutomaticallyConvertNewLinks = legacySettings.automaticallyConvertNewLinks;
+      }
+
+      if (legacySettings.shouldAutomaticallyConvertNewLinks !== undefined) {
+        legacySettings.linkConversionMode = legacySettings.shouldAutomaticallyConvertNewLinks
+          ? LinkConversionMode.OnEveryModification
+          : LinkConversionMode.OnExplicitCommand;
       }
 
       if (legacySettings.automaticallyUpdateLinksOnRenameOrMove !== undefined) {

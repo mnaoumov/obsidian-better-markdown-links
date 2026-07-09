@@ -74,14 +74,22 @@ import {
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { BetterMarkdownLinksComponent } from './better-markdown-links-component.ts';
 
+interface CommandsHolder {
+  commands: CommandsStub;
+}
+
+interface CommandsStub {
+  findCommand(commandId: string): unknown;
+}
+
 type ConfiguredFiles = NonNullable<Parameters<typeof AppCls.createConfigured__>[0]>['files'];
+
+interface HandleModifyHolder {
+  handleModify(file: TAbstractFile): Promise<void>;
+}
 
 interface MutableAbortSignalHolder {
   abortSignal: AbortSignal;
-}
-
-interface MutableAutoConvertSetting {
-  shouldAutomaticallyConvertNewLinks: boolean;
 }
 
 interface ObsidianDevUtilsStateHolder {
@@ -101,6 +109,9 @@ interface TestContext {
   convertLinksInFile: ReturnType<typeof vi.fn<LinkConverter['convertLinksInFile']>>;
   isPathIgnored: ReturnType<typeof vi.fn>;
   settings: PluginSettings;
+  shouldConvertLinksOnModify: ReturnType<typeof vi.fn<() => boolean>>;
+  shouldConvertLinksOnNavigation: ReturnType<typeof vi.fn<() => boolean>>;
+  shouldConvertLinksOnSave: ReturnType<typeof vi.fn<(isSaveCommand: boolean) => boolean>>;
 }
 
 function createContext(files: ConfiguredFiles = {}): TestContext {
@@ -109,6 +120,12 @@ function createContext(files: ConfiguredFiles = {}): TestContext {
   // (used by the real `GenerateMarkdownLinkDefaultParamsComponent`) read it, so seed it like the
   // Sibling-plugin tests do rather than mocking those helpers.
   castTo<ObsidianDevUtilsStateHolder>(appMock).obsidianDevUtilsState = {};
+  // Seed a stub `commands` on the configured App mock, which lacks one.
+  // The real `EditorSaveFileCommandPatchComponent` reads `app.commands.findCommand` in `onload`.
+  // Returning no command keeps this test focused; that patch has its own dedicated test.
+  castTo<CommandsHolder>(appMock).commands = {
+    findCommand: vi.fn().mockReturnValue(undefined)
+  };
   const app = appMock.asOriginalType__();
 
   const abortSignalComponent = strictProxy<AbortSignalComponent>({
@@ -117,11 +134,16 @@ function createContext(files: ConfiguredFiles = {}): TestContext {
   const consoleDebug = vi.fn();
   const consoleDebugComponent = strictProxy<ConsoleDebugComponent>({ consoleDebug });
   const isPathIgnored = vi.fn<(path: string) => boolean>().mockReturnValue(false);
+  const shouldConvertLinksOnModify = vi.fn<() => boolean>().mockReturnValue(true);
+  const shouldConvertLinksOnNavigation = vi.fn<() => boolean>().mockReturnValue(true);
+  const shouldConvertLinksOnSave = vi.fn<(isSaveCommand: boolean) => boolean>().mockReturnValue(true);
   const settings = strictProxy<PluginSettings>({
     getLinkStyle: vi.fn().mockReturnValue('ObsidianSettingsDefault'),
     isPathIgnored,
     shouldAllowEmptyEmbedAlias: false,
-    shouldAutomaticallyConvertNewLinks: true,
+    shouldConvertLinksOnModify,
+    shouldConvertLinksOnNavigation,
+    shouldConvertLinksOnSave,
     shouldIncludeAttachmentExtensionToEmbedAlias: true,
     shouldUseAngleBrackets: false,
     shouldUseLeadingDotForRelativePaths: false,
@@ -147,7 +169,10 @@ function createContext(files: ConfiguredFiles = {}): TestContext {
     consoleDebug,
     convertLinksInFile,
     isPathIgnored,
-    settings
+    settings,
+    shouldConvertLinksOnModify,
+    shouldConvertLinksOnNavigation,
+    shouldConvertLinksOnSave
   };
 }
 
@@ -155,6 +180,10 @@ const loadedComponents: BetterMarkdownLinksComponent[] = [];
 
 function getProcessFileAbortControllers(component: BetterMarkdownLinksComponent): Map<string, AbortController> {
   return castTo<ProcessFileAbortControllersHolder>(component).processFileAbortControllers;
+}
+
+function handleModify(component: BetterMarkdownLinksComponent, file: TAbstractFile): Promise<void> {
+  return castTo<HandleModifyHolder>(component).handleModify(file);
 }
 
 /**
@@ -241,13 +270,13 @@ describe('BetterMarkdownLinksComponent', () => {
       controller.abort();
       castTo<MutableAbortSignalHolder>(context.abortSignalComponent).abortSignal = controller.signal;
 
-      await expect(context.component.handleModify(makeTFile('note.md'))).rejects.toThrow();
+      await expect(handleModify(context.component, makeTFile('note.md'))).rejects.toThrow();
     });
 
     it('should ignore non-file abstract files', async () => {
       const context = createContext();
 
-      await context.component.handleModify(makeTFolder('folder'));
+      await handleModify(context.component, makeTFolder('folder'));
 
       expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
     });
@@ -259,28 +288,28 @@ describe('BetterMarkdownLinksComponent', () => {
       const abortSpy = vi.spyOn(existingController, 'abort');
       getProcessFileAbortControllers(context.component).set(file.path, existingController);
 
-      await context.component.handleModify(file);
+      await handleModify(context.component, file);
 
       expect(abortSpy).toHaveBeenCalled();
     });
 
-    it('should do nothing when automatic conversion is disabled', async () => {
+    it('should do nothing when the mode does not convert on modify', async () => {
       const context = createContext();
-      castTo<MutableAutoConvertSetting>(context.settings).shouldAutomaticallyConvertNewLinks = false;
+      context.shouldConvertLinksOnModify.mockReturnValue(false);
 
-      await context.component.handleModify(makeTFile('note.md'));
+      await handleModify(context.component, makeTFile('note.md'));
 
       expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
     });
 
     it('should do nothing while the suggestion container is shown', async () => {
       const context = createContext();
-      const suggestionContainer = activeDocument.createElement('div');
+      const suggestionContainer = activeWindow.createDiv();
       suggestionContainer.addClass('suggestion-container');
       activeDocument.body.appendChild(suggestionContainer);
       vi.spyOn(suggestionContainer, 'isShown').mockReturnValue(true);
 
-      await context.component.handleModify(makeTFile('note.md'));
+      await handleModify(context.component, makeTFile('note.md'));
 
       expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
     });
@@ -289,7 +318,7 @@ describe('BetterMarkdownLinksComponent', () => {
       const context = createContext();
       context.isPathIgnored.mockReturnValue(true);
 
-      await context.component.handleModify(makeTFile('ignored.md'));
+      await handleModify(context.component, makeTFile('ignored.md'));
 
       expect(context.consoleDebug).toHaveBeenCalledWith('File ignored.md is ignored in plugin settings, skipping');
       expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
@@ -301,14 +330,14 @@ describe('BetterMarkdownLinksComponent', () => {
       controller.abort();
       vi.mocked(abortSignalAny).mockReturnValue(controller.signal);
 
-      await expect(context.component.handleModify(makeTFile('note.md'))).rejects.toThrow();
+      await expect(handleModify(context.component, makeTFile('note.md'))).rejects.toThrow();
     });
 
     it('should return when there is no cache', async () => {
       const context = createContext();
       vi.mocked(getCacheSafe).mockResolvedValue(null);
 
-      await context.component.handleModify(makeTFile('note.md'));
+      await handleModify(context.component, makeTFile('note.md'));
 
       expect(context.convertLinksInFile).not.toHaveBeenCalled();
     });
@@ -317,7 +346,7 @@ describe('BetterMarkdownLinksComponent', () => {
       const context = createContext();
       vi.mocked(getAllLinks).mockReturnValue([makeLink('converted')]);
 
-      await context.component.handleModify(makeTFile('note.md'));
+      await handleModify(context.component, makeTFile('note.md'));
 
       expect(context.convertLinksInFile).not.toHaveBeenCalled();
     });
@@ -327,7 +356,7 @@ describe('BetterMarkdownLinksComponent', () => {
       const file = makeTFile('note.md');
       vi.mocked(getAllLinks).mockReturnValue([makeLink('[[different]]')]);
 
-      await context.component.handleModify(file);
+      await handleModify(context.component, file);
 
       expect(context.convertLinksInFile).toHaveBeenCalledOnce();
       expect(context.convertLinksInFile.mock.calls[0]?.[0].file).toBe(file);
@@ -335,15 +364,107 @@ describe('BetterMarkdownLinksComponent', () => {
     });
   });
 
+  describe('handleNavigation', () => {
+    it('should throw when the plugin abort signal is already aborted', async () => {
+      const context = createContext();
+      const controller = new AbortController();
+      controller.abort();
+      castTo<MutableAbortSignalHolder>(context.abortSignalComponent).abortSignal = controller.signal;
+
+      await expect(context.component.handleNavigation(makeTFile('note.md'))).rejects.toThrow();
+    });
+
+    it('should do nothing when the mode does not convert on navigation', async () => {
+      const context = createContext();
+      context.shouldConvertLinksOnNavigation.mockReturnValue(false);
+
+      await context.component.handleNavigation(makeTFile('note.md'));
+
+      expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
+    });
+
+    it('should convert when the mode converts on navigation', async () => {
+      const context = createContext();
+      const file = makeTFile('note.md');
+      vi.mocked(getAllLinks).mockReturnValue([makeLink('[[different]]')]);
+
+      await context.component.handleNavigation(file);
+
+      expect(context.convertLinksInFile).toHaveBeenCalledOnce();
+      expect(context.convertLinksInFile.mock.calls[0]?.[0].file).toBe(file);
+    });
+  });
+
+  describe('handleSave', () => {
+    it('should throw when the plugin abort signal is already aborted', async () => {
+      const context = createContext();
+      const controller = new AbortController();
+      controller.abort();
+      castTo<MutableAbortSignalHolder>(context.abortSignalComponent).abortSignal = controller.signal;
+
+      await expect(context.component.handleSave(makeTFile('note.md'))).rejects.toThrow();
+    });
+
+    it('should do nothing when the mode does not convert on save', async () => {
+      const context = createContext();
+      context.shouldConvertLinksOnSave.mockReturnValue(false);
+
+      await context.component.handleSave(makeTFile('note.md'));
+
+      expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
+    });
+
+    it('should ask whether to convert with isSaveCommand false for a plain save', async () => {
+      const context = createContext();
+
+      await context.component.handleSave(makeTFile('note.md'));
+
+      expect(context.shouldConvertLinksOnSave).toHaveBeenCalledWith(false);
+    });
+
+    it('should ask whether to convert with isSaveCommand true after markSaveCommand', async () => {
+      const context = createContext();
+      const file = makeTFile('note.md');
+      context.component.markSaveCommand(file.path);
+
+      await context.component.handleSave(file);
+
+      expect(context.shouldConvertLinksOnSave).toHaveBeenCalledWith(true);
+    });
+
+    it('should consume the save-command flag so a subsequent save is treated as a plain save', async () => {
+      const context = createContext();
+      const file = makeTFile('note.md');
+      context.component.markSaveCommand(file.path);
+
+      await context.component.handleSave(file);
+      await context.component.handleSave(file);
+
+      expect(context.shouldConvertLinksOnSave).toHaveBeenNthCalledWith(1, true);
+      expect(context.shouldConvertLinksOnSave).toHaveBeenNthCalledWith(2, false);
+    });
+
+    it('should convert when the mode converts on save', async () => {
+      const context = createContext();
+      const file = makeTFile('note.md');
+      vi.mocked(getAllLinks).mockReturnValue([makeLink('[[different]]')]);
+
+      await context.component.handleSave(file);
+
+      expect(context.convertLinksInFile).toHaveBeenCalledOnce();
+      expect(context.convertLinksInFile.mock.calls[0]?.[0].file).toBe(file);
+    });
+  });
+
   describe('openLinkText patch', () => {
     it('should call the fallback and skip processing when the source file is missing', async () => {
       const context = createContext({ 'target.md': 'content' });
       loadComponent(context);
-      const handleModifySpy = vi.spyOn(context.component, 'handleModify');
+      const handleNavigationSpy = vi.spyOn(context.component, 'handleNavigation');
 
       await context.app.workspace.openLinkText('target', 'missing.md');
 
-      expect(handleModifySpy).not.toHaveBeenCalled();
+      expect(handleNavigationSpy).not.toHaveBeenCalled();
     });
 
     it('should process the source file after the fallback', async () => {
@@ -352,12 +473,12 @@ describe('BetterMarkdownLinksComponent', () => {
         'target.md': 'content'
       });
       loadComponent(context);
-      const handleModifySpy = vi.spyOn(context.component, 'handleModify').mockResolvedValue(undefined);
+      const handleNavigationSpy = vi.spyOn(context.component, 'handleNavigation').mockResolvedValue(undefined);
 
       await context.app.workspace.openLinkText('target', 'source.md');
 
       const sourceFile = context.app.vault.getFileByPath('source.md');
-      expect(handleModifySpy).toHaveBeenCalledWith(sourceFile);
+      expect(handleNavigationSpy).toHaveBeenCalledWith(sourceFile);
     });
 
     it('should swallow silent errors thrown while processing', async () => {
@@ -366,7 +487,7 @@ describe('BetterMarkdownLinksComponent', () => {
         'target.md': 'content'
       });
       loadComponent(context);
-      vi.spyOn(context.component, 'handleModify').mockRejectedValue(new Error('silent'));
+      vi.spyOn(context.component, 'handleNavigation').mockRejectedValue(new Error('silent'));
       vi.mocked(handleSilentError).mockReturnValue(true);
 
       await expect(context.app.workspace.openLinkText('target', 'source.md')).resolves.toBeUndefined();
@@ -378,7 +499,7 @@ describe('BetterMarkdownLinksComponent', () => {
         'target.md': 'content'
       });
       loadComponent(context);
-      vi.spyOn(context.component, 'handleModify').mockRejectedValue(new Error('boom'));
+      vi.spyOn(context.component, 'handleNavigation').mockRejectedValue(new Error('boom'));
       vi.mocked(handleSilentError).mockReturnValue(false);
 
       await expect(context.app.workspace.openLinkText('target', 'source.md')).rejects.toThrow('boom');

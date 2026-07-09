@@ -39,9 +39,9 @@ export class Plugin extends PluginBase {
     const linkConverter = new LinkConverter({
       abortSignalComponent: this.abortSignalComponent,
       app: this.app,
-      editorLockComponent: this.editorLockComponent,
       pluginNoticeComponent: this.pluginNoticeComponent,
-      pluginSettingsComponent
+      pluginSettingsComponent,
+      resourceLockComponent: this.resourceLockComponent
     });
 
     this.addChild(
@@ -58,9 +58,9 @@ export class Plugin extends PluginBase {
       new RenameDeleteHandlerComponent({
         abortSignalComponent: this.abortSignalComponent,
         app: this.app,
-        editorLockComponent: this.editorLockComponent,
         pluginId: this.manifest.id,
         pluginNoticeComponent: this.pluginNoticeComponent,
+        resourceLockComponent: this.resourceLockComponent,
         settingsBuilder(): Partial<RenameDeleteHandlerSettings> {
           return {
             isPathIgnored: (path): boolean => {

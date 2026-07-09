@@ -122,8 +122,7 @@ export function registerGenerateMarkdownLinkSettingsSuite(platform: string): voi
           for (const path of [...markdownFiles.map((file) => file.path), attachmentPath]) {
             const existing = app.vault.getAbstractFileByPath(path);
             if (existing) {
-              // eslint-disable-next-line obsidianmd/prefer-file-manager-trash-file -- Permanent cleanup of stale test fixtures.
-              await app.vault.delete(existing, true);
+              await app.fileManager.trashFile(existing);
             }
 
             const folderPath = path.split('/').slice(0, -1).join('/');

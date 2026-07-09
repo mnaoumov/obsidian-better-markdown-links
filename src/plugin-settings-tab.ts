@@ -4,6 +4,8 @@ import { SettingEx } from 'obsidian-dev-utils/obsidian/setting-ex';
 
 import type { PluginSettings } from './plugin-settings.ts';
 
+import { LinkConversionMode } from './link-conversion-mode.ts';
+
 export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
   public override displayLegacy(): void {
     super.displayLegacy();
@@ -57,10 +59,38 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
       });
 
     new SettingEx(this.containerEl)
-      .setName('Should automatically convert new links')
-      .setDesc('Whether to automatically convert new links entered manually to the selected format.')
-      .addToggle((toggle) => {
-        this.bind({ propertyName: 'shouldAutomaticallyConvertNewLinks', valueComponent: toggle });
+      .setName('Convert links')
+      .setDesc(createFragment((f) => {
+        f.appendText('When to automatically convert links to the selected format.');
+        f.createEl('br');
+        f.appendText('Each option is cumulative and also includes every option above it.');
+        f.createEl('br');
+        appendCodeBlock(f, 'On explicit command');
+        f.appendText(' - only when a convert command is invoked. No automatic conversion happens.');
+        f.createEl('br');
+        appendCodeBlock(f, 'On save command');
+        f.appendText(' - additionally when the ');
+        appendCodeBlock(f, 'Save current file');
+        f.appendText(' command runs (usually bound to ');
+        appendCodeBlock(f, 'Ctrl + S');
+        f.appendText(').');
+        f.createEl('br');
+        appendCodeBlock(f, 'On auto save');
+        f.appendText(' - additionally on the implicit auto-save (usually every 2s).');
+        f.createEl('br');
+        appendCodeBlock(f, 'On every modification');
+        f.appendText(' - additionally on every file modification, including changes made outside Obsidian.');
+      }))
+      .addDropdown((dropdown) => {
+        dropdown.addOptions({
+          /* eslint-disable perfectionist/sort-objects -- Need to keep order. */
+          [LinkConversionMode.OnExplicitCommand]: 'On explicit command',
+          [LinkConversionMode.OnSaveCommand]: 'On save command',
+          [LinkConversionMode.OnAutoSave]: 'On auto save',
+          [LinkConversionMode.OnEveryModification]: 'On every modification'
+          /* eslint-enable perfectionist/sort-objects -- Need to keep order. */
+        });
+        this.bind({ propertyName: 'linkConversionMode', valueComponent: dropdown });
       });
 
     new SettingEx(this.containerEl)

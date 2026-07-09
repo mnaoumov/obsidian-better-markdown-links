@@ -22,6 +22,8 @@ import type { LinkConverter } from './link-converter.ts';
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 
 import { GenerateMarkdownLinkPatchComponent } from './generate-markdown-link-extended-impl.ts';
+import { EditorSaveFileCommandPatchComponent } from './patches/editor-save-file-command-patch-component.ts';
+import { TextFileViewSavePatchComponent } from './patches/text-file-view-save-patch-component.ts';
 import { WorkspaceOpenLinkTextPatchComponent } from './patches/workspace-open-link-text-patch-component.ts';
 
 interface BetterMarkdownLinksComponentConstructorParams {
@@ -38,6 +40,7 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
   private readonly linkConverter: LinkConverter;
   private readonly pluginSettingsComponent: PluginSettingsComponent;
   private readonly processFileAbortControllers = new Map<string, AbortController>();
+  private readonly saveCommandFilePaths = new Set<string>();
 
   public constructor(params: BetterMarkdownLinksComponentConstructorParams) {
     super(params.app);
@@ -48,20 +51,94 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     this.linkConverter = params.linkConverter;
   }
 
-  public async handleModify(file: TAbstractFile): Promise<void> {
+  public async handleNavigation(file: TFile): Promise<void> {
+    this.abortSignalComponent.abortSignal.throwIfAborted();
+
+    if (!this.pluginSettingsComponent.settings.shouldConvertLinksOnNavigation()) {
+      return;
+    }
+
+    await this.processFile(file);
+  }
+
+  public async handleSave(file: TFile): Promise<void> {
+    this.abortSignalComponent.abortSignal.throwIfAborted();
+
+    const isSaveCommand = this.saveCommandFilePaths.delete(file.path);
+    if (!this.pluginSettingsComponent.settings.shouldConvertLinksOnSave(isSaveCommand)) {
+      return;
+    }
+
+    await this.processFile(file);
+  }
+
+  public markSaveCommand(path: string): void {
+    this.saveCommandFilePaths.add(path);
+  }
+
+  protected override onLayoutReady(): void {
+    this.addChild(
+      new GenerateMarkdownLinkPatchComponent({
+        app: this.app,
+        fileManager: this.app.fileManager
+      })
+    );
+    this.addChild(
+      new GenerateMarkdownLinkDefaultParamsComponent({
+        getDefaultParams: (): Partial<GenerateMarkdownLinkParams> => {
+          const settings = this.pluginSettingsComponent.settings;
+          return {
+            isEmptyEmbedAliasAllowed: settings.shouldAllowEmptyEmbedAlias,
+            shouldIncludeAttachmentExtensionToEmbedAlias: settings.shouldIncludeAttachmentExtensionToEmbedAlias,
+            shouldUseAngleBrackets: settings.shouldUseAngleBrackets,
+            shouldUseLeadingDotForRelativePaths: settings.shouldUseLeadingDotForRelativePaths,
+            shouldUseLeadingSlashForAbsolutePaths: settings.shouldUseLeadingSlashForAbsolutePaths
+          };
+        }
+      })
+    );
+
+    this.registerEvent(this.app.vault.on('modify', convertAsyncToSync(this.handleModify.bind(this))));
+
+    this.addChild(
+      new WorkspaceOpenLinkTextPatchComponent({
+        app: this.app,
+        betterMarkdownLinksComponent: this
+      })
+    );
+
+    this.addChild(
+      new TextFileViewSavePatchComponent({
+        betterMarkdownLinksComponent: this
+      })
+    );
+
+    this.addChild(
+      new EditorSaveFileCommandPatchComponent({
+        app: this.app,
+        betterMarkdownLinksComponent: this
+      })
+    );
+  }
+
+  private async handleModify(file: TAbstractFile): Promise<void> {
     this.abortSignalComponent.abortSignal.throwIfAborted();
 
     if (!(file instanceof TFile)) {
       return;
     }
 
+    if (!this.pluginSettingsComponent.settings.shouldConvertLinksOnModify()) {
+      return;
+    }
+
+    await this.processFile(file);
+  }
+
+  private async processFile(file: TFile): Promise<void> {
     let processFileAbortController = this.processFileAbortControllers.get(file.path);
     processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
     this.processFileAbortControllers.delete(file.path);
-
-    if (!this.pluginSettingsComponent.settings.shouldAutomaticallyConvertNewLinks) {
-      return;
-    }
 
     const suggestionContainer = activeDocument.querySelector<HTMLDivElement>('.suggestion-container');
     if (suggestionContainer?.isShown()) {
@@ -101,37 +178,5 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     } finally {
       this.processFileAbortControllers.delete(file.path);
     }
-  }
-
-  protected override onLayoutReady(): void {
-    this.addChild(
-      new GenerateMarkdownLinkPatchComponent({
-        app: this.app,
-        fileManager: this.app.fileManager
-      })
-    );
-    this.addChild(
-      new GenerateMarkdownLinkDefaultParamsComponent({
-        getDefaultParams: (): Partial<GenerateMarkdownLinkParams> => {
-          const settings = this.pluginSettingsComponent.settings;
-          return {
-            isEmptyEmbedAliasAllowed: settings.shouldAllowEmptyEmbedAlias,
-            shouldIncludeAttachmentExtensionToEmbedAlias: settings.shouldIncludeAttachmentExtensionToEmbedAlias,
-            shouldUseAngleBrackets: settings.shouldUseAngleBrackets,
-            shouldUseLeadingDotForRelativePaths: settings.shouldUseLeadingDotForRelativePaths,
-            shouldUseLeadingSlashForAbsolutePaths: settings.shouldUseLeadingSlashForAbsolutePaths
-          };
-        }
-      })
-    );
-
-    this.registerEvent(this.app.vault.on('modify', convertAsyncToSync(this.handleModify.bind(this))));
-
-    this.addChild(
-      new WorkspaceOpenLinkTextPatchComponent({
-        app: this.app,
-        betterMarkdownLinksComponent: this
-      })
-    );
   }
 }

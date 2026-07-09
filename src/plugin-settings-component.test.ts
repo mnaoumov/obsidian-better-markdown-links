@@ -11,6 +11,7 @@ import {
   vi
 } from 'vitest';
 
+import { LinkConversionMode } from './link-conversion-mode.ts';
 import { PluginSettingsComponent } from './plugin-settings-component.ts';
 import { PluginSettings } from './plugin-settings.ts';
 
@@ -118,13 +119,40 @@ describe('PluginSettingsComponent', () => {
       expect(component.settings.shouldAllowEmptyEmbedAlias).toBe(false);
     });
 
-    it('should convert automaticallyConvertNewLinks to shouldAutomaticallyConvertNewLinks', async () => {
+    it('should convert automaticallyConvertNewLinks to the OnExplicitCommand link conversion mode when false', async () => {
       const component = createComponent({
         loadDataReturnValue: { automaticallyConvertNewLinks: false }
       });
       await component.loadWithPromises();
 
-      expect(component.settings.shouldAutomaticallyConvertNewLinks).toBe(false);
+      expect(component.settings.linkConversionMode).toBe(LinkConversionMode.OnExplicitCommand);
+    });
+
+    it('should convert automaticallyConvertNewLinks to the OnEveryModification link conversion mode when true', async () => {
+      const component = createComponent({
+        loadDataReturnValue: { automaticallyConvertNewLinks: true }
+      });
+      await component.loadWithPromises();
+
+      expect(component.settings.linkConversionMode).toBe(LinkConversionMode.OnEveryModification);
+    });
+
+    it('should convert shouldAutomaticallyConvertNewLinks to the OnExplicitCommand link conversion mode when false', async () => {
+      const component = createComponent({
+        loadDataReturnValue: { shouldAutomaticallyConvertNewLinks: false }
+      });
+      await component.loadWithPromises();
+
+      expect(component.settings.linkConversionMode).toBe(LinkConversionMode.OnExplicitCommand);
+    });
+
+    it('should convert shouldAutomaticallyConvertNewLinks to the OnEveryModification link conversion mode when true', async () => {
+      const component = createComponent({
+        loadDataReturnValue: { shouldAutomaticallyConvertNewLinks: true }
+      });
+      await component.loadWithPromises();
+
+      expect(component.settings.linkConversionMode).toBe(LinkConversionMode.OnEveryModification);
     });
 
     it('should convert automaticallyUpdateLinksOnRenameOrMove to shouldAutomaticallyUpdateLinksOnRenameOrMove', async () => {
@@ -180,7 +208,7 @@ describe('PluginSettingsComponent', () => {
 
       const defaults = new PluginSettings();
       expect(component.settings.shouldAllowEmptyEmbedAlias).toBe(defaults.shouldAllowEmptyEmbedAlias);
-      expect(component.settings.shouldAutomaticallyConvertNewLinks).toBe(defaults.shouldAutomaticallyConvertNewLinks);
+      expect(component.settings.linkConversionMode).toBe(defaults.linkConversionMode);
     });
   });
 });

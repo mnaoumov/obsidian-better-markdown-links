@@ -5,8 +5,8 @@ import type {
 } from 'obsidian';
 import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
 import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
-import type { EditorLockComponent } from 'obsidian-dev-utils/obsidian/editor-lock';
 import type { LinkStyle } from 'obsidian-dev-utils/obsidian/link';
+import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource-lock';
 
 import { castTo } from 'obsidian-dev-utils/object-utils';
 import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
@@ -61,10 +61,10 @@ interface CreateConverterResult {
   readonly abortSignal: AbortSignal;
   readonly app: App;
   readonly converter: LinkConverter;
-  readonly editorLockComponent: EditorLockComponent;
   readonly getActiveFile: ReturnType<typeof vi.fn>;
   readonly getLinkStyle: ReturnType<typeof vi.fn>;
   readonly isPathIgnored: ReturnType<typeof vi.fn>;
+  readonly resourceLockComponent: ResourceLockComponent;
 }
 
 function createConverter(): CreateConverterResult {
@@ -84,24 +84,24 @@ function createConverter(): CreateConverterResult {
   });
   const pluginSettingsComponent = strictProxy<PluginSettingsComponent>({ settings });
   const pluginNoticeComponent = strictProxy<PluginNoticeComponent>({});
-  const editorLockComponent = strictProxy<EditorLockComponent>({});
+  const resourceLockComponent = strictProxy<ResourceLockComponent>({});
 
   const converter = new LinkConverter({
     abortSignalComponent,
     app,
-    editorLockComponent,
     pluginNoticeComponent,
-    pluginSettingsComponent
+    pluginSettingsComponent,
+    resourceLockComponent
   });
 
   return {
     abortSignal,
     app,
     converter,
-    editorLockComponent,
     getActiveFile,
     getLinkStyle,
-    isPathIgnored
+    isPathIgnored,
+    resourceLockComponent
   };
 }
 
@@ -139,9 +139,9 @@ describe('LinkConverter', () => {
       expect(vi.mocked(updateLinksInFile)).toHaveBeenCalledExactlyOnceWith({
         abortSignal: context.abortSignal,
         app: context.app,
-        editorLockComponent: context.editorLockComponent,
         linkStyle: LINK_STYLE,
-        newSourcePathOrFile: file
+        newSourcePathOrFile: file,
+        resourceLockComponent: context.resourceLockComponent
       });
     });
 
