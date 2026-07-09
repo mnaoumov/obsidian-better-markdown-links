@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 4.0.0
+
+- feat: re #36
+
 ## 3.4.13
 
 - fix: apply shouldAllowEmptyEmbedAlias setting to generateMarkdownLink
