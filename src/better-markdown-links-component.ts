@@ -51,20 +51,6 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     this.linkConverter = params.linkConverter;
   }
 
-  public async handleModify(file: TAbstractFile): Promise<void> {
-    this.abortSignalComponent.abortSignal.throwIfAborted();
-
-    if (!(file instanceof TFile)) {
-      return;
-    }
-
-    if (!this.pluginSettingsComponent.settings.shouldConvertLinksOnModify()) {
-      return;
-    }
-
-    await this.processFile(file);
-  }
-
   public async handleNavigation(file: TFile): Promise<void> {
     this.abortSignalComponent.abortSignal.throwIfAborted();
 
@@ -133,6 +119,20 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
         betterMarkdownLinksComponent: this
       })
     );
+  }
+
+  private async handleModify(file: TAbstractFile): Promise<void> {
+    this.abortSignalComponent.abortSignal.throwIfAborted();
+
+    if (!(file instanceof TFile)) {
+      return;
+    }
+
+    if (!this.pluginSettingsComponent.settings.shouldConvertLinksOnModify()) {
+      return;
+    }
+
+    await this.processFile(file);
   }
 
   private async processFile(file: TFile): Promise<void> {

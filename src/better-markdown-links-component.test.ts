@@ -84,6 +84,10 @@ interface CommandsStub {
 
 type ConfiguredFiles = NonNullable<Parameters<typeof AppCls.createConfigured__>[0]>['files'];
 
+interface HandleModifyHolder {
+  handleModify(file: TAbstractFile): Promise<void>;
+}
+
 interface MutableAbortSignalHolder {
   abortSignal: AbortSignal;
 }
@@ -178,6 +182,10 @@ function getProcessFileAbortControllers(component: BetterMarkdownLinksComponent)
   return castTo<ProcessFileAbortControllersHolder>(component).processFileAbortControllers;
 }
 
+function handleModify(component: BetterMarkdownLinksComponent, file: TAbstractFile): Promise<void> {
+  return castTo<HandleModifyHolder>(component).handleModify(file);
+}
+
 /**
  * Drives the REAL `LayoutReadyComponent` lifecycle: `load()` registers the workspace layout-ready
  * callback, `setLayoutReady__()` fires it (scheduling the internal `setTimeout(0)`), and
@@ -262,13 +270,13 @@ describe('BetterMarkdownLinksComponent', () => {
       controller.abort();
       castTo<MutableAbortSignalHolder>(context.abortSignalComponent).abortSignal = controller.signal;
 
-      await expect(context.component.handleModify(makeTFile('note.md'))).rejects.toThrow();
+      await expect(handleModify(context.component, makeTFile('note.md'))).rejects.toThrow();
     });
 
     it('should ignore non-file abstract files', async () => {
       const context = createContext();
 
-      await context.component.handleModify(makeTFolder('folder'));
+      await handleModify(context.component, makeTFolder('folder'));
 
       expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
     });
@@ -280,7 +288,7 @@ describe('BetterMarkdownLinksComponent', () => {
       const abortSpy = vi.spyOn(existingController, 'abort');
       getProcessFileAbortControllers(context.component).set(file.path, existingController);
 
-      await context.component.handleModify(file);
+      await handleModify(context.component, file);
 
       expect(abortSpy).toHaveBeenCalled();
     });
@@ -289,7 +297,7 @@ describe('BetterMarkdownLinksComponent', () => {
       const context = createContext();
       context.shouldConvertLinksOnModify.mockReturnValue(false);
 
-      await context.component.handleModify(makeTFile('note.md'));
+      await handleModify(context.component, makeTFile('note.md'));
 
       expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
     });
@@ -301,7 +309,7 @@ describe('BetterMarkdownLinksComponent', () => {
       activeDocument.body.appendChild(suggestionContainer);
       vi.spyOn(suggestionContainer, 'isShown').mockReturnValue(true);
 
-      await context.component.handleModify(makeTFile('note.md'));
+      await handleModify(context.component, makeTFile('note.md'));
 
       expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
     });
@@ -310,7 +318,7 @@ describe('BetterMarkdownLinksComponent', () => {
       const context = createContext();
       context.isPathIgnored.mockReturnValue(true);
 
-      await context.component.handleModify(makeTFile('ignored.md'));
+      await handleModify(context.component, makeTFile('ignored.md'));
 
       expect(context.consoleDebug).toHaveBeenCalledWith('File ignored.md is ignored in plugin settings, skipping');
       expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
@@ -322,14 +330,14 @@ describe('BetterMarkdownLinksComponent', () => {
       controller.abort();
       vi.mocked(abortSignalAny).mockReturnValue(controller.signal);
 
-      await expect(context.component.handleModify(makeTFile('note.md'))).rejects.toThrow();
+      await expect(handleModify(context.component, makeTFile('note.md'))).rejects.toThrow();
     });
 
     it('should return when there is no cache', async () => {
       const context = createContext();
       vi.mocked(getCacheSafe).mockResolvedValue(null);
 
-      await context.component.handleModify(makeTFile('note.md'));
+      await handleModify(context.component, makeTFile('note.md'));
 
       expect(context.convertLinksInFile).not.toHaveBeenCalled();
     });
@@ -338,7 +346,7 @@ describe('BetterMarkdownLinksComponent', () => {
       const context = createContext();
       vi.mocked(getAllLinks).mockReturnValue([makeLink('converted')]);
 
-      await context.component.handleModify(makeTFile('note.md'));
+      await handleModify(context.component, makeTFile('note.md'));
 
       expect(context.convertLinksInFile).not.toHaveBeenCalled();
     });
@@ -348,7 +356,7 @@ describe('BetterMarkdownLinksComponent', () => {
       const file = makeTFile('note.md');
       vi.mocked(getAllLinks).mockReturnValue([makeLink('[[different]]')]);
 
-      await context.component.handleModify(file);
+      await handleModify(context.component, file);
 
       expect(context.convertLinksInFile).toHaveBeenCalledOnce();
       expect(context.convertLinksInFile.mock.calls[0]?.[0].file).toBe(file);
