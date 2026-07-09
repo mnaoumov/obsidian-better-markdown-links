@@ -65,20 +65,32 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         f.createEl('br');
         f.appendText('Each option is cumulative and also includes every option above it.');
         f.createEl('br');
-        f.appendText('The ');
+        appendCodeBlock(f, 'On explicit command');
+        f.appendText(' - only when a convert command is invoked. No automatic conversion happens.');
+        f.createEl('br');
+        appendCodeBlock(f, 'On save command');
+        f.appendText(' - additionally when the ');
         appendCodeBlock(f, 'Save current file');
-        f.appendText(' command is usually bound to ');
+        f.appendText(' command runs (usually bound to ');
         appendCodeBlock(f, 'Ctrl + S');
-        f.appendText('.');
+        f.appendText(').');
+        f.createEl('br');
+        appendCodeBlock(f, 'On auto save');
+        f.appendText(' - additionally on the implicit auto-save (usually every 2s).');
+        f.createEl('br');
+        appendCodeBlock(f, 'On every modification');
+        f.appendText(' - additionally on every file modification, including changes made outside Obsidian.');
       }))
-      .addTypedDropdown((typedDropdown) => {
-        const options = new Map<LinkConversionMode, string>();
-        options.set(LinkConversionMode.OnExplicitCommand, 'On explicit commands');
-        options.set(LinkConversionMode.OnSaveCommand, '+ On explicit Save current file command');
-        options.set(LinkConversionMode.OnAutoSave, '+ On implicit auto-save (usually every 2s)');
-        options.set(LinkConversionMode.OnEveryModification, '+ On every file modification (including external)');
-        typedDropdown.addOptions(options);
-        this.bind({ propertyName: 'linkConversionMode', valueComponent: typedDropdown });
+      .addDropdown((dropdown) => {
+        dropdown.addOptions({
+          /* eslint-disable perfectionist/sort-objects -- Need to keep order. */
+          [LinkConversionMode.OnExplicitCommand]: 'On explicit command',
+          [LinkConversionMode.OnSaveCommand]: 'On save command',
+          [LinkConversionMode.OnAutoSave]: 'On auto save',
+          [LinkConversionMode.OnEveryModification]: 'On every modification'
+          /* eslint-enable perfectionist/sort-objects -- Need to keep order. */
+        });
+        this.bind({ propertyName: 'linkConversionMode', valueComponent: dropdown });
       });
 
     new SettingEx(this.containerEl)
