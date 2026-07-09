@@ -31,15 +31,18 @@ Better Markdown Links is an Obsidian plugin that adds support for angle bracket 
 - **`src/`** — plugin source:
   - `main.ts` — Obsidian entry point (imports the SCSS bundle and re-exports `Plugin` as the default export)
   - `plugin.ts` — `Plugin extends PluginBase`; `onloadImpl()` wires up all child components (settings, link conversion, rename/delete handling, and command handlers)
-  - `better-markdown-links-component.ts` — `LayoutReadyComponent` that installs the patches, listens for vault `modify` events, and auto-converts links in modified files
+  - `better-markdown-links-component.ts` — `LayoutReadyComponent` that installs the patches and dispatches conversion by trigger: `handleModify` (vault `modify`), `handleSave` (editor save, via the save patch), and `handleNavigation` (link navigation). Gating lives on `PluginSettings` (`shouldConvertLinksOn*`)
   - `link-converter.ts` — `LinkConverter` performing the actual link conversion in the current file, a file, a folder, or the entire vault
-  - `plugin-settings.ts` — `PluginSettings` model (angle brackets, leading dot/slash, auto-convert/update toggles, include/exclude paths, link style)
+  - `link-conversion-mode.ts` — `LinkConversionMode` enum (dependency-free so it can be imported as a value from node-based integration tests without loading `obsidian`)
+  - `plugin-settings.ts` — `PluginSettings` model (angle brackets, leading dot/slash, `linkConversionMode`, auto-update toggle, include/exclude paths, link style)
   - `plugin-settings-component.ts` — settings persistence, legacy-settings converters, and validators
   - `plugin-settings-tab.ts` — settings UI tab (`PluginSettingsTabBase`)
   - `generate-markdown-link-extended.d.ts` — type declarations for the extended `generateMarkdownLink` overload (`LinkPathStyle`/`LinkStyle` enums, options interface)
   - `generate-markdown-link-extended-impl.ts` — `GenerateMarkdownLinkPatchComponent` patching `fileManager.generateMarkdownLink` and adding the `.extended(...)` method
   - `commands/` — three `CommandHandler` subclasses: convert links in file, in folder, and in entire vault
   - `patches/workspace-open-link-text-patch-component.ts` — `MonkeyAroundComponent` patching `Workspace.openLinkText` to convert links on navigation
+  - `patches/text-file-view-save-patch-component.ts` — `MonkeyAroundComponent` patching `TextFileView.save` (fires on auto-save and Ctrl+S, never on external writes) to convert after the write
+  - `patches/editor-save-file-command-patch-component.ts` — `MonkeyAroundComponent` patching the `editor:save-file` command's `checkCallback` to tag the active file so a Ctrl+S save is distinguishable from an auto-save
   - `styles/` — `main.scss` plus `scss.d.ts` ambient module declaration
 - **`main` field** points to `src/main.ts` (Obsidian plugin source entry; built artifact is `dist/build/main.js`, not published to npm).
 

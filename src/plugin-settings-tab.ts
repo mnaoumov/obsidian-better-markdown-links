@@ -4,6 +4,8 @@ import { SettingEx } from 'obsidian-dev-utils/obsidian/setting-ex';
 
 import type { PluginSettings } from './plugin-settings.ts';
 
+import { LinkConversionMode } from './link-conversion-mode.ts';
+
 export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
   public override displayLegacy(): void {
     super.displayLegacy();
@@ -57,10 +59,26 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
       });
 
     new SettingEx(this.containerEl)
-      .setName('Should automatically convert new links')
-      .setDesc('Whether to automatically convert new links entered manually to the selected format.')
-      .addToggle((toggle) => {
-        this.bind({ propertyName: 'shouldAutomaticallyConvertNewLinks', valueComponent: toggle });
+      .setName('Convert links')
+      .setDesc(createFragment((f) => {
+        f.appendText('When to automatically convert links to the selected format.');
+        f.createEl('br');
+        f.appendText('Each option is cumulative and also includes every option above it.');
+        f.createEl('br');
+        f.appendText('The ');
+        appendCodeBlock(f, 'Save current file');
+        f.appendText(' command is usually bound to ');
+        appendCodeBlock(f, 'Ctrl + S');
+        f.appendText('.');
+      }))
+      .addTypedDropdown((typedDropdown) => {
+        const options = new Map<LinkConversionMode, string>();
+        options.set(LinkConversionMode.OnExplicitCommand, 'On explicit commands');
+        options.set(LinkConversionMode.OnSaveCommand, '+ On explicit Save current file command');
+        options.set(LinkConversionMode.OnAutoSave, '+ On implicit auto-save (usually every 2s)');
+        options.set(LinkConversionMode.OnEveryModification, '+ On every file modification (including external)');
+        typedDropdown.addOptions(options);
+        this.bind({ propertyName: 'linkConversionMode', valueComponent: typedDropdown });
       });
 
     new SettingEx(this.containerEl)

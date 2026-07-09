@@ -37,7 +37,7 @@ export class WorkspaceOpenLinkTextPatchComponent extends MonkeyAroundComponent {
         }
 
         try {
-          await this.betterMarkdownLinksComponent.handleModify(sourceFile);
+          await this.betterMarkdownLinksComponent.handleNavigation(sourceFile);
         } catch (error) {
           if (handleSilentError(error)) {
             return;

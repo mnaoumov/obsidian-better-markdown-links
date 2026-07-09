@@ -29,7 +29,14 @@ This plugin adds the ability to convert all links in an individual note or the e
 
 ## Automatic Link Conversion
 
-This plugin adds the ability to automatically convert all new links entered manually to the selected format.
+This plugin adds the ability to automatically convert links to the selected format. The `Convert links` setting controls _when_ this happens, with each option being cumulative (it also includes every option above it):
+
+- **On explicit commands** — only when you run a convert command. No automatic conversion happens.
+- **On explicit `Save current file` command** — additionally when the `Save current file` command runs (usually bound to `Ctrl + S`).
+- **On implicit auto-save** — additionally on Obsidian's implicit auto-save (which also covers `Ctrl + S`).
+- **On every file modification** — additionally on every file modification, including changes made outside Obsidian.
+
+Use one of the save-based options if the older "convert as you type" behavior felt too eager and moved your cursor while editing — those convert only when the file is saved.
 
 ## Automatic handling rename/move
 
