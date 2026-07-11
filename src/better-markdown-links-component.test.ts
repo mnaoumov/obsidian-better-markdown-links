@@ -1,12 +1,12 @@
 import type {
   App,
-  CachedMetadata,
   Reference,
   TAbstractFile,
   TFile
 } from 'obsidian';
 import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
 import type { ConsoleDebugComponent } from 'obsidian-dev-utils/obsidian/components/console-debug-component';
+import type { CachedMetadataEx } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 import { castTo } from 'obsidian-dev-utils/object-utils';
 import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
@@ -52,8 +52,8 @@ vi.mock('obsidian-dev-utils/obsidian/link', async (importOriginal) => ({
 }));
 
 vi.mock('obsidian-dev-utils/obsidian/metadata-cache', () => ({
-  getAllLinks: vi.fn(),
-  getCacheSafe: vi.fn()
+  getCacheSafe: vi.fn(),
+  getLinks: vi.fn()
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
@@ -67,8 +67,8 @@ import {
 } from 'obsidian-dev-utils/obsidian/link';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
-  getAllLinks,
-  getCacheSafe
+  getCacheSafe,
+  getLinks
 } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
@@ -220,8 +220,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   activeDocument.body.innerHTML = '';
   vi.mocked(abortSignalAny).mockImplementation((...signals) => signals[0] ?? new AbortController().signal);
-  vi.mocked(getCacheSafe).mockResolvedValue(castTo<CachedMetadata>({}));
-  vi.mocked(getAllLinks).mockReturnValue([]);
+  vi.mocked(getCacheSafe).mockResolvedValue(castTo<CachedMetadataEx>({ features: [] }));
+  vi.mocked(getLinks).mockReturnValue([]);
   vi.mocked(convertLink).mockReturnValue('converted');
   vi.mocked(handleSilentError).mockReturnValue(false);
 });
@@ -344,7 +344,7 @@ describe('BetterMarkdownLinksComponent', () => {
 
     it('should not convert when all links already match the target style', async () => {
       const context = createContext();
-      vi.mocked(getAllLinks).mockReturnValue([makeLink('converted')]);
+      vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
 
       await handleModify(context.component, makeTFile('note.md'));
 
@@ -354,7 +354,7 @@ describe('BetterMarkdownLinksComponent', () => {
     it('should convert when a link differs from the target style', async () => {
       const context = createContext();
       const file = makeTFile('note.md');
-      vi.mocked(getAllLinks).mockReturnValue([makeLink('[[different]]')]);
+      vi.mocked(getLinks).mockReturnValue([makeLink('[[different]]')]);
 
       await handleModify(context.component, file);
 
@@ -386,7 +386,7 @@ describe('BetterMarkdownLinksComponent', () => {
     it('should convert when the mode converts on navigation', async () => {
       const context = createContext();
       const file = makeTFile('note.md');
-      vi.mocked(getAllLinks).mockReturnValue([makeLink('[[different]]')]);
+      vi.mocked(getLinks).mockReturnValue([makeLink('[[different]]')]);
 
       await context.component.handleNavigation(file);
 
@@ -447,7 +447,7 @@ describe('BetterMarkdownLinksComponent', () => {
     it('should convert when the mode converts on save', async () => {
       const context = createContext();
       const file = makeTFile('note.md');
-      vi.mocked(getAllLinks).mockReturnValue([makeLink('[[different]]')]);
+      vi.mocked(getLinks).mockReturnValue([makeLink('[[different]]')]);
 
       await context.component.handleSave(file);
 

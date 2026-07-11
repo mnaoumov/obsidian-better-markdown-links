@@ -217,7 +217,7 @@ describe('LinkConverter', () => {
       const folder = strictProxy<TFolder>({ path: 'sub' });
       const file = createFile('sub/note.md');
       vi.mocked(loop).mockImplementation(async (params) => {
-        params.buildNoticeMessage(file, '1/1');
+        params.buildNoticeMessage({ item: file, iterationStr: '1/1' });
         await params.processItem(file);
       });
 

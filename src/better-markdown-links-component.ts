@@ -14,8 +14,8 @@ import { GenerateMarkdownLinkDefaultParamsComponent } from 'obsidian-dev-utils/o
 import { LayoutReadyComponent } from 'obsidian-dev-utils/obsidian/components/layout-ready-component';
 import { convertLink } from 'obsidian-dev-utils/obsidian/link';
 import {
-  getAllLinks,
-  getCacheSafe
+  getCacheSafe,
+  getLinks
 } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 import type { LinkConverter } from './link-converter.ts';
@@ -159,7 +159,7 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
       if (!cache) {
         return;
       }
-      const links = getAllLinks(cache);
+      const links = getLinks({ cache });
       if (
         links.some((link) =>
           link.original !== convertLink({

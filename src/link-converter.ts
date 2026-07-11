@@ -81,7 +81,7 @@ export class LinkConverter {
     const abortSignal = abortSignalAny(this.abortSignalComponent.abortSignal, params.abortSignal);
     await loop({
       abortSignal,
-      buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,
+      buildNoticeMessage: ({ item, iterationStr }) => `Converting links in note ${iterationStr} - ${item.path}`,
       items: getMarkdownFiles({
         app: this.app,
         isRecursive: true,
