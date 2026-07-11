@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 4.1.0
+
+- chore: update libs
+- feat: re #35
+
 ## 4.0.0
 
 - feat: re #36
