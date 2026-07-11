@@ -16,6 +16,7 @@ describe('PluginSettings', () => {
       expect(settings.shouldAllowEmptyEmbedAlias).toBe(true);
       expect(settings.shouldAutomaticallyUpdateLinksOnRenameOrMove).toBe(true);
       expect(settings.shouldIncludeAttachmentExtensionToEmbedAlias).toBe(false);
+      expect(settings.shouldNormalizeFileLinks).toBe(true);
       expect(settings.shouldPreserveExistingLinkStyle).toBe(false);
       expect(settings.shouldUseAngleBrackets).toBe(true);
       expect(settings.shouldUseLeadingDotForRelativePaths).toBe(true);

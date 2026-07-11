@@ -8,6 +8,7 @@ export class PluginSettings {
   public shouldAllowEmptyEmbedAlias = true;
   public shouldAutomaticallyUpdateLinksOnRenameOrMove = true;
   public shouldIncludeAttachmentExtensionToEmbedAlias = false;
+  public shouldNormalizeFileLinks = true;
   public shouldPreserveExistingLinkStyle = false;
   public shouldUseAngleBrackets = true;
   public shouldUseLeadingDotForRelativePaths = true;

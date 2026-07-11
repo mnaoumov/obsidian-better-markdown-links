@@ -1,12 +1,12 @@
 import type {
   App,
-  CachedMetadata,
   Reference,
   TAbstractFile,
   TFile
 } from 'obsidian';
 import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
 import type { ConsoleDebugComponent } from 'obsidian-dev-utils/obsidian/components/console-debug-component';
+import type { CachedMetadataEx } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 import { castTo } from 'obsidian-dev-utils/object-utils';
 import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
@@ -52,8 +52,8 @@ vi.mock('obsidian-dev-utils/obsidian/link', async (importOriginal) => ({
 }));
 
 vi.mock('obsidian-dev-utils/obsidian/metadata-cache', () => ({
-  getAllLinks: vi.fn(),
-  getCacheSafe: vi.fn()
+  getCacheSafe: vi.fn(),
+  getLinks: vi.fn()
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
@@ -67,8 +67,8 @@ import {
 } from 'obsidian-dev-utils/obsidian/link';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
-  getAllLinks,
-  getCacheSafe
+  getCacheSafe,
+  getLinks
 } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
@@ -83,6 +83,10 @@ interface CommandsStub {
 }
 
 type ConfiguredFiles = NonNullable<Parameters<typeof AppCls.createConfigured__>[0]>['files'];
+
+interface CreateContextOptions {
+  readonly shouldNormalizeFileLinks?: boolean;
+}
 
 interface HandleModifyHolder {
   handleModify(file: TAbstractFile): Promise<void>;
@@ -114,7 +118,7 @@ interface TestContext {
   shouldConvertLinksOnSave: ReturnType<typeof vi.fn<(isSaveCommand: boolean) => boolean>>;
 }
 
-function createContext(files: ConfiguredFiles = {}): TestContext {
+function createContext(files: ConfiguredFiles = {}, options: CreateContextOptions = {}): TestContext {
   const appMock = AppCls.createConfigured__({ files });
   // The configured App mock has no `obsidianDevUtilsState`; the real dev-utils shared-state helpers
   // (used by the real `GenerateMarkdownLinkDefaultParamsComponent`) read it, so seed it like the
@@ -145,6 +149,7 @@ function createContext(files: ConfiguredFiles = {}): TestContext {
     shouldConvertLinksOnNavigation,
     shouldConvertLinksOnSave,
     shouldIncludeAttachmentExtensionToEmbedAlias: true,
+    shouldNormalizeFileLinks: options.shouldNormalizeFileLinks ?? true,
     shouldUseAngleBrackets: false,
     shouldUseLeadingDotForRelativePaths: false,
     shouldUseLeadingSlashForAbsolutePaths: true
@@ -203,6 +208,19 @@ function loadComponent(context: TestContext): void {
 
 const realVault = AppCls.createConfigured__().vault;
 
+function makeCacheWithExternalLinks(isFileUrl: boolean, location: 'body' | 'frontmatter' | 'multiValueFrontmatter'): CachedMetadataEx {
+  const reference = { parseLinkResult: { isFileUrl } };
+  const key = {
+    body: 'externalLinks',
+    frontmatter: 'frontmatterExternalLinks',
+    multiValueFrontmatter: 'multiValueFrontmatterExternalLinks'
+  }[location];
+  return castTo<CachedMetadataEx>({
+    features: [],
+    [key]: [reference]
+  });
+}
+
 function makeLink(original: string): Reference {
   return castTo<Reference>({ original });
 }
@@ -220,8 +238,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   activeDocument.body.innerHTML = '';
   vi.mocked(abortSignalAny).mockImplementation((...signals) => signals[0] ?? new AbortController().signal);
-  vi.mocked(getCacheSafe).mockResolvedValue(castTo<CachedMetadata>({}));
-  vi.mocked(getAllLinks).mockReturnValue([]);
+  vi.mocked(getCacheSafe).mockResolvedValue(castTo<CachedMetadataEx>({ features: [] }));
+  vi.mocked(getLinks).mockReturnValue([]);
   vi.mocked(convertLink).mockReturnValue('converted');
   vi.mocked(handleSilentError).mockReturnValue(false);
 });
@@ -344,7 +362,7 @@ describe('BetterMarkdownLinksComponent', () => {
 
     it('should not convert when all links already match the target style', async () => {
       const context = createContext();
-      vi.mocked(getAllLinks).mockReturnValue([makeLink('converted')]);
+      vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
 
       await handleModify(context.component, makeTFile('note.md'));
 
@@ -354,13 +372,78 @@ describe('BetterMarkdownLinksComponent', () => {
     it('should convert when a link differs from the target style', async () => {
       const context = createContext();
       const file = makeTFile('note.md');
-      vi.mocked(getAllLinks).mockReturnValue([makeLink('[[different]]')]);
+      vi.mocked(getLinks).mockReturnValue([makeLink('[[different]]')]);
 
       await handleModify(context.component, file);
 
       expect(context.convertLinksInFile).toHaveBeenCalledOnce();
       expect(context.convertLinksInFile.mock.calls[0]?.[0].file).toBe(file);
       expect(getProcessFileAbortControllers(context.component).has(file.path)).toBe(false);
+    });
+
+    it('should convert when the only pending change is a body file:// link normalization', async () => {
+      const context = createContext();
+      const file = makeTFile('note.md');
+      vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
+      vi.mocked(getCacheSafe).mockResolvedValue(makeCacheWithExternalLinks(true, 'body'));
+
+      await handleModify(context.component, file);
+
+      expect(vi.mocked(getCacheSafe)).toHaveBeenCalledWith(context.app, file, {
+        shouldParseExternalLinks: true,
+        shouldParseFrontmatterExternalLinks: true,
+        shouldParseMultiValueFrontmatterExternalLinks: true
+      });
+      expect(context.convertLinksInFile).toHaveBeenCalledOnce();
+      expect(context.convertLinksInFile.mock.calls[0]?.[0].file).toBe(file);
+    });
+
+    it('should convert when the only pending change is a multi-link frontmatter file:// link normalization', async () => {
+      const context = createContext();
+      const file = makeTFile('note.md');
+      vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
+      vi.mocked(getCacheSafe).mockResolvedValue(makeCacheWithExternalLinks(true, 'multiValueFrontmatter'));
+
+      await handleModify(context.component, file);
+
+      expect(context.convertLinksInFile).toHaveBeenCalledOnce();
+    });
+
+    it('should convert when the only pending change is a frontmatter file:// link normalization', async () => {
+      const context = createContext();
+      const file = makeTFile('note.md');
+      vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
+      vi.mocked(getCacheSafe).mockResolvedValue(makeCacheWithExternalLinks(true, 'frontmatter'));
+
+      await handleModify(context.component, file);
+
+      expect(context.convertLinksInFile).toHaveBeenCalledOnce();
+    });
+
+    it('should not convert when the only external link is not a file:// link', async () => {
+      const context = createContext();
+      vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
+      vi.mocked(getCacheSafe).mockResolvedValue(makeCacheWithExternalLinks(false, 'body'));
+
+      await handleModify(context.component, makeTFile('note.md'));
+
+      expect(context.convertLinksInFile).not.toHaveBeenCalled();
+    });
+
+    it('should not parse external links or convert a file:// link when normalization is disabled', async () => {
+      const context = createContext({}, { shouldNormalizeFileLinks: false });
+      const file = makeTFile('note.md');
+      vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
+      vi.mocked(getCacheSafe).mockResolvedValue(makeCacheWithExternalLinks(true, 'body'));
+
+      await handleModify(context.component, file);
+
+      expect(vi.mocked(getCacheSafe)).toHaveBeenCalledWith(context.app, file, {
+        shouldParseExternalLinks: false,
+        shouldParseFrontmatterExternalLinks: false,
+        shouldParseMultiValueFrontmatterExternalLinks: false
+      });
+      expect(context.convertLinksInFile).not.toHaveBeenCalled();
     });
   });
 
@@ -386,7 +469,7 @@ describe('BetterMarkdownLinksComponent', () => {
     it('should convert when the mode converts on navigation', async () => {
       const context = createContext();
       const file = makeTFile('note.md');
-      vi.mocked(getAllLinks).mockReturnValue([makeLink('[[different]]')]);
+      vi.mocked(getLinks).mockReturnValue([makeLink('[[different]]')]);
 
       await context.component.handleNavigation(file);
 
@@ -447,7 +530,7 @@ describe('BetterMarkdownLinksComponent', () => {
     it('should convert when the mode converts on save', async () => {
       const context = createContext();
       const file = makeTFile('note.md');
-      vi.mocked(getAllLinks).mockReturnValue([makeLink('[[different]]')]);
+      vi.mocked(getLinks).mockReturnValue([makeLink('[[different]]')]);
 
       await context.component.handleSave(file);
 

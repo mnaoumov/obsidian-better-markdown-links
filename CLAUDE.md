@@ -31,10 +31,10 @@ Better Markdown Links is an Obsidian plugin that adds support for angle bracket 
 - **`src/`** — plugin source:
   - `main.ts` — Obsidian entry point (imports the SCSS bundle and re-exports `Plugin` as the default export)
   - `plugin.ts` — `Plugin extends PluginBase`; `onloadImpl()` wires up all child components (settings, link conversion, rename/delete handling, and command handlers)
-  - `better-markdown-links-component.ts` — `LayoutReadyComponent` that installs the patches and dispatches conversion by trigger: `handleModify` (vault `modify`), `handleSave` (editor save, via the save patch), and `handleNavigation` (link navigation). Gating lives on `PluginSettings` (`shouldConvertLinksOn*`)
-  - `link-converter.ts` — `LinkConverter` performing the actual link conversion in the current file, a file, a folder, or the entire vault
+  - `better-markdown-links-component.ts` — `LayoutReadyComponent` that installs the patches and dispatches conversion by trigger: `handleModify` (vault `modify`), `handleSave` (editor save, via the save patch), and `handleNavigation` (link navigation). Gating lives on `PluginSettings` (`shouldConvertLinksOn*`). The `processFile` gate also triggers conversion when a note's only pending change is a `file://` normalization — it parses external links (`getCacheSafe` with `shouldParse{External,FrontmatterExternal,MultiValueFrontmatterExternal}Links`) and checks `parseLinkResult.isFileUrl`
+  - `link-converter.ts` — `LinkConverter` performing the actual link conversion in the current file, a file, a folder, or the entire vault; also normalizes `file://` links (via `updateFileUrlLinksInFile`) when `shouldNormalizeFileLinks` is enabled, so every conversion surface (commands + automatic triggers) picks it up
   - `link-conversion-mode.ts` — `LinkConversionMode` enum (dependency-free so it can be imported as a value from node-based integration tests without loading `obsidian`)
-  - `plugin-settings.ts` — `PluginSettings` model (angle brackets, leading dot/slash, `linkConversionMode`, auto-update toggle, include/exclude paths, link style)
+  - `plugin-settings.ts` — `PluginSettings` model (angle brackets, leading dot/slash, `linkConversionMode`, auto-update toggle, include/exclude paths, link style, `shouldNormalizeFileLinks` for `file://` link normalization)
   - `plugin-settings-component.ts` — settings persistence, legacy-settings converters, and validators
   - `plugin-settings-tab.ts` — settings UI tab (`PluginSettingsTabBase`)
   - `generate-markdown-link-extended.d.ts` — type declarations for the extended `generateMarkdownLink` overload (`LinkPathStyle`/`LinkStyle` enums, options interface)

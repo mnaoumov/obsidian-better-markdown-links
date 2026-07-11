@@ -9,7 +9,10 @@ import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource
 
 import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
 import { getMarkdownFiles } from 'obsidian-dev-utils/obsidian/file-system';
-import { updateLinksInFile } from 'obsidian-dev-utils/obsidian/link';
+import {
+  updateFileUrlLinksInFile,
+  updateLinksInFile
+} from 'obsidian-dev-utils/obsidian/link';
 import { loop } from 'obsidian-dev-utils/obsidian/loop';
 import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
 
@@ -75,13 +78,23 @@ export class LinkConverter {
       newSourcePathOrFile: params.file,
       resourceLockComponent: this.resourceLockComponent
     });
+
+    if (settings.shouldNormalizeFileLinks) {
+      await updateFileUrlLinksInFile({
+        abortSignal,
+        app: this.app,
+        pathOrFile: params.file,
+        resourceLockComponent: this.resourceLockComponent,
+        shouldUseAngleBrackets: settings.shouldUseAngleBrackets
+      });
+    }
   }
 
   public async convertLinksInFolder(params: LinkConverterConvertLinksInFolderParams): Promise<void> {
     const abortSignal = abortSignalAny(this.abortSignalComponent.abortSignal, params.abortSignal);
     await loop({
       abortSignal,
-      buildNoticeMessage: (file, iterationStr) => `Converting links in note ${iterationStr} - ${file.path}`,
+      buildNoticeMessage: ({ item, iterationStr }) => `Converting links in note ${iterationStr} - ${item.path}`,
       items: getMarkdownFiles({
         app: this.app,
         isRecursive: true,

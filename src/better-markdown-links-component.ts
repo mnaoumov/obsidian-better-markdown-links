@@ -2,6 +2,7 @@ import type { App } from 'obsidian';
 import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
 import type { ConsoleDebugComponent } from 'obsidian-dev-utils/obsidian/components/console-debug-component';
 import type { GenerateMarkdownLinkParams } from 'obsidian-dev-utils/obsidian/link';
+import type { CachedMetadataEx } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 import {
   TAbstractFile,
@@ -14,8 +15,8 @@ import { GenerateMarkdownLinkDefaultParamsComponent } from 'obsidian-dev-utils/o
 import { LayoutReadyComponent } from 'obsidian-dev-utils/obsidian/components/layout-ready-component';
 import { convertLink } from 'obsidian-dev-utils/obsidian/link';
 import {
-  getAllLinks,
-  getCacheSafe
+  getCacheSafe,
+  getLinks
 } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 import type { LinkConverter } from './link-converter.ts';
@@ -135,6 +136,15 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     await this.processFile(file);
   }
 
+  private hasFileUrlLink(cache: CachedMetadataEx): boolean {
+    const externalLinks = [
+      ...cache.externalLinks ?? [],
+      ...cache.frontmatterExternalLinks ?? [],
+      ...cache.multiValueFrontmatterExternalLinks ?? []
+    ];
+    return externalLinks.some((externalLink) => externalLink.parseLinkResult.isFileUrl);
+  }
+
   private async processFile(file: TFile): Promise<void> {
     let processFileAbortController = this.processFileAbortControllers.get(file.path);
     processFileAbortController?.abort(new SilentError(`File ${file.path} is already being processed`));
@@ -154,22 +164,27 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     this.processFileAbortControllers.set(file.path, processFileAbortController);
     try {
       const combinedAbortSignal = abortSignalAny(this.abortSignalComponent.abortSignal, processFileAbortController.signal);
-      const cache = await getCacheSafe(this.app, file);
+      const shouldNormalizeFileLinks = this.pluginSettingsComponent.settings.shouldNormalizeFileLinks;
+      const cache = await getCacheSafe(this.app, file, {
+        shouldParseExternalLinks: shouldNormalizeFileLinks,
+        shouldParseFrontmatterExternalLinks: shouldNormalizeFileLinks,
+        shouldParseMultiValueFrontmatterExternalLinks: shouldNormalizeFileLinks
+      });
       combinedAbortSignal.throwIfAborted();
       if (!cache) {
         return;
       }
-      const links = getAllLinks(cache);
-      if (
-        links.some((link) =>
-          link.original !== convertLink({
-            app: this.app,
-            link,
-            linkStyle: this.pluginSettingsComponent.settings.getLinkStyle(true),
-            newSourcePathOrFile: file
-          })
-        )
-      ) {
+      const links = getLinks({ cache });
+      const needsInternalConversion = links.some((link) =>
+        link.original !== convertLink({
+          app: this.app,
+          link,
+          linkStyle: this.pluginSettingsComponent.settings.getLinkStyle(true),
+          newSourcePathOrFile: file
+        })
+      );
+      const needsFileUrlNormalization = shouldNormalizeFileLinks && this.hasFileUrlLink(cache);
+      if (needsInternalConversion || needsFileUrlNormalization) {
         await this.linkConverter.convertLinksInFile({
           abortSignal: combinedAbortSignal,
           file

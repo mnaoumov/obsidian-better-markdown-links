@@ -59,6 +59,24 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
       });
 
     new SettingEx(this.containerEl)
+      .setName('Should normalize file links')
+      .setDesc(createFragment((f) => {
+        f.appendText('Whether to normalize ');
+        appendCodeBlock(f, 'file://');
+        f.appendText(' links to a pretty form (converting backslashes to forward slashes) when converting links.');
+        f.createEl('br');
+        f.appendText('If enabled: ');
+        appendCodeBlock(f, '[alias](<file:///C:/path/to/file.md>)');
+        f.createEl('br');
+        f.appendText('If disabled, ');
+        appendCodeBlock(f, 'file://');
+        f.appendText(' links are left unchanged.');
+      }))
+      .addToggle((toggle) => {
+        this.bind({ propertyName: 'shouldNormalizeFileLinks', valueComponent: toggle });
+      });
+
+    new SettingEx(this.containerEl)
       .setName('Convert links')
       .setDesc(createFragment((f) => {
         f.appendText('When to automatically convert links to the selected format.');
