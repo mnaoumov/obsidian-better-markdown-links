@@ -30,6 +30,7 @@ vi.mock('obsidian-dev-utils/obsidian/file-system', () => ({
 }));
 
 vi.mock('obsidian-dev-utils/obsidian/link', () => ({
+  updateFileUrlLinksInFile: vi.fn(),
   updateLinksInFile: vi.fn()
 }));
 
@@ -46,7 +47,10 @@ import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { getMarkdownFiles } from 'obsidian-dev-utils/obsidian/file-system';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { updateLinksInFile } from 'obsidian-dev-utils/obsidian/link';
+import {
+  updateFileUrlLinksInFile,
+  updateLinksInFile
+} from 'obsidian-dev-utils/obsidian/link';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { loop } from 'obsidian-dev-utils/obsidian/loop';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
@@ -56,6 +60,10 @@ import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
 import { LinkConverter } from './link-converter.ts';
 
 const LINK_STYLE = castTo<LinkStyle>('ObsidianSettingsDefault');
+
+interface CreateConverterOptions {
+  readonly shouldNormalizeFileLinks?: boolean;
+}
 
 interface CreateConverterResult {
   readonly abortSignal: AbortSignal;
@@ -67,7 +75,7 @@ interface CreateConverterResult {
   readonly resourceLockComponent: ResourceLockComponent;
 }
 
-function createConverter(): CreateConverterResult {
+function createConverter(options: CreateConverterOptions = {}): CreateConverterResult {
   const abortSignal = new AbortController().signal;
   const abortSignalComponent = strictProxy<AbortSignalComponent>({ abortSignal });
   const getActiveFile = vi.fn();
@@ -80,7 +88,9 @@ function createConverter(): CreateConverterResult {
   const getLinkStyle = vi.fn<(isExistingLink: boolean) => LinkStyle>().mockReturnValue(LINK_STYLE);
   const settings = strictProxy<PluginSettings>({
     getLinkStyle,
-    isPathIgnored
+    isPathIgnored,
+    shouldNormalizeFileLinks: options.shouldNormalizeFileLinks ?? true,
+    shouldUseAngleBrackets: true
   });
   const pluginSettingsComponent = strictProxy<PluginSettingsComponent>({ settings });
   const pluginNoticeComponent = strictProxy<PluginNoticeComponent>({});
@@ -113,6 +123,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(abortSignalAny).mockImplementation((...signals) => signals[0] ?? new AbortController().signal);
   vi.mocked(updateLinksInFile).mockResolvedValue(undefined);
+  vi.mocked(updateFileUrlLinksInFile).mockResolvedValue(undefined);
   vi.mocked(loop).mockResolvedValue(undefined);
   vi.mocked(getMarkdownFiles).mockReturnValue([]);
 });
@@ -143,6 +154,30 @@ describe('LinkConverter', () => {
         newSourcePathOrFile: file,
         resourceLockComponent: context.resourceLockComponent
       });
+    });
+
+    it('should normalize file links after updating links when the setting is enabled', async () => {
+      const context = createConverter({ shouldNormalizeFileLinks: true });
+      const file = createFile('note.md');
+
+      await context.converter.convertLinksInFile({ file });
+
+      expect(vi.mocked(updateFileUrlLinksInFile)).toHaveBeenCalledExactlyOnceWith({
+        abortSignal: context.abortSignal,
+        app: context.app,
+        pathOrFile: file,
+        resourceLockComponent: context.resourceLockComponent,
+        shouldUseAngleBrackets: true
+      });
+    });
+
+    it('should not normalize file links when the setting is disabled', async () => {
+      const context = createConverter({ shouldNormalizeFileLinks: false });
+
+      await context.converter.convertLinksInFile({ file: createFile('note.md') });
+
+      expect(vi.mocked(updateLinksInFile)).toHaveBeenCalledOnce();
+      expect(vi.mocked(updateFileUrlLinksInFile)).not.toHaveBeenCalled();
     });
 
     it('should skip an ignored file when not prompting', async () => {

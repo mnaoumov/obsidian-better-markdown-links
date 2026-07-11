@@ -23,6 +23,12 @@ There is a [problem](https://forum.obsidian.md/t/add-settings-to-control-link-re
 
 This plugin ensures that relative paths are prepended with `./`, e.g., `[Title](./path/to/note.md)`, to overcome the above-mentioned problem.
 
+## File Link Normalization
+
+External `file://` links are often stored in an inconsistent, hard-to-read form — with `%5C`-encoded (or literal) backslashes, e.g. `[note](file:///C:%5Cnotes%5Ctodo.md)`.
+
+When the `Should normalize file links` setting is enabled (the default), this plugin normalizes such links to a pretty form (decoding and converting backslashes to forward slashes), e.g. `[note](file:///C:/notes/todo.md)`, whenever links are converted — both via the convert commands and via the automatic conversion triggers. Other (non-`file://`) links are left untouched.
+
 ## Link Conversion
 
 This plugin adds the ability to convert all links in an individual note or the entire vault.
