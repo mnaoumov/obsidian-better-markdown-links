@@ -6,6 +6,7 @@
  * conversion is triggered, driving a real Obsidian instance:
  * - enabled: a body `file://` link with an encoded backslash is rewritten to forward slashes on the
  *   `Save current file` command, even though the note has no internal links to convert,
+ * - enabled: `file://` links inside a multi-link frontmatter value are likewise normalized,
  * - disabled: the same `file://` link is left untouched.
  *
  * Each scenario uses its own source file so a pending async conversion never leaks between tests.
@@ -48,25 +49,45 @@ interface TestableSettingsTab extends SettingTab {
 
 const PLUGIN_ID = 'better-markdown-links';
 
-// A body `file://` link whose path uses an encoded backslash (`%5C`); normalizing it decodes the
-// Backslash and converts it to a forward slash, yielding an observably different string.
-const UNNORMALIZED_CONTENT = '[body](file:///F:%5Cover%5Cage.txt)';
-const NORMALIZED_MARKER = 'file:///F:/over/age.txt';
+// `file://` links whose paths use encoded backslashes (`%5C`); normalizing decodes them and converts
+// The backslashes to forward slashes, yielding an observably different string.
+const BODY_CONTENT = '[body](file:///F:%5Cover%5Cage.txt)';
+const FRONTMATTER_MULTI_LINK_CONTENT = '---\nkey: "file:///F:%5Cover%5Care.txt file:///F:%5Cover%5Cage.txt"\n---\n\nbody\n';
 const ENCODED_BACKSLASH_MARKER = '%5C';
 
 describe('normalize file links (Desktop)', () => {
   it('should normalize a body file:// link on the save command when enabled', async () => {
-    const content = await runScenario({ shouldNormalizeFileLinks: true });
+    const content = await runScenario({
+      content: BODY_CONTENT,
+      shouldNormalizeFileLinks: true,
+      sourceKey: 'body-enabled'
+    });
 
-    expect(content).toContain(NORMALIZED_MARKER);
+    expect(content).toContain('file:///F:/over/age.txt');
+    expect(content).not.toContain(ENCODED_BACKSLASH_MARKER);
+  });
+
+  it('should normalize file:// links in a multi-link frontmatter value on the save command when enabled', async () => {
+    const content = await runScenario({
+      content: FRONTMATTER_MULTI_LINK_CONTENT,
+      shouldNormalizeFileLinks: true,
+      sourceKey: 'frontmatter-multi-link'
+    });
+
+    expect(content).toContain('file:///F:/over/are.txt');
+    expect(content).toContain('file:///F:/over/age.txt');
     expect(content).not.toContain(ENCODED_BACKSLASH_MARKER);
   });
 
   it('should leave a body file:// link unchanged when disabled', async () => {
-    const content = await runScenario({ shouldNormalizeFileLinks: false });
+    const content = await runScenario({
+      content: BODY_CONTENT,
+      shouldNormalizeFileLinks: false,
+      sourceKey: 'body-disabled'
+    });
 
     expect(content).toContain(ENCODED_BACKSLASH_MARKER);
-    expect(content).not.toContain(NORMALIZED_MARKER);
+    expect(content).not.toContain('file:///F:/over/age.txt');
   });
 });
 
@@ -74,13 +95,15 @@ describe('normalize file links (Desktop)', () => {
  * Parameters for {@link runScenario}.
  */
 interface RunScenarioParams {
+  readonly content: string;
   readonly shouldNormalizeFileLinks: boolean;
+  readonly sourceKey: string;
 }
 
 /**
  * Applies the given `shouldNormalizeFileLinks` setting (with the `OnSaveCommand` conversion mode), opens
- * a fresh source file with an un-normalized `file://` link typed in its editor, runs the save command,
- * waits for any normalization to settle, and returns the resulting on-disk content.
+ * a fresh source file with the given un-normalized `file://` content typed in its editor, runs the save
+ * command, waits for any normalization to settle, and returns the resulting on-disk content.
  *
  * @param params - See {@link RunScenarioParams}.
  * @returns The on-disk content of the source file after the save settles.
@@ -88,15 +111,14 @@ interface RunScenarioParams {
 async function runScenario(params: RunScenarioParams): Promise<string> {
   return evalInObsidian({
     args: {
+      content: params.content,
       encodedBackslashMarker: ENCODED_BACKSLASH_MARKER,
       mode: LinkConversionMode.OnSaveCommand,
-      normalizedMarker: NORMALIZED_MARKER,
       pluginId: PLUGIN_ID,
       shouldNormalizeFileLinks: params.shouldNormalizeFileLinks,
-      sourcePath: `normalize-file-links-${String(params.shouldNormalizeFileLinks)}.md`,
-      unnormalizedContent: UNNORMALIZED_CONTENT
+      sourcePath: `normalize-file-links-${params.sourceKey}.md`
     },
-    async fn({ app, encodedBackslashMarker, mode, normalizedMarker, obsidianModule, pluginId, shouldNormalizeFileLinks, sourcePath, unnormalizedContent }): Promise<string> {
+    async fn({ app, content, encodedBackslashMarker, mode, obsidianModule, pluginId, shouldNormalizeFileLinks, sourcePath }): Promise<string> {
       const EDITOR_WAIT_ATTEMPTS = 50;
       const EDITOR_WAIT_INTERVAL_IN_MILLISECONDS = 50;
       const SETTLE_TIMEOUT_IN_MILLISECONDS = 2500;
@@ -124,8 +146,8 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
       await leaf.openFile(sourceFile);
 
       const view = await waitForMarkdownView();
-      // Typing the un-normalized link into the empty file dirties the editor so the save actually writes.
-      view.editor.setValue(unnormalizedContent);
+      // Typing the un-normalized content into the empty file dirties the editor so the save actually writes.
+      view.editor.setValue(content);
 
       app.commands.executeCommandById('editor:save-file');
 
@@ -144,21 +166,22 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
         throw new Error('Markdown editor did not become active');
       }
 
-      // Returns as soon as the link is normalized; otherwise waits the full timeout so the write has
-      // Flushed and any (absent) normalization has had time to happen, then returns the on-disk content.
+      // Returns as soon as the links are normalized (no encoded backslash remains); otherwise waits the
+      // Full timeout so the write has flushed and any (absent) normalization has had time to happen, then
+      // Returns the on-disk content.
       async function waitForSettledContent(file: TFile): Promise<string> {
         const start = performance.now();
-        let content = await app.vault.read(file);
+        let fileContent = await app.vault.read(file);
         while (performance.now() - start < SETTLE_TIMEOUT_IN_MILLISECONDS) {
-          content = await app.vault.read(file);
-          if (content.includes(normalizedMarker) && !content.includes(encodedBackslashMarker)) {
-            return content;
+          fileContent = await app.vault.read(file);
+          if (!fileContent.includes(encodedBackslashMarker)) {
+            return fileContent;
           }
 
           await sleep(SETTLE_POLL_INTERVAL_IN_MILLISECONDS);
         }
 
-        return content;
+        return fileContent;
       }
     },
     vaultPath: getTempVault().path

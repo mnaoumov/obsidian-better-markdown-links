@@ -208,19 +208,17 @@ function loadComponent(context: TestContext): void {
 
 const realVault = AppCls.createConfigured__().vault;
 
-function makeCacheWithExternalLinks(isFileUrl: boolean, location: 'body' | 'frontmatter'): CachedMetadataEx {
+function makeCacheWithExternalLinks(isFileUrl: boolean, location: 'body' | 'frontmatter' | 'multiValueFrontmatter'): CachedMetadataEx {
   const reference = { parseLinkResult: { isFileUrl } };
-  return castTo<CachedMetadataEx>(
-    location === 'frontmatter'
-      ? {
-        features: [],
-        frontmatterExternalLinks: [reference]
-      }
-      : {
-        externalLinks: [reference],
-        features: []
-      }
-  );
+  const key = {
+    body: 'externalLinks',
+    frontmatter: 'frontmatterExternalLinks',
+    multiValueFrontmatter: 'multiValueFrontmatterExternalLinks'
+  }[location];
+  return castTo<CachedMetadataEx>({
+    features: [],
+    [key]: [reference]
+  });
 }
 
 function makeLink(original: string): Reference {
@@ -393,10 +391,22 @@ describe('BetterMarkdownLinksComponent', () => {
 
       expect(vi.mocked(getCacheSafe)).toHaveBeenCalledWith(context.app, file, {
         shouldParseExternalLinks: true,
-        shouldParseFrontmatterExternalLinks: true
+        shouldParseFrontmatterExternalLinks: true,
+        shouldParseMultiValueFrontmatterExternalLinks: true
       });
       expect(context.convertLinksInFile).toHaveBeenCalledOnce();
       expect(context.convertLinksInFile.mock.calls[0]?.[0].file).toBe(file);
+    });
+
+    it('should convert when the only pending change is a multi-link frontmatter file:// link normalization', async () => {
+      const context = createContext();
+      const file = makeTFile('note.md');
+      vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
+      vi.mocked(getCacheSafe).mockResolvedValue(makeCacheWithExternalLinks(true, 'multiValueFrontmatter'));
+
+      await handleModify(context.component, file);
+
+      expect(context.convertLinksInFile).toHaveBeenCalledOnce();
     });
 
     it('should convert when the only pending change is a frontmatter file:// link normalization', async () => {
@@ -430,7 +440,8 @@ describe('BetterMarkdownLinksComponent', () => {
 
       expect(vi.mocked(getCacheSafe)).toHaveBeenCalledWith(context.app, file, {
         shouldParseExternalLinks: false,
-        shouldParseFrontmatterExternalLinks: false
+        shouldParseFrontmatterExternalLinks: false,
+        shouldParseMultiValueFrontmatterExternalLinks: false
       });
       expect(context.convertLinksInFile).not.toHaveBeenCalled();
     });

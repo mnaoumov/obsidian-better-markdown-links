@@ -139,7 +139,8 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
   private hasFileUrlLink(cache: CachedMetadataEx): boolean {
     const externalLinks = [
       ...cache.externalLinks ?? [],
-      ...cache.frontmatterExternalLinks ?? []
+      ...cache.frontmatterExternalLinks ?? [],
+      ...cache.multiValueFrontmatterExternalLinks ?? []
     ];
     return externalLinks.some((externalLink) => externalLink.parseLinkResult.isFileUrl);
   }
@@ -166,7 +167,8 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
       const shouldNormalizeFileLinks = this.pluginSettingsComponent.settings.shouldNormalizeFileLinks;
       const cache = await getCacheSafe(this.app, file, {
         shouldParseExternalLinks: shouldNormalizeFileLinks,
-        shouldParseFrontmatterExternalLinks: shouldNormalizeFileLinks
+        shouldParseFrontmatterExternalLinks: shouldNormalizeFileLinks,
+        shouldParseMultiValueFrontmatterExternalLinks: shouldNormalizeFileLinks
       });
       combinedAbortSignal.throwIfAborted();
       if (!cache) {
