@@ -45,7 +45,3 @@ Better Markdown Links is an Obsidian plugin that adds support for angle bracket 
   - `patches/editor-save-file-command-patch-component.ts` — `MonkeyAroundComponent` patching the `editor:save-file` command's `checkCallback` to tag the active file so a Ctrl+S save is distinguishable from an auto-save
   - `styles/` — `main.scss` plus `scss.d.ts` ambient module declaration
 - **`main` field** points to `src/main.ts` (Obsidian plugin source entry; built artifact is `dist/build/main.js`, not published to npm).
-
-## Known Issues
-
-None.
