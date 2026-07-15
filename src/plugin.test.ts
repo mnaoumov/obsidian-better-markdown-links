@@ -5,6 +5,7 @@ import type {
 
 import { Component } from 'obsidian';
 import { castTo } from 'obsidian-dev-utils/object-utils';
+import { CommandHandlerComponent } from 'obsidian-dev-utils/obsidian/command-handlers/command-handler-component';
 import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
 import { App } from 'obsidian-test-mocks/obsidian';
 import {
@@ -31,32 +32,12 @@ vi.mock('obsidian-dev-utils/obsidian/components/rename-delete-handler-component'
   })
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/command-handlers/command-handler-component', () => ({
-  // eslint-disable-next-line prefer-arrow-callback, func-names -- mock must be constructable with `new` and return a loadable Component.
-  CommandHandlerComponent: vi.fn(function (): Component {
-    return new Component();
-  })
-}));
-
 vi.mock('obsidian-dev-utils/obsidian/data-handler', () => ({
   PluginDataHandler: vi.fn()
 }));
 
 vi.mock('obsidian-dev-utils/obsidian/plugin/plugin-event-source', () => ({
   PluginEventSourceImpl: vi.fn()
-}));
-
-vi.mock('obsidian-dev-utils/obsidian/active-file-provider', () => ({
-  AppActiveFileProvider: vi.fn()
-}));
-
-vi.mock('obsidian-dev-utils/obsidian/command-registrar', () => ({
-  PluginCommandRegistrar: vi.fn()
-}));
-
-vi.mock('obsidian-dev-utils/obsidian/components/menu-event-registrar-component', () => ({
-  // Extends the real obsidian-test-mocks Component so the real addChild lifecycle can load it.
-  MenuEventRegistrarComponent: class extends Component {}
 }));
 
 vi.mock('obsidian-dev-utils/obsidian/components/plugin-settings-tab-component', () => ({
@@ -77,20 +58,6 @@ vi.mock('./better-markdown-links-component.ts', () => ({
   BetterMarkdownLinksComponent: class extends Component {}
 }));
 
-vi.mock('./commands/convert-links-in-file-command-handler.ts', () => ({
-  ConvertLinksInFileCommandHandler: vi.fn()
-}));
-
-vi.mock('./commands/convert-links-in-folder-command-handler.ts', () => ({
-  ConvertLinksInFolderCommandHandler: vi.fn()
-}));
-
-vi.mock('./commands/convert-links-in-entire-vault-command-handler.ts', () => ({
-  ConvertLinksInEntireVaultCommandHandler: vi.fn()
-}));
-
-// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { CommandHandlerComponent } from 'obsidian-dev-utils/obsidian/command-handlers/command-handler-component';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { RenameDeleteHandlerComponent } from 'obsidian-dev-utils/obsidian/components/rename-delete-handler-component';
 
@@ -146,24 +113,21 @@ describe('Plugin', () => {
     expect(vi.mocked(RenameDeleteHandlerComponent)).toHaveBeenCalledOnce();
   });
 
-  it('should wire up the command handler once on load', async () => {
+  it('should register the plugin command handlers after the base command handler', async () => {
+    const registerCommandHandlersSpy = vi.spyOn(CommandHandlerComponent.prototype, 'registerCommandHandlers');
+
     await createLoadedPlugin();
 
-    expect(vi.mocked(CommandHandlerComponent)).toHaveBeenCalledOnce();
+    expect(registerCommandHandlersSpy).toHaveBeenCalledTimes(2);
   });
 
   it('should register the three conversion command handlers', async () => {
+    const registerCommandHandlersSpy = vi.spyOn(CommandHandlerComponent.prototype, 'registerCommandHandlers');
+
     await createLoadedPlugin();
 
-    const params = vi.mocked(CommandHandlerComponent).mock.calls[0]?.[0];
-    expect(params?.commandHandlers.length).toBe(3);
-  });
-
-  it('should register the command handlers with the plugin name', async () => {
-    await createLoadedPlugin();
-
-    const params = vi.mocked(CommandHandlerComponent).mock.calls[0]?.[0];
-    expect(params?.pluginName).toBe('Better Markdown Links');
+    const commandHandlers = registerCommandHandlersSpy.mock.calls[1]?.[0];
+    expect(commandHandlers).toHaveLength(3);
   });
 
   describe('rename/delete settings builder', () => {
