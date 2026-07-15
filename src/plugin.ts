@@ -1,9 +1,5 @@
 import type { RenameDeleteHandlerSettings } from 'obsidian-dev-utils/obsidian/components/rename-delete-handler-component';
 
-import { AppActiveFileProvider } from 'obsidian-dev-utils/obsidian/active-file-provider';
-import { CommandHandlerComponent } from 'obsidian-dev-utils/obsidian/command-handlers/command-handler-component';
-import { PluginCommandRegistrar } from 'obsidian-dev-utils/obsidian/command-registrar';
-import { MenuEventRegistrarComponent } from 'obsidian-dev-utils/obsidian/components/menu-event-registrar-component';
 import { PluginSettingsTabComponent } from 'obsidian-dev-utils/obsidian/components/plugin-settings-tab-component';
 import { RenameDeleteHandlerComponent } from 'obsidian-dev-utils/obsidian/components/rename-delete-handler-component';
 import { PluginDataHandler } from 'obsidian-dev-utils/obsidian/data-handler';
@@ -73,26 +69,17 @@ export class Plugin extends PluginBase {
       })
     );
 
-    const menuEventRegistrar = this.addChild(new MenuEventRegistrarComponent(this.app));
-    this.addChild(
-      new CommandHandlerComponent({
-        activeFileProvider: new AppActiveFileProvider(this.app),
-        commandHandlers: [
-          new ConvertLinksInFileCommandHandler({
-            linkConverter
-          }),
-          new ConvertLinksInFolderCommandHandler({
-            linkConverter
-          }),
-          new ConvertLinksInEntireVaultCommandHandler({
-            app: this.app,
-            linkConverter
-          })
-        ],
-        commandRegistrar: new PluginCommandRegistrar(this),
-        menuEventRegistrar,
-        pluginName: this.manifest.name
+    this.commandHandlerComponent.registerCommandHandlers([
+      new ConvertLinksInFileCommandHandler({
+        linkConverter
+      }),
+      new ConvertLinksInFolderCommandHandler({
+        linkConverter
+      }),
+      new ConvertLinksInEntireVaultCommandHandler({
+        app: this.app,
+        linkConverter
       })
-    );
+    ]);
   }
 }
