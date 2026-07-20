@@ -4,7 +4,7 @@ Welcome to the [Better Markdown Links](https://github.com/mnaoumov/obsidian-bett
 
 > [!TIP] Interactive buttons
 >
-> The two setup notes have **Run** buttons, powered by [`CodeScript Toolkit`](https://github.com/mnaoumov/obsidian-codescript-toolkit/), which this vault installs for you automatically on first open (see [[06 CodeScript Toolkit prerequisite]]). Formatting and converting links are plain editor/command actions, so the feature notes have no buttons - just links to inspect and commands to run.
+> The two setup notes have **Run** buttons, powered by [`CodeScript Toolkit`](https://github.com/mnaoumov/obsidian-codescript-toolkit/), which this vault installs for you automatically on first open (see [[CodeScript Toolkit prerequisite]]). Formatting and converting links are plain editor/command actions, so the feature notes have no buttons - just links to inspect and commands to run.
 
 ## Explore
 
@@ -15,5 +15,5 @@ Welcome to the [Better Markdown Links](https://github.com/mnaoumov/obsidian-bett
 
 ## Setup
 
-- [[05 Code buttons check]]
-- [[06 CodeScript Toolkit prerequisite]]
+- [[Code buttons check]]
+- [[CodeScript Toolkit prerequisite]]
