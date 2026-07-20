@@ -3,6 +3,7 @@ import type {
   Menu as MenuOriginal,
   TFolder as TFolderOriginal
 } from 'obsidian';
+import type { DisposableEx } from 'obsidian-dev-utils/disposable';
 import type { ActiveFileProvider } from 'obsidian-dev-utils/obsidian/active-file-provider';
 import type {
   CommandHandler,
@@ -51,11 +52,13 @@ describe('ConvertLinksInFolderCommandHandler', () => {
       activeFileProvider,
       menuEventRegistrar: {
         registerEditorMenuEventHandler: vi.fn(),
-        registerFileMenuEventHandler: (menuHandler: FileMenuEventHandler): void => {
+        registerFileMenuEventHandler: (menuHandler: FileMenuEventHandler): DisposableEx => {
           fileMenuHandlers.push(menuHandler);
+          return strictProxy<DisposableEx>({});
         },
-        registerFilesMenuEventHandler: (_menuHandler: FilesMenuEventHandler): void => {
+        registerFilesMenuEventHandler: (_menuHandler: FilesMenuEventHandler): DisposableEx => {
           // The handler under test does not use the multi-folder menu.
+          return strictProxy<DisposableEx>({});
         }
       },
       pluginName: 'Better Markdown Links'
