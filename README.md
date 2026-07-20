@@ -7,6 +7,14 @@
 
 This is a plugin for [Obsidian] that adds support for `angle bracket` links and manages relative links properly.
 
+## Demo vault
+
+A demo vault with usage examples ships with every release. You can access it via any of the following:
+
+1. Running the **Better Markdown Links: Open demo vault** command.
+2. Downloading `better-markdown-links.demo-vault.zip` from the [Releases](https://github.com/mnaoumov/obsidian-better-markdown-links/releases).
+3. Browsing its source in [`demo-vault/`](./demo-vault/README.md) in this repository.
+
 ## Angle Bracket Links
 
 Markdown links `[Title](path/to/note.md)` are better for compatibility purposes as `[[Wikilink]]` is not part of the Markdown spec.

@@ -1,0 +1,8 @@
+{
+  "attachmentFolderPath": "_assets/attachments",
+  "newLinkFormat": "relative",
+  "useMarkdownLinks": true,
+  "showUnsupportedFiles": true,
+  "defaultViewMode": "source",
+  "livePreview": true
+}
