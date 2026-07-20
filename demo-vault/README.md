@@ -1,9 +1,8 @@
-# Better Markdown Links demo vault
+This is an [Obsidian](https://obsidian.md/) vault demonstrating features of the [Better Markdown Links](https://github.com/mnaoumov/obsidian-better-markdown-links) plugin.
 
-A small Obsidian vault that demonstrates the [Better Markdown Links](https://github.com/mnaoumov/obsidian-better-markdown-links) plugin - it makes Obsidian generate cleaner, more portable Markdown links (angle brackets for paths with spaces, explicit `./` relative paths, normalized `file://` links) and can convert existing links in a note, a folder, or the whole vault.
+## Opening this vault
 
-Open [00 Start](<./00 Start.md>) and work through the numbered notes: inspect the angle-bracket and relative links, then run a **Better Markdown Links: Convert links ...** command to rewrite links into that form.
+- **If you already have the plugin installed**, run the **Better Markdown Links: Open demo vault** command — it downloads and opens the latest demo vault automatically.
+- **Otherwise**, download `better-markdown-links.demo-vault.zip` from the [plugin releases](https://github.com/mnaoumov/obsidian-better-markdown-links/releases), unzip it, and in Obsidian choose `Manage vaults...` → `Open folder as vault` → select the unzipped folder.
 
-## First open
-
-The first time you open this vault, Obsidian treats it as **untrusted**, so the bundled plugins are listed but not loaded until you **Trust author and enable plugins** and reload. After that, the Demo Vault Helper opens the start note for you.
+On first open, Obsidian treats the vault as untrusted — choose **Trust author and enable plugins** (or enable Community plugins manually), then open [00 Start](<./00 Start.md>).
