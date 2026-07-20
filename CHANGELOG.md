@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 4.1.1
+
+- docs: standardize demo-vault README
+- docs: drop per-plugin demo-vault setup notes (bootstrap covered by ODU harness)
+- docs: unnumber demo-vault setup notes
+- Merge branch 'T97': create the Better Markdown Links demo vault (S2)
+- chore: update libs
+- docs: update
+- docs: migrate to AGENTS.md
+
 ## 4.1.0
 
 - chore: update libs
