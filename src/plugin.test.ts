@@ -72,7 +72,8 @@ const STRICT_PROXY_TARGET_SYMBOL = Symbol.for('strictProxyTarget');
 
 const manifest = strictProxy<PluginManifest>({
   id: 'better-markdown-links',
-  name: 'Better Markdown Links'
+  name: 'Better Markdown Links',
+  version: '1.0.0'
 });
 
 let app: AppOriginal;
@@ -121,13 +122,24 @@ describe('Plugin', () => {
     expect(registerCommandHandlersSpy).toHaveBeenCalledTimes(2);
   });
 
-  it('should register the three conversion command handlers', async () => {
+  it('should register the three conversion command handlers plus the open demo vault command', async () => {
     const registerCommandHandlersSpy = vi.spyOn(CommandHandlerComponent.prototype, 'registerCommandHandlers');
 
     await createLoadedPlugin();
 
     const commandHandlers = registerCommandHandlersSpy.mock.calls[1]?.[0];
-    expect(commandHandlers).toHaveLength(3);
+    expect(commandHandlers).toHaveLength(4);
+  });
+
+  it('should register the open demo vault command via its command handler', async () => {
+    const plugin = new Plugin(app, manifest);
+    const addCommandSpy = vi.spyOn(plugin, 'addCommand');
+
+    await plugin.onload();
+
+    expect(addCommandSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'open-demo-vault' })
+    );
   });
 
   describe('rename/delete settings builder', () => {
