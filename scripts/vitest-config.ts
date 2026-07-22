@@ -61,7 +61,7 @@ export const config = defineConfig({
         test: {
           environment: 'node',
           fileParallelism: false,
-          globalSetup: ['obsidian-integration-testing/vitest-global-setup'],
+          globalSetup: ['obsidian-integration-testing/vitest-global-setup-plugin'],
           hookTimeout: BIG_TIMEOUT_IN_MILLISECONDS * HOOK_TIMEOUT_MULTIPLIER,
           include: ['src/**/*.desktop.integration.test.ts'],
           name: 'integration-tests:desktop',
@@ -73,7 +73,7 @@ export const config = defineConfig({
         test: {
           environment: 'node',
           fileParallelism: false,
-          globalSetup: ['obsidian-integration-testing/vitest-global-setup'],
+          globalSetup: ['obsidian-integration-testing/vitest-global-setup-plugin'],
           hookTimeout: PERFORMANCE_TIMEOUT_IN_MILLISECONDS,
           include: ['src/**/*.desktop-performance.integration.test.ts'],
           name: 'integration-tests:desktop-performance',
@@ -92,7 +92,7 @@ export const config = defineConfig({
             }
           },
           fileParallelism: false,
-          globalSetup: ['obsidian-integration-testing/vitest-global-setup'],
+          globalSetup: ['obsidian-integration-testing/vitest-global-setup-plugin'],
           hookTimeout: ANDROID_TIMEOUT_IN_MILLISECONDS * HOOK_TIMEOUT_MULTIPLIER,
           include: ['src/**/*.android.integration.test.ts'],
           name: 'integration-tests:android',
