@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 4.1.6
+
+- fix: pass plugin notice component to link update operations
+
 ## 4.1.5
 
 - chore: update libs
