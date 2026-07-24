@@ -76,6 +76,7 @@ export class LinkConverter {
       app: this.app,
       linkStyle: settings.getLinkStyle(true),
       newSourcePathOrFile: params.file,
+      pluginNoticeComponent: null,
       resourceLockComponent: this.resourceLockComponent
     });
 
@@ -84,6 +85,7 @@ export class LinkConverter {
         abortSignal,
         app: this.app,
         pathOrFile: params.file,
+        pluginNoticeComponent: null,
         resourceLockComponent: this.resourceLockComponent,
         shouldUseAngleBrackets: settings.shouldUseAngleBrackets
       });
