@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 4.2.0
+
+- test(link-converter): expect the pluginNoticeComponent the converter passes
+- refactor(settings): move the settings tab onto the declarative settings API
+- chore: update libs and clear the npm audit
+- docs: fix the demo vault download instructions
+
 ## 4.1.6
 
 - fix: pass plugin notice component to link update operations
