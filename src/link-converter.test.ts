@@ -72,6 +72,7 @@ interface CreateConverterResult {
   readonly getActiveFile: ReturnType<typeof vi.fn>;
   readonly getLinkStyle: ReturnType<typeof vi.fn>;
   readonly isPathIgnored: ReturnType<typeof vi.fn>;
+  readonly pluginNoticeComponent: PluginNoticeComponent;
   readonly resourceLockComponent: ResourceLockComponent;
 }
 
@@ -111,6 +112,7 @@ function createConverter(options: CreateConverterOptions = {}): CreateConverterR
     getActiveFile,
     getLinkStyle,
     isPathIgnored,
+    pluginNoticeComponent,
     resourceLockComponent
   };
 }
@@ -152,6 +154,7 @@ describe('LinkConverter', () => {
         app: context.app,
         linkStyle: LINK_STYLE,
         newSourcePathOrFile: file,
+        pluginNoticeComponent: context.pluginNoticeComponent,
         resourceLockComponent: context.resourceLockComponent
       });
     });
@@ -166,6 +169,7 @@ describe('LinkConverter', () => {
         abortSignal: context.abortSignal,
         app: context.app,
         pathOrFile: file,
+        pluginNoticeComponent: context.pluginNoticeComponent,
         resourceLockComponent: context.resourceLockComponent,
         shouldUseAngleBrackets: true
       });
