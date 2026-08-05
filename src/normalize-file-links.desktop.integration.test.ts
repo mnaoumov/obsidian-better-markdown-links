@@ -110,6 +110,7 @@ interface RunScenarioParams {
  */
 async function runScenario(params: RunScenarioParams): Promise<string> {
   return evalInObsidian({
+    // eslint-disable-next-line unicorn/name-replacements -- `args` is an `obsidian-integration-testing` parameter name.
     args: {
       content: params.content,
       encodedBackslashMarker: ENCODED_BACKSLASH_MARKER,
@@ -118,6 +119,7 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
       shouldNormalizeFileLinks: params.shouldNormalizeFileLinks,
       sourcePath: `normalize-file-links-${params.sourceKey}.md`
     },
+    // eslint-disable-next-line unicorn/name-replacements -- `fn` is an `obsidian-integration-testing` parameter name.
     async fn({ app, content, encodedBackslashMarker, mode, obsidianModule, pluginId, shouldNormalizeFileLinks, sourcePath }): Promise<string> {
       const EDITOR_WAIT_ATTEMPTS = 50;
       const EDITOR_WAIT_INTERVAL_IN_MILLISECONDS = 50;

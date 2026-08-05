@@ -31,10 +31,10 @@ export class GenerateMarkdownLinkPatchComponent extends MonkeyAroundComponent {
     const app = this.app;
 
     this.registerMethodPatch({
+      $object: this.fileManager,
       methodName: 'generateMarkdownLink',
-      obj: this.fileManager,
       patchHandler: ({
-        originalArgs: [file, sourcePath, subpath, alias]
+        originalArguments: [file, sourcePath, subpath, alias]
       }) => {
         const options = removeUndefinedProperties(normalizeOptionalProperties<GenerateMarkdownLinkExtendedOptions>({
           alias,

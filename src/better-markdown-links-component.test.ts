@@ -236,7 +236,7 @@ function makeTFolder(path: string): TAbstractFile {
 beforeEach(() => {
   vi.useFakeTimers();
   vi.clearAllMocks();
-  activeDocument.body.innerHTML = '';
+  activeDocument.body.replaceChildren();
   vi.mocked(abortSignalAny).mockImplementation((...signals) => signals[0] ?? new AbortController().signal);
   vi.mocked(getCacheSafe).mockResolvedValue(castTo<CachedMetadataEx>({ features: [] }));
   vi.mocked(getLinks).mockReturnValue([]);
@@ -268,10 +268,10 @@ describe('BetterMarkdownLinksComponent', () => {
       loadComponent(context);
 
       const fns = getGenerateMarkdownLinkDefaultParamsFns();
-      const lastFn = fns.at(-1);
+      const lastFunction = fns.at(-1);
       // `shouldAllowEmptyEmbedAlias` must be exposed under the dev-utils name `isEmptyEmbedAliasAllowed`;
       // Returning the settings object verbatim silently dropped it (the field names differ).
-      expect(lastFn?.()).toEqual({
+      expect(lastFunction?.()).toEqual({
         isEmptyEmbedAliasAllowed: false,
         shouldIncludeAttachmentExtensionToEmbedAlias: true,
         shouldUseAngleBrackets: false,
@@ -324,7 +324,7 @@ describe('BetterMarkdownLinksComponent', () => {
       const context = createContext();
       const suggestionContainer = activeWindow.createDiv();
       suggestionContainer.addClass('suggestion-container');
-      activeDocument.body.appendChild(suggestionContainer);
+      activeDocument.body.append(suggestionContainer);
       vi.spyOn(suggestionContainer, 'isShown').mockReturnValue(true);
 
       await handleModify(context.component, makeTFile('note.md'));

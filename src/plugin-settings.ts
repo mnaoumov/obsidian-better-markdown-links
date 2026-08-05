@@ -33,7 +33,7 @@ export class PluginSettings {
   private readonly _pathSettings = new PathSettings();
 
   public constructor() {
-    this.excludePaths = ['/.+\\.excalidraw\\.md$/', '/.+\\.tldraw\\.md$/'];
+    this.excludePaths = [String.raw`/.+\.excalidraw\.md$/`, String.raw`/.+\.tldraw\.md$/`];
   }
 
   public getLinkStyle(isExistingLink: boolean): LinkStyle {

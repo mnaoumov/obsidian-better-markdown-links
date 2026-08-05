@@ -61,7 +61,7 @@ describe('PluginSettingsComponent', () => {
     it('should accept valid regex paths', async () => {
       const component = createComponent();
       const settings = new PluginSettings();
-      settings.includePaths = ['/.+\\.md$/'];
+      settings.includePaths = [String.raw`/.+\.md$/`];
 
       const result = await component.validate(settings);
 

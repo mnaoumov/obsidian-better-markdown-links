@@ -33,9 +33,13 @@ interface TestContext {
 
 const loadedComponents: EditorSaveFileCommandPatchComponent[] = [];
 
+function checkCommandCallback(command: Command, isChecking: boolean): boolean {
+  return castTo<(isChecking: boolean) => boolean>(command.checkCallback)(isChecking);
+}
+
 function createCommand(): Command {
   return castTo<Command>({
-    checkCallback: vi.fn((checking: boolean): boolean => !checking),
+    checkCallback: vi.fn((isChecking: boolean): boolean => !isChecking),
     id: 'editor:save-file',
     name: 'Save current file'
   });
@@ -69,10 +73,6 @@ function createContext(options?: CreateComponentOptions): TestContext {
   };
 }
 
-function invokeCheckCallback(command: Command, checking: boolean): boolean {
-  return castTo<(checking: boolean) => boolean>(command.checkCallback)(checking);
-}
-
 function makeTFile(path: string): TFile {
   return strictProxy<TFile>({ path });
 }
@@ -91,25 +91,25 @@ describe('EditorSaveFileCommandPatchComponent', () => {
   it('should tag the active file as a save command when performing the command', () => {
     const context = createContext();
 
-    const result = invokeCheckCallback(context.command, false);
+    const isResult = checkCommandCallback(context.command, false);
 
     expect(context.markSaveCommand).toHaveBeenCalledExactlyOnceWith('note.md');
-    expect(result).toBe(true);
+    expect(isResult).toBe(true);
   });
 
-  it('should not tag anything while only checking command availability', () => {
+  it('should not tag anything while only isChecking command availability', () => {
     const context = createContext();
 
-    const result = invokeCheckCallback(context.command, true);
+    const isResult = checkCommandCallback(context.command, true);
 
     expect(context.markSaveCommand).not.toHaveBeenCalled();
-    expect(result).toBe(false);
+    expect(isResult).toBe(false);
   });
 
   it('should not tag anything when there is no active file', () => {
     const context = createContext({ activeFile: null });
 
-    invokeCheckCallback(context.command, false);
+    checkCommandCallback(context.command, false);
 
     expect(context.markSaveCommand).not.toHaveBeenCalled();
   });

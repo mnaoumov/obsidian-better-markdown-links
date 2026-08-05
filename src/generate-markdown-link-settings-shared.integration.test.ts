@@ -107,6 +107,7 @@ export function registerGenerateMarkdownLinkSettingsSuite(platform: string): voi
   describe(`generateMarkdownLink settings (${platform})`, () => {
     beforeAll(async () => {
       await evalInObsidian({
+        // eslint-disable-next-line unicorn/name-replacements -- `args` is an `obsidian-integration-testing` parameter name.
         args: {
           attachmentPath: ATTACHMENT_PATH,
           markdownFiles: [
@@ -116,6 +117,7 @@ export function registerGenerateMarkdownLinkSettingsSuite(platform: string): voi
             { content: '# target', path: TARGET_WITH_SPACE_PATH }
           ]
         },
+        // eslint-disable-next-line unicorn/name-replacements -- `fn` is an `obsidian-integration-testing` parameter name.
         async fn({ app, attachmentPath, markdownFiles }) {
           const PNG_MAGIC_BYTES = [137, 80, 78, 71, 13, 10, 26, 10];
 
@@ -262,6 +264,7 @@ export function registerGenerateMarkdownLinkSettingsSuite(platform: string): voi
  */
 async function generate(params: GenerateParams): Promise<string> {
   return evalInObsidian({
+    // eslint-disable-next-line unicorn/name-replacements -- `args` is an `obsidian-integration-testing` parameter name.
     args: {
       isEmbed: params.isEmbed ?? false,
       newLinkFormat: params.newLinkFormat,
@@ -270,6 +273,7 @@ async function generate(params: GenerateParams): Promise<string> {
       sourcePath: params.sourcePath,
       targetPath: params.targetPath
     },
+    // eslint-disable-next-line unicorn/name-replacements -- `fn` is an `obsidian-integration-testing` parameter name.
     async fn({ app, isEmbed, newLinkFormat, pluginId, settingsOverrides, sourcePath, targetPath }): Promise<string> {
       app.vault.setConfig('useMarkdownLinks', true);
       app.vault.setConfig('newLinkFormat', newLinkFormat);
@@ -290,7 +294,7 @@ async function generate(params: GenerateParams): Promise<string> {
 
       const generateMarkdownLink = app.fileManager.generateMarkdownLink as PatchedGenerateMarkdownLink;
       if (typeof generateMarkdownLink.extended !== 'function') {
-        throw new Error('generateMarkdownLink is not patched by the plugin (missing `.extended`)');
+        throw new TypeError('generateMarkdownLink is not patched by the plugin (missing `.extended`)');
       }
 
       if (isEmbed) {

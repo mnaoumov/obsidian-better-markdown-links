@@ -20,7 +20,7 @@ import type {
   GenerateMarkdownLinkExtendedWrapper
 } from './generate-markdown-link-extended.d.ts';
 
-type GenerateMarkdownLinkNativeFn = FileManager['generateMarkdownLink'];
+type GenerateMarkdownLinkNativeFunction = FileManager['generateMarkdownLink'];
 
 vi.mock('obsidian-dev-utils/obsidian/link', () => ({
   generateMarkdownLink: vi.fn().mockReturnValue('[generated](link.md)')
@@ -32,7 +32,7 @@ import { generateMarkdownLink } from 'obsidian-dev-utils/obsidian/link';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { GenerateMarkdownLinkPatchComponent } from './generate-markdown-link-extended-impl.ts';
 
-type PatchedGenerateMarkdownLink = GenerateMarkdownLinkExtendedWrapper & GenerateMarkdownLinkNativeFn;
+type PatchedGenerateMarkdownLink = GenerateMarkdownLinkExtendedWrapper & GenerateMarkdownLinkNativeFunction;
 
 function loadPatched(app: AppOriginal): PatchedGenerateMarkdownLink {
   const component = new GenerateMarkdownLinkPatchComponent({

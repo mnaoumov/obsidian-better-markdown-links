@@ -18,8 +18,8 @@ export class TextFileViewSavePatchComponent extends MonkeyAroundComponent {
 
   public override onload(): void {
     this.registerMethodPatch({
+      $object: TextFileView.prototype,
       methodName: 'save',
-      obj: TextFileView.prototype,
       patchHandler: async ({ fallback, originalThis }) => {
         await fallback();
         const file = originalThis.file;

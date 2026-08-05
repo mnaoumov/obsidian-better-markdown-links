@@ -33,9 +33,9 @@ export class EditorSaveFileCommandPatchComponent extends MonkeyAroundComponent {
     }
 
     this.registerMethodPatch({
+      $object: command,
       methodName: 'checkCallback',
-      obj: command,
-      patchHandler: ({ fallback, originalArgs: [checking] }) => {
+      patchHandler: ({ fallback, originalArguments: [checking] }) => {
         if (!checking) {
           const activeFile = this.app.workspace.getActiveFile();
           if (activeFile) {
