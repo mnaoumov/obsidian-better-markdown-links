@@ -20,7 +20,7 @@ export enum LinkStyle {
   Wikilink = 'Wikilink'
 }
 
-export type GenerateMarkdownLinkExtendedFn = (options: GenerateMarkdownLinkExtendedOptions) => string;
+export type GenerateMarkdownLinkExtendedFunction = (options: GenerateMarkdownLinkExtendedOptions) => string;
 
 export interface GenerateMarkdownLinkExtendedOptions {
   readonly alias?: string;
@@ -57,7 +57,7 @@ export interface GenerateMarkdownLinkExtendedOptions {
 }
 
 export interface GenerateMarkdownLinkExtendedWrapper {
-  extended: GenerateMarkdownLinkExtendedFn;
+  extended: GenerateMarkdownLinkExtendedFunction;
 }
 
 export type PathOrFile = string | TFile;

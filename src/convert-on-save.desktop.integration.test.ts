@@ -74,7 +74,9 @@ type SaveTrigger = 'auto-save' | 'command';
 describe('convert on save (Desktop)', () => {
   beforeAll(async () => {
     await evalInObsidian({
+      // eslint-disable-next-line unicorn/name-replacements -- `args` is an `obsidian-integration-testing` parameter name.
       args: { targetPath: TARGET_PATH },
+      // eslint-disable-next-line unicorn/name-replacements -- `fn` is an `obsidian-integration-testing` parameter name.
       async fn({ app, targetPath }) {
         app.vault.setConfig('useMarkdownLinks', true);
         app.vault.setConfig('newLinkFormat', 'absolute');
@@ -129,6 +131,7 @@ describe('convert on save (Desktop)', () => {
  */
 async function runSaveScenario(params: RunSaveScenarioParams): Promise<string> {
   return evalInObsidian({
+    // eslint-disable-next-line unicorn/name-replacements -- `args` is an `obsidian-integration-testing` parameter name.
     args: {
       convertedMarker: CONVERTED_MARKER,
       mode: params.mode,
@@ -137,6 +140,7 @@ async function runSaveScenario(params: RunSaveScenarioParams): Promise<string> {
       trigger: params.trigger,
       unconvertedContent: UNCONVERTED_CONTENT
     },
+    // eslint-disable-next-line unicorn/name-replacements -- `fn` is an `obsidian-integration-testing` parameter name.
     async fn({ app, convertedMarker, mode, obsidianModule, pluginId, sourcePath, trigger, unconvertedContent }): Promise<string> {
       const EDITOR_WAIT_ATTEMPTS = 50;
       const EDITOR_WAIT_INTERVAL_IN_MILLISECONDS = 50;

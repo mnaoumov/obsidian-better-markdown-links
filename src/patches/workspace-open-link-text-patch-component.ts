@@ -24,11 +24,11 @@ export class WorkspaceOpenLinkTextPatchComponent extends MonkeyAroundComponent {
 
   public override onload(): void {
     this.registerMethodPatch({
+      $object: Workspace.prototype,
       methodName: 'openLinkText',
-      obj: Workspace.prototype,
       patchHandler: async ({
         fallback,
-        originalArgs: [, sourcePath]
+        originalArguments: [, sourcePath]
       }) => {
         await fallback();
         const sourceFile = this.app.vault.getFileByPath(sourcePath);

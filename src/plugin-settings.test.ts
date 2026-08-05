@@ -26,7 +26,7 @@ describe('PluginSettings', () => {
     it('should set default exclude paths for excalidraw and tldraw', () => {
       const settings = new PluginSettings();
 
-      expect(settings.excludePaths).toEqual(['/.+\\.excalidraw\\.md$/', '/.+\\.tldraw\\.md$/']);
+      expect(settings.excludePaths).toEqual([String.raw`/.+\.excalidraw\.md$/`, String.raw`/.+\.tldraw\.md$/`]);
     });
 
     it('should have empty include paths by default', () => {

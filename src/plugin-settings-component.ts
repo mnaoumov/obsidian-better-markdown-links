@@ -78,11 +78,13 @@ export class PluginSettingsComponent extends PluginSettingsComponentBase<PluginS
 
 function pathsValidator(paths: string[]): MaybeReturn<string> {
   for (const path of paths) {
-    if (path.startsWith('/') && path.endsWith('/')) {
-      const regExp = path.slice(1, -1);
-      if (!isValidRegExp(regExp)) {
-        return `Invalid regular expression ${path}`;
-      }
+    if (!(path.startsWith('/') && path.endsWith('/'))) {
+      continue;
+    }
+
+    const regExp = path.slice(1, -1);
+    if (!isValidRegExp(regExp)) {
+      return `Invalid regular expression ${path}`;
     }
   }
 }

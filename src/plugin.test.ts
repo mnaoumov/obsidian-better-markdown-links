@@ -95,8 +95,8 @@ beforeEach(() => {
   vi.clearAllMocks();
 
   const appMock = App.createConfigured__();
-  appMock.workspace.onLayoutReady = vi.fn((cb: () => void) => {
-    cb();
+  appMock.workspace.onLayoutReady = vi.fn((callback: () => void) => {
+    callback();
   });
   app = appMock.asOriginalType__();
 
@@ -127,8 +127,9 @@ describe('Plugin', () => {
 
     await createLoadedPlugin();
 
-    const commandHandlers = registerCommandHandlersSpy.mock.calls[1]?.[0];
-    expect(commandHandlers).toHaveLength(4);
+    // Since obsidian-dev-utils 89.0.0 the handlers are built lazily by a factory, so build them here.
+    const commandHandlerFactory = registerCommandHandlersSpy.mock.calls[1]?.[0];
+    expect(commandHandlerFactory?.()).toHaveLength(4);
   });
 
   it('should register the open demo vault command via its command handler', async () => {
