@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 4.2.1
+
+- chore: update libs
+- refactor(test): collapse the shared integration suites per G47
+- chore: update libs
+- chore(vitest): adopt the shared Obsidian plugin vitest configuration
+
 ## 4.2.0
 
 - test(link-converter): expect the pluginNoticeComponent the converter passes
