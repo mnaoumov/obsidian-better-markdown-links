@@ -17,7 +17,7 @@ import type {
 } from 'obsidian';
 
 import { evalInObsidian } from 'obsidian-integration-testing';
-import { getTempVault } from 'obsidian-integration-testing/vitest-global-setup-plugin';
+import { getTemporaryVault } from 'obsidian-integration-testing/vitest-global-setup-plugin';
 import {
   beforeAll,
   describe,
@@ -93,18 +93,7 @@ interface GenerateParams {
 describe('generateMarkdownLink settings', () => {
   beforeAll(async () => {
     await evalInObsidian({
-      // eslint-disable-next-line unicorn/name-replacements -- `args` is an `obsidian-integration-testing` parameter name.
-      args: {
-        attachmentPath: ATTACHMENT_PATH,
-        markdownFiles: [
-          { content: '', path: SOURCE_PATH },
-          { content: '', path: SOURCE_IN_FOLDER_PATH },
-          { content: '# target', path: TARGET_PATH },
-          { content: '# target', path: TARGET_WITH_SPACE_PATH }
-        ]
-      },
-      // eslint-disable-next-line unicorn/name-replacements -- `fn` is an `obsidian-integration-testing` parameter name.
-      async fn({ app, attachmentPath, markdownFiles }) {
+      async callback({ app, attachmentPath, markdownFiles }) {
         const PNG_MAGIC_BYTES = [137, 80, 78, 71, 13, 10, 26, 10];
 
         for (const path of [...markdownFiles.map((file) => file.path), attachmentPath]) {
@@ -125,7 +114,16 @@ describe('generateMarkdownLink settings', () => {
 
         await app.vault.createBinary(attachmentPath, new Uint8Array(PNG_MAGIC_BYTES).buffer);
       },
-      vaultPath: getTempVault().path
+      input: {
+        attachmentPath: ATTACHMENT_PATH,
+        markdownFiles: [
+          { content: '', path: SOURCE_PATH },
+          { content: '', path: SOURCE_IN_FOLDER_PATH },
+          { content: '# target', path: TARGET_PATH },
+          { content: '# target', path: TARGET_WITH_SPACE_PATH }
+        ]
+      },
+      vaultPath: getTemporaryVault().path
     });
   });
 
@@ -249,17 +247,7 @@ describe('generateMarkdownLink settings', () => {
  */
 async function generate(params: GenerateParams): Promise<string> {
   return evalInObsidian({
-    // eslint-disable-next-line unicorn/name-replacements -- `args` is an `obsidian-integration-testing` parameter name.
-    args: {
-      isEmbed: params.isEmbed ?? false,
-      newLinkFormat: params.newLinkFormat,
-      pluginId: PLUGIN_ID,
-      settingsOverrides: params.settingsOverrides,
-      sourcePath: params.sourcePath,
-      targetPath: params.targetPath
-    },
-    // eslint-disable-next-line unicorn/name-replacements -- `fn` is an `obsidian-integration-testing` parameter name.
-    async fn({ app, isEmbed, newLinkFormat, pluginId, settingsOverrides, sourcePath, targetPath }): Promise<string> {
+    async callback({ app, isEmbed, newLinkFormat, pluginId, settingsOverrides, sourcePath, targetPath }): Promise<string> {
       app.vault.setConfig('useMarkdownLinks', true);
       app.vault.setConfig('newLinkFormat', newLinkFormat);
 
@@ -292,6 +280,14 @@ async function generate(params: GenerateParams): Promise<string> {
 
       return generateMarkdownLink(targetFile, sourcePath);
     },
-    vaultPath: getTempVault().path
+    input: {
+      isEmbed: params.isEmbed ?? false,
+      newLinkFormat: params.newLinkFormat,
+      pluginId: PLUGIN_ID,
+      settingsOverrides: params.settingsOverrides,
+      sourcePath: params.sourcePath,
+      targetPath: params.targetPath
+    },
+    vaultPath: getTemporaryVault().path
   });
 }

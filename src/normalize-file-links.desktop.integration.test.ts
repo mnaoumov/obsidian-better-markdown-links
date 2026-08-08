@@ -21,7 +21,7 @@ import type {
 } from 'obsidian';
 
 import { evalInObsidian } from 'obsidian-integration-testing';
-import { getTempVault } from 'obsidian-integration-testing/vitest-global-setup-plugin';
+import { getTemporaryVault } from 'obsidian-integration-testing/vitest-global-setup-plugin';
 import {
   describe,
   expect,
@@ -110,17 +110,7 @@ interface RunScenarioParams {
  */
 async function runScenario(params: RunScenarioParams): Promise<string> {
   return evalInObsidian({
-    // eslint-disable-next-line unicorn/name-replacements -- `args` is an `obsidian-integration-testing` parameter name.
-    args: {
-      content: params.content,
-      encodedBackslashMarker: ENCODED_BACKSLASH_MARKER,
-      mode: LinkConversionMode.OnSaveCommand,
-      pluginId: PLUGIN_ID,
-      shouldNormalizeFileLinks: params.shouldNormalizeFileLinks,
-      sourcePath: `normalize-file-links-${params.sourceKey}.md`
-    },
-    // eslint-disable-next-line unicorn/name-replacements -- `fn` is an `obsidian-integration-testing` parameter name.
-    async fn({ app, content, encodedBackslashMarker, mode, obsidianModule, pluginId, shouldNormalizeFileLinks, sourcePath }): Promise<string> {
+    async callback({ app, content, encodedBackslashMarker, mode, obsidianModule, pluginId, shouldNormalizeFileLinks, sourcePath }): Promise<string> {
       const EDITOR_WAIT_ATTEMPTS = 50;
       const EDITOR_WAIT_INTERVAL_IN_MILLISECONDS = 50;
       const SETTLE_TIMEOUT_IN_MILLISECONDS = 2500;
@@ -186,6 +176,14 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
         return fileContent;
       }
     },
-    vaultPath: getTempVault().path
+    input: {
+      content: params.content,
+      encodedBackslashMarker: ENCODED_BACKSLASH_MARKER,
+      mode: LinkConversionMode.OnSaveCommand,
+      pluginId: PLUGIN_ID,
+      shouldNormalizeFileLinks: params.shouldNormalizeFileLinks,
+      sourcePath: `normalize-file-links-${params.sourceKey}.md`
+    },
+    vaultPath: getTemporaryVault().path
   });
 }

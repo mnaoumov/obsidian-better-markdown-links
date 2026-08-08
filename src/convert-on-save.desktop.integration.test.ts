@@ -21,7 +21,7 @@ import type {
 } from 'obsidian';
 
 import { evalInObsidian } from 'obsidian-integration-testing';
-import { getTempVault } from 'obsidian-integration-testing/vitest-global-setup-plugin';
+import { getTemporaryVault } from 'obsidian-integration-testing/vitest-global-setup-plugin';
 import {
   beforeAll,
   describe,
@@ -74,10 +74,7 @@ type SaveTrigger = 'auto-save' | 'command';
 describe('convert on save (Desktop)', () => {
   beforeAll(async () => {
     await evalInObsidian({
-      // eslint-disable-next-line unicorn/name-replacements -- `args` is an `obsidian-integration-testing` parameter name.
-      args: { targetPath: TARGET_PATH },
-      // eslint-disable-next-line unicorn/name-replacements -- `fn` is an `obsidian-integration-testing` parameter name.
-      async fn({ app, targetPath }) {
+      async callback({ app, targetPath }) {
         app.vault.setConfig('useMarkdownLinks', true);
         app.vault.setConfig('newLinkFormat', 'absolute');
 
@@ -88,7 +85,8 @@ describe('convert on save (Desktop)', () => {
 
         await app.vault.create(targetPath, '# target');
       },
-      vaultPath: getTempVault().path
+      input: { targetPath: TARGET_PATH },
+      vaultPath: getTemporaryVault().path
     });
   });
 
@@ -131,17 +129,7 @@ describe('convert on save (Desktop)', () => {
  */
 async function runSaveScenario(params: RunSaveScenarioParams): Promise<string> {
   return evalInObsidian({
-    // eslint-disable-next-line unicorn/name-replacements -- `args` is an `obsidian-integration-testing` parameter name.
-    args: {
-      convertedMarker: CONVERTED_MARKER,
-      mode: params.mode,
-      pluginId: PLUGIN_ID,
-      sourcePath: `convert-on-save-${params.mode}-${params.trigger}.md`,
-      trigger: params.trigger,
-      unconvertedContent: UNCONVERTED_CONTENT
-    },
-    // eslint-disable-next-line unicorn/name-replacements -- `fn` is an `obsidian-integration-testing` parameter name.
-    async fn({ app, convertedMarker, mode, obsidianModule, pluginId, sourcePath, trigger, unconvertedContent }): Promise<string> {
+    async callback({ app, convertedMarker, mode, obsidianModule, pluginId, sourcePath, trigger, unconvertedContent }): Promise<string> {
       const EDITOR_WAIT_ATTEMPTS = 50;
       const EDITOR_WAIT_INTERVAL_IN_MILLISECONDS = 50;
       const SETTLE_TIMEOUT_IN_MILLISECONDS = 2500;
@@ -210,6 +198,14 @@ async function runSaveScenario(params: RunSaveScenarioParams): Promise<string> {
         return content;
       }
     },
-    vaultPath: getTempVault().path
+    input: {
+      convertedMarker: CONVERTED_MARKER,
+      mode: params.mode,
+      pluginId: PLUGIN_ID,
+      sourcePath: `convert-on-save-${params.mode}-${params.trigger}.md`,
+      trigger: params.trigger,
+      unconvertedContent: UNCONVERTED_CONTENT
+    },
+    vaultPath: getTemporaryVault().path
   });
 }
