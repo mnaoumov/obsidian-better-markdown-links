@@ -5,73 +5,66 @@
 [![GitHub downloads](https://img.shields.io/github/downloads/mnaoumov/obsidian-better-markdown-links/total)](https://github.com/mnaoumov/obsidian-better-markdown-links/releases)
 [![Coverage: 100%](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/mnaoumov/obsidian-better-markdown-links)
 
-This is a plugin for [Obsidian] that adds support for `angle bracket` links and manages relative links properly.
+`[[Wikilinks]]` are not part of the Markdown spec, so a vault that uses them stops making sense outside
+[Obsidian]. Switch to Markdown links and you hit the next problem: Obsidian writes
+`[Title](path%20with%20space/note%20with%20space.md)`, which is unreadable, and it writes relative paths
+without a leading `./`, which other editors resolve differently than Obsidian does — the same link, two
+meanings.
+
+This plugin makes Obsidian generate the readable, unambiguous form instead: angle brackets around paths
+with spaces, an explicit `./` on relative links, and tidy `file://` URLs. It can also convert the links
+you already have, in one note, one folder, or the whole vault.
 
 ## Demo vault
 
-A demo vault with usage examples ships with every release. You can access it via any of the following:
+**The documentation is a demo vault.** Every feature has a note that explains what it does and why you
+would want it, with awkward paths already in place to try it against.
+
+**[Start reading here](<./demo-vault/00 Start.md>)** — it is plain markdown, so it works on GitHub with
+nothing installed.
+
+A copy of the vault ships with every release. You can access it via any of the following:
 
 1. Running the **Better Markdown Links: Open demo vault** command.
 2. Downloading `better-markdown-links-demo-vault-<version>.zip` (`<version>` is the release version) from the [Releases](https://github.com/mnaoumov/obsidian-better-markdown-links/releases).
 3. Browsing its source in [`demo-vault/`](./demo-vault/README.md) in this repository.
 
-## Angle Bracket Links
+## What it does
 
-Markdown links `[Title](path/to/note.md)` are better for compatibility purposes as `[[Wikilink]]` is not part of the Markdown spec.
+- **Angle bracket links** — `[Title](<path with space/note with space.md>)` instead of `%20` noise. The
+  Markdown spec allows it and Obsidian understands it; Obsidian just never generates it.
+  [01 Angle bracket links](<./demo-vault/01 Angle bracket links.md>)
+- **Explicit relative links** — a leading `./`, so a relative path cannot be
+  [mistaken for an absolute one](https://forum.obsidian.md/t/add-settings-to-control-link-resolution-mode/69560)
+  by anything that reads your vault.
+  [02 Relative links](<./demo-vault/02 Relative links.md>)
+- **Convert what you already have** — one note, one folder, or the whole vault; on command, on save, on
+  auto-save, or on every modification, whichever suits how eagerly you want it to work.
+  [03 Convert links](<./demo-vault/03 Convert links.md>)
+- **`file://` normalization** — `[note](file:///C:%5Cnotes%5Ctodo.md)` becomes
+  `[note](file:///C:/notes/todo.md)`. Other links are left alone.
+  [03 Convert links](<./demo-vault/03 Convert links.md>)
+- **Links keep working when notes move** — renames and moves update the links pointing at them.
+  [04 Settings](<./demo-vault/04 Settings.md>)
 
-However, links with spaces `[Title](path%20with%20space/note%20with%20space.md)` are quite unreadable.
+## For plugin developers
 
-The Markdown spec allows more readable links `[Title](<path with space/note with space.md>)`, which work fine in [Obsidian], but [Obsidian] doesn't generate such `angle bracket` links.
-
-This plugin makes [Obsidian] generate `angle bracket` links.
-
-## Relative Links
-
-There is a [problem](https://forum.obsidian.md/t/add-settings-to-control-link-resolution-mode/69560) in [Obsidian] where relative paths might be incorrectly resolved as absolute paths, causing the same link to behave differently in [Obsidian] and other Markdown editors.
-
-This plugin ensures that relative paths are prepended with `./`, e.g., `[Title](./path/to/note.md)`, to overcome the above-mentioned problem.
-
-## File Link Normalization
-
-External `file://` links are often stored in an inconsistent, hard-to-read form — with `%5C`-encoded (or literal) backslashes, e.g. `[note](file:///C:%5Cnotes%5Ctodo.md)`.
-
-When the `Should normalize file links` setting is enabled (the default), this plugin normalizes such links to a pretty form (decoding and converting backslashes to forward slashes), e.g. `[note](file:///C:/notes/todo.md)`, whenever links are converted — both via the convert commands and via the automatic conversion triggers. Other (non-`file://`) links are left untouched.
-
-## Link Conversion
-
-This plugin adds the ability to convert all links in an individual note or the entire vault.
-
-## Automatic Link Conversion
-
-This plugin adds the ability to automatically convert links to the selected format. The `Convert links` setting controls _when_ this happens, with each option being cumulative (it also includes every option above it):
-
-- **On explicit command** — only when a convert command is invoked. No automatic conversion happens.
-- **On save command** — additionally when the `Save current file` command runs (usually bound to `Ctrl + S`).
-- **On auto save** — additionally on the implicit auto-save (usually every 2s).
-- **On every modification** — additionally on every file modification, including changes made outside Obsidian.
-
-Use one of the save-based options if the older "convert as you type" behavior felt too eager and moved your cursor while editing — those convert only when the file is saved.
-
-## Automatic handling rename/move
-
-This plugin adds the ability to automatically update links to the renamed or moved to another directory files.
-
-To improve performance, consider installing [Backlink Cache](https://obsidian.md/plugins?id=backlink-cache) plugin.
-
-## Extend [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink]
-
-This plugin enhances the [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] function by adding an [additional overload](./src/generate-markdown-link-extended.d.ts).
-
-If you want to use the updated functions from your plugin, you can copy [GenerateMarkdownLinkExtended.d.ts](./src/generate-markdown-link-extended.d.ts) into your code.
+This plugin adds an [additional overload](./src/generate-markdown-link-extended.d.ts) to
+[`app.fileManager.generateMarkdownLink()`][generateMarkdownLink]. To use the extended signature from
+your own plugin, copy
+[`generate-markdown-link-extended.d.ts`](./src/generate-markdown-link-extended.d.ts) into your code.
 
 ## Integration with other plugins
 
-This plugin is handling rename/delete events based on the plugin settings. Similar handlers are added to other plugins:
+This plugin handles rename and delete events according to its settings. Similar handlers ship in:
 
 - [`Consistent Attachments and Links`](https://obsidian.md/plugins?id=consistent-attachments-and-links)
 - [`Custom Attachment Location`](https://obsidian.md/plugins?id=obsidian-custom-attachment-location)
 
-But those handlers are designed to work fine with each other and the plugins can be installed together.
+Those handlers are designed to work with each other, so the plugins can be installed together.
+
+For better performance on a large vault, consider also installing
+[Backlink Cache](https://obsidian.md/plugins?id=backlink-cache).
 
 ## Installation
 
@@ -96,6 +89,14 @@ window.DEBUG.enable('better-markdown-links');
 ```
 
 For more details, refer to the [documentation](https://mnaoumov.dev/obsidian-dev-utils/guides/debugging/).
+
+## Changelog
+
+All notable changes to this project will be documented in the [CHANGELOG](./CHANGELOG.md).
+
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING](./CONTRIBUTING.md) to get set up.
 
 ## Support
 

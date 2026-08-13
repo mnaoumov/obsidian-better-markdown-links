@@ -18,10 +18,10 @@ note or to the vault root.
 These links are written exactly as the plugin generates them - relative, dot-prefixed, and wrapped
 in angle brackets where the path has spaces:
 
-- [Deep note](<./Targets/Nested folder/Deep note.md>) - two folders deep, reached with a relative
+- [Deep note](<./Materials/02 Relative links/Targets/Nested folder/Deep note.md>) - two folders deep, reached with a relative
   path from this note.
-- [Simple note](<./Targets/Simple note.md>) - a shallower relative path.
-- [Note with spaces](<./A folder with spaces/Note with spaces.md>) - a relative, dot-prefixed,
+- [Simple note](<./Materials/02 Relative links/Targets/Simple note.md>) - a shallower relative path.
+- [Note with spaces](<./Materials/01 Angle bracket links/A folder with spaces/Note with spaces.md>) - a relative, dot-prefixed,
   angle-bracket link all at once.
 
 Run a convert command from [03 Convert links](<./03 Convert links.md>) over an older note to see existing links rewritten
