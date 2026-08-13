@@ -11,7 +11,7 @@ The Markdown spec allows a far more readable form using **angle brackets**, whic
 understands but does not generate on its own:
 
 ```markdown
-[Note with spaces](<A folder with spaces/Note with spaces.md>)
+[Note with spaces](<Materials/01 Angle bracket links/A folder with spaces/Note with spaces.md>)
 ```
 
 With **Should use angle brackets** enabled (the default), Better Markdown Links makes Obsidian
@@ -20,10 +20,12 @@ generate the angle-bracket form whenever a link is created or converted.
 ## Try it
 
 1. Open [03 Convert links](<./03 Convert links.md>) to see the commands that rewrite existing links.
-2. Or type a fresh link to [Note with spaces](<A folder with spaces/Note with spaces.md>) - a
+2. Or type a fresh link to [Note with spaces](<Materials/01 Angle bracket links/A folder with spaces/Note with spaces.md>) - a
    target whose folder and file name both contain spaces - and watch how it is formatted.
-3. Compare it with a link to a space-free target, [Simple note](<Targets/Simple note.md>), where
-   angle brackets are not needed.
+3. Compare it with a link to [Simple note](<Materials/02 Relative links/Targets/Simple note.md>), where
+   only the file name contains a space. One space is enough to make the difference worth having: the
+   percent-encoded form of that same link is `Simple%20note.md`, and it gets worse with every space in
+   the path.
 
 The link above already uses the angle-bracket form, so it stays readable while still resolving
 to the real note.
