@@ -1,5 +1,3 @@
-[Docs](https://github.com/mnaoumov/obsidian-better-markdown-links/)
-
 # Angle bracket links
 
 Markdown links are more portable than `[[wikilinks]]`, but when a path contains spaces
@@ -21,7 +19,7 @@ generate the angle-bracket form whenever a link is created or converted.
 
 ## Try it
 
-1. Open [[03 Convert links]] to see the commands that rewrite existing links.
+1. Open [03 Convert links](<./03 Convert links.md>) to see the commands that rewrite existing links.
 2. Or type a fresh link to [Note with spaces](<A folder with spaces/Note with spaces.md>) - a
    target whose folder and file name both contain spaces - and watch how it is formatted.
 3. Compare it with a link to a space-free target, [Simple note](<Targets/Simple note.md>), where

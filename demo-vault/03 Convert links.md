@@ -1,5 +1,3 @@
-[Docs](https://github.com/mnaoumov/obsidian-better-markdown-links/)
-
 # Convert links
 
 Beyond formatting new links, Better Markdown Links can rewrite links that already exist so they
@@ -16,7 +14,7 @@ Three commands are available in the Command Palette:
 
 Try it: open [Simple note](<Targets/Simple note.md>), add a messy link by hand, then run
 **Convert links in current file** and watch it snap into the readable form shown in
-[[01 Angle bracket links]] and [[02 Relative links]].
+[01 Angle bracket links](<./01 Angle bracket links.md>) and [02 Relative links](<./02 Relative links.md>).
 
 ## Automatically
 
@@ -37,4 +35,4 @@ up during conversion - backslashes become forward slashes and percent-encoding i
 [note](file:///C:%5Cnotes%5Ctodo.md)   ->   [note](file:///C:/notes/todo.md)
 ```
 
-See [[04 Settings]] for every option that shapes the conversion.
+See [04 Settings](<./04 Settings.md>) for every option that shapes the conversion.

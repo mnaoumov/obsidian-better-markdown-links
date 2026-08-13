@@ -1,5 +1,3 @@
-[Docs](https://github.com/mnaoumov/obsidian-better-markdown-links/)
-
 # Relative links
 
 Obsidian can [resolve a relative path as if it were absolute](https://forum.obsidian.md/t/add-settings-to-control-link-resolution-mode/69560),
@@ -26,5 +24,5 @@ in angle brackets where the path has spaces:
 - [Note with spaces](<./A folder with spaces/Note with spaces.md>) - a relative, dot-prefixed,
   angle-bracket link all at once.
 
-Run a convert command from [[03 Convert links]] over an older note to see existing links rewritten
+Run a convert command from [03 Convert links](<./03 Convert links.md>) over an older note to see existing links rewritten
 into this form.
