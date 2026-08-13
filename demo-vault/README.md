@@ -1,3 +1,5 @@
+# Better Markdown Links demo vault
+
 This is an [Obsidian](https://obsidian.md/) vault demonstrating features of the [Better Markdown Links](https://github.com/mnaoumov/obsidian-better-markdown-links) plugin.
 
 ## Opening this vault
