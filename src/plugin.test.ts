@@ -32,14 +32,9 @@ vi.mock('obsidian-dev-utils/obsidian/components/rename-delete-handler-component'
   })
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/data-handler', () => ({
-  PluginDataHandler: vi.fn()
-}));
-
-vi.mock('obsidian-dev-utils/obsidian/plugin/plugin-event-source', () => ({
-  PluginEventSourceImpl: vi.fn()
-}));
-
+// `PluginDataHandler` and `PluginEventSourceImpl` are NOT stubbed: since obsidian-dev-utils 93.2 the base
+// Builds its own settings component out of them during `onload`, and that component really calls
+// `pluginEventSource.on`, so a bare `vi.fn()` double makes the base throw before `onloadImpl` runs (G49).
 vi.mock('obsidian-dev-utils/obsidian/components/plugin-settings-tab-component', () => ({
   // Extends the real obsidian-test-mocks Component so the real addChild lifecycle can load it.
   PluginSettingsTabComponent: class extends Component {}
@@ -102,6 +97,9 @@ beforeEach(() => {
 
   // Seed the obsidianDevUtilsState holder on the raw target behind the strict-proxy App so the real dev-utils universal components can read/write shared state during load.
   seedOnRawTarget(app, 'obsidianDevUtilsState', {});
+  // Since obsidian-dev-utils 89.0.0 the base bridges its command handlers into Notebook Navigator's
+  // Menus, which looks the plugin up on layout-ready -- so `plugins` has to answer on the strict mock.
+  seedOnRawTarget(app, 'plugins', { getPlugin: vi.fn().mockReturnValue(null) });
 
   // Expose the app as the global instance so dev-utils helpers that resolve shared state without an explicit app argument read/write the same seeded holder.
   castTo<AppGlobal>(window).app = app;
