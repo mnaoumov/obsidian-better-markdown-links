@@ -15,9 +15,29 @@ Three commands are available in the Command Palette:
 - **Better Markdown Links: Convert links in entire vault**
   - rewrites the whole vault at once.
 
-Try it: open [Simple note](<Materials/02 Relative links/Targets/Simple note.md>), add a messy link by hand, then run
-**Convert links in current file** and watch it snap into the readable form shown in
+Knowing what a messy link looks like before you have seen one converted is the awkward part, so the button writes a note full of them - percent-encoded spaces, no leading dot, a backslash-and-percent `file://` URL - and opens it:
+
+```code-button
+---
+caption: Create a note full of unconverted links
+---
+await require('/demoSetup.ts').openMessyNote(app);
+```
+
+Manual equivalent: create a note and paste in some percent-encoded, dot-less markdown links.
+
+```code-button
+---
+caption: Convert links in the current file
+---
+require('/demoSetup.ts').convertLinksInCurrentFile(app);
+```
+
+Manual equivalent: run **Better Markdown Links: Convert links in current file** from the Command Palette.
+
+Each link snaps into the readable form shown in
 [01 Angle bracket links](<./01 Angle bracket links.md>) and [02 Relative links](<./02 Relative links.md>).
+Press the first button again to get the messy note back and try a different setting.
 
 ## Automatically
 
@@ -32,6 +52,31 @@ without a command. Each option is cumulative - it includes every option above it
   - additionally on Obsidian's implicit auto-save.
 - **On every modification**
   - additionally on every change, including edits made outside Obsidian.
+
+Each mode has a button, so you can watch the difference rather than infer it. After switching, reset the messy note and edit it to see when conversion fires:
+
+```code-button
+---
+caption: Convert only on an explicit command
+---
+await require('/demoSetup.ts').changeSettings(app, { linkConversionMode: 'OnExplicitCommand' });
+```
+
+```code-button
+---
+caption: Convert on every modification
+---
+await require('/demoSetup.ts').changeSettings(app, { linkConversionMode: 'OnEveryModification' });
+```
+
+```code-button
+---
+caption: Back to the default (on save command)
+---
+await require('/demoSetup.ts').changeSettings(app, { linkConversionMode: 'OnSaveCommand' });
+```
+
+Manual equivalent: pick from the **Convert links** dropdown in **Settings -> Community plugins -> Better Markdown Links**.
 
 ## File link normalization
 
