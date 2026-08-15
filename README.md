@@ -15,6 +15,23 @@ This plugin makes Obsidian generate the readable, unambiguous form instead: angl
 with spaces, an explicit `./` on relative links, and tidy `file://` URLs. It can also convert the links
 you already have, in one note, one folder, or the whole vault.
 
+<!-- markdownlint-disable MD033 -->
+
+<a href="images/screenshots/screenshot-desktop-1.png"><img src="images/screenshots/screenshot-desktop-1.png" alt="What you get by default: percent-escapes and bare paths" width="600"></a>
+
+<details>
+<summary>More screenshots</summary>
+
+<a href="images/screenshots/screenshot-desktop-2.png"><img src="images/screenshots/screenshot-desktop-2.png" alt="Readable paths, angle brackets, an explicit ./" width="600"></a>
+<a href="images/screenshots/screenshot-desktop-3.png"><img src="images/screenshots/screenshot-desktop-3.png" alt="Convert one note, one folder, or the whole vault" width="600"></a>
+<a href="images/screenshots/screenshot-mobile-1.png"><img src="images/screenshots/screenshot-mobile-1.png" alt="What you get by default: percent-escapes and bare paths" width="270"></a>
+<a href="images/screenshots/screenshot-mobile-2.png"><img src="images/screenshots/screenshot-mobile-2.png" alt="Readable paths, angle brackets, an explicit ./" width="270"></a>
+<a href="images/screenshots/screenshot-mobile-3.png"><img src="images/screenshots/screenshot-mobile-3.png" alt="Convert one note, one folder, or the whole vault" width="270"></a>
+
+</details>
+
+<!-- markdownlint-enable MD033 -->
+
 ## Demo vault
 
 **The documentation is a demo vault.** Every feature has a note that explains what it does and why you
