@@ -11,7 +11,8 @@ import type {
 } from 'obsidian-dev-utils/obsidian/command-handlers/command-handler';
 import type {
   FileMenuEventHandler,
-  FilesMenuEventHandler
+  FilesMenuEventHandler,
+  MarkdownViewportMenuEventHandler
 } from 'obsidian-dev-utils/obsidian/menu-event-registrar';
 
 import { castTo } from 'obsidian-dev-utils/object-utils';
@@ -58,6 +59,10 @@ describe('ConvertLinksInFolderCommandHandler', () => {
         },
         registerFilesMenuEventHandler: (_menuHandler: FilesMenuEventHandler): DisposableEx => {
           // The handler under test does not use the multi-folder menu.
+          return strictProxy<DisposableEx>({});
+        },
+        registerMarkdownViewportMenuEventHandler: (_menuHandler: MarkdownViewportMenuEventHandler): DisposableEx => {
+          // The handler under test does not use the readable-line-length margin menu.
           return strictProxy<DisposableEx>({});
         }
       },
