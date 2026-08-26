@@ -4,17 +4,11 @@ Welcome to the [Better Markdown Links](https://github.com/mnaoumov/obsidian-bett
 
 ## Your first two minutes
 
-1. Open [01 Angle bracket links](<./01 Angle bracket links.md>) and look at the link to
-   **Note with spaces**. It reads `[Note with spaces](<A folder with spaces/Note with spaces.md>)` —
-   readable, because the path is wrapped in angle brackets rather than littered with `%20`.
-2. In any note, type `[[` and pick a note whose path has spaces. Obsidian would normally write the
-   percent-encoded form; with this plugin you get the angle-bracket one.
-3. Open [03 Convert links](<./03 Convert links.md>) and press its buttons: the first writes a note
-   full of unconverted links, the second converts them in place. Press the first again to get the
-   messy note back and try a different setting.
+1. Open [01 Angle bracket links](<./01 Angle bracket links.md>) and look at the link to **Note with spaces**. It reads `[Note with spaces](<A folder with spaces/Note with spaces.md>)` — readable, because the path is wrapped in angle brackets rather than littered with `%20`.
+2. In any note, type `[[` and pick a note whose path has spaces. Obsidian would normally write the percent-encoded form; with this plugin you get the angle-bracket one.
+3. Open [03 Convert links](<./03 Convert links.md>) and press its buttons: the first writes a note full of unconverted links, the second converts them in place. Press the first again to get the messy note back and try a different setting.
 
-No setup is needed: the notes and folders these steps use ship in `Materials/`, and the formatting
-settings are documented in [04 Settings](<./04 Settings.md>).
+No setup is needed: the notes and folders these steps use ship in `Materials/`, and the formatting settings are documented in [04 Settings](<./04 Settings.md>).
 
 ## Explore
 
@@ -25,6 +19,4 @@ settings are documented in [04 Settings](<./04 Settings.md>).
 
 ## Materials
 
-`Materials/` holds the notes the walkthroughs link to, one folder per note that needs them —
-`Materials/01 Angle bracket links/A folder with spaces/` is the deliberately awkward path that makes
-angle brackets worth having. You never have to open it directly; each note links to what it needs.
+`Materials/` holds the notes the walkthroughs link to, one folder per note that needs them — `Materials/01 Angle bracket links/A folder with spaces/` is the deliberately awkward path that makes angle brackets worth having. You never have to open it directly; each note links to what it needs.
