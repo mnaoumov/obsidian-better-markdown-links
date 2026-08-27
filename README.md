@@ -53,22 +53,22 @@ This plugin adds an [additional overload](./src/generate-markdown-link-extended.
 
 This plugin handles rename and delete events according to its settings. Similar handlers ship in:
 
-- [`Consistent Attachments and Links`](https://obsidian.md/plugins?id=consistent-attachments-and-links)
-- [`Custom Attachment Location`](https://obsidian.md/plugins?id=obsidian-custom-attachment-location)
+- [`Consistent Attachments and Links`](https://community.obsidian.md/plugins/consistent-attachments-and-links)
+- [`Custom Attachment Location`](https://community.obsidian.md/plugins/obsidian-custom-attachment-location)
 
 Those handlers are designed to work with each other, so the plugins can be installed together.
 
-For better performance on a large vault, consider also installing [Backlink Cache](https://obsidian.md/plugins?id=backlink-cache).
+For better performance on a large vault, consider also installing [Backlink Cache](https://community.obsidian.md/plugins/backlink-cache).
 
 ## Installation
 
-The plugin is available in [the official Community Plugins repository](https://obsidian.md/plugins?id=better-markdown-links).
+The plugin is available in [the official Community Plugins repository](https://community.obsidian.md/plugins/better-markdown-links).
 
 ### Beta versions
 
-To install the latest beta release of this plugin (regardless if it is available in [the official Community Plugins repository](https://obsidian.md/plugins) or not), follow these steps:
+To install the latest beta release of this plugin (regardless if it is available in [the official Community Plugins repository](https://community.obsidian.md) or not), follow these steps:
 
-1. Ensure you have the [BRAT plugin](https://obsidian.md/plugins?id=obsidian42-brat) installed and enabled.
+1. Ensure you have the [BRAT plugin](https://community.obsidian.md/plugins/obsidian42-brat) installed and enabled.
 2. Click [Install via BRAT](https://intradeus.github.io/http-protocol-redirector?r=obsidian://brat?plugin=https://github.com/mnaoumov/obsidian-better-markdown-links).
 3. An Obsidian pop-up window should appear. In the window, click the `Add plugin` button once and wait a few seconds for the plugin to install.
 
