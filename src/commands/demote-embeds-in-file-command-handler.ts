@@ -4,27 +4,27 @@ import type { FileCommandHandlerShouldAddToFileMenuParams } from 'obsidian-dev-u
 import { FileCommandHandler } from 'obsidian-dev-utils/obsidian/command-handlers/file-command-handler';
 import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/file-system';
 
-import type { LinkConverter } from '../link-converter.ts';
+import type { EmbedDemoter } from '../embed-demoter.ts';
 
-interface ConvertLinksInFileCommandHandlerConstructorParams {
-  readonly linkConverter: LinkConverter;
+interface DemoteEmbedsInFileCommandHandlerConstructorParams {
+  readonly embedDemoter: EmbedDemoter;
 }
 
-export class ConvertLinksInFileCommandHandler extends FileCommandHandler {
-  private readonly linkConverter: LinkConverter;
+export class DemoteEmbedsInFileCommandHandler extends FileCommandHandler {
+  private readonly embedDemoter: EmbedDemoter;
 
-  public constructor(params: ConvertLinksInFileCommandHandlerConstructorParams) {
+  public constructor(params: DemoteEmbedsInFileCommandHandlerConstructorParams) {
     super({
-      fileMenuItemName: 'Convert links in file',
+      fileMenuItemName: 'Demote embeds to links in file',
       fileMenuSubmenuIcon: 'link-2',
-      filesMenuItemName: 'Convert links in files',
+      filesMenuItemName: 'Demote embeds to links in files',
       icon: 'link',
-      id: 'convert-links-in-current-file',
-      name: 'Convert links in current file',
+      id: 'demote-embeds-to-links-in-current-file',
+      name: 'Demote embeds to links in current file',
       shouldAddCommandToSubmenu: true
     });
 
-    this.linkConverter = params.linkConverter;
+    this.embedDemoter = params.embedDemoter;
   }
 
   protected override canExecuteFile(file: TFile): boolean {
@@ -32,10 +32,9 @@ export class ConvertLinksInFileCommandHandler extends FileCommandHandler {
   }
 
   protected override async executeFile(file: TFile): Promise<void> {
-    await this.linkConverter.convertLinksInFile({
+    await this.embedDemoter.demoteEmbedsInFile({
       file,
-      shouldPromptForExcludedFile: true,
-      shouldResolveUnresolvedLinks: true
+      shouldPromptForExcludedFile: true
     });
   }
 

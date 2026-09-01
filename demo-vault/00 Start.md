@@ -8,14 +8,15 @@ Welcome to the [Better Markdown Links](https://github.com/mnaoumov/obsidian-bett
 2. In any note, type `[[` and pick a note whose path has spaces. Obsidian would normally write the percent-encoded form; with this plugin you get the angle-bracket one.
 3. Open [03 Convert links](<./03 Convert links.md>) and press its buttons: the first writes a note full of unconverted links, the second converts them in place. Press the first again to get the messy note back and try a different setting.
 
-No setup is needed: the notes and folders these steps use ship in `Materials/`, and the formatting settings are documented in [04 Settings](<./04 Settings.md>).
+No setup is needed: the notes and folders these steps use ship in `Materials/`, and the formatting settings are documented in [05 Settings](<./05 Settings.md>).
 
 ## Explore
 
 - [01 Angle bracket links](<./01 Angle bracket links.md>)
 - [02 Relative links](<./02 Relative links.md>)
 - [03 Convert links](<./03 Convert links.md>)
-- [04 Settings](<./04 Settings.md>)
+- [04 Demote embeds](<./04 Demote embeds.md>)
+- [05 Settings](<./05 Settings.md>)
 
 ## Materials
 

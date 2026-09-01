@@ -6,11 +6,19 @@ import { configureCommunityPlugin } from 'obsidian-dev-utils/obsidian/community-
 const PLUGIN_ID = 'better-markdown-links';
 const MESSY_FOLDER_PATH = 'Materials/03 Convert links';
 const MESSY_NOTE_PATH = `${MESSY_FOLDER_PATH}/Messy links.md`;
+const EMBEDDED_FOLDER_PATH = 'Materials/04 Demote embeds';
+const EMBEDDED_NOTE_PATH = `${EMBEDDED_FOLDER_PATH}/Embedded links.md`;
+const UNRESOLVED_FOLDER_PATH = 'Materials/03 Convert links';
+const UNRESOLVED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/Unresolved links.md`;
+const ALIASED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/Aliased note.md`;
 
 interface DemoSettingsPatch {
   linkConversionMode?: string;
+  shouldAppendFileNameWhenDemotingEmbeds?: boolean;
+  shouldCreateMissingNotes?: boolean;
   shouldNormalizeFileLinks?: boolean;
   shouldPreserveExistingLinkStyle?: boolean;
+  shouldResolveLinksViaAliases?: boolean;
   shouldUseAngleBrackets?: boolean;
   shouldUseLeadingDotForRelativePaths?: boolean;
   shouldUseLeadingSlashForAbsolutePaths?: boolean;
@@ -44,23 +52,31 @@ const MESSY_CONTENT = [
  * Manual equivalent: create a note and paste in some percent-encoded, dot-less markdown links.
  */
 export async function openMessyNote(app: App): Promise<void> {
-  if (!app.vault.getFolderByPath(MESSY_FOLDER_PATH)) {
-    await app.vault.createFolder(MESSY_FOLDER_PATH);
+  await openDemoNote(app, MESSY_FOLDER_PATH, MESSY_NOTE_PATH, MESSY_CONTENT);
+  new Notice('Messy links note ready. Now convert it.');
+}
+
+/**
+ * Writes (or rewrites) one demo note and opens it, creating its folder if needed. Every "create a note
+ * to try this against" button goes through here, so pressing one twice restores the note rather than
+ * accumulating edits.
+ */
+async function openDemoNote(app: App, folderPath: string, notePath: string, content: string): Promise<void> {
+  if (!app.vault.getFolderByPath(folderPath)) {
+    await app.vault.createFolder(folderPath);
   }
 
-  const existing = app.vault.getFileByPath(MESSY_NOTE_PATH);
+  const existing = app.vault.getFileByPath(notePath);
   if (existing) {
-    await app.vault.modify(existing, MESSY_CONTENT);
+    await app.vault.modify(existing, content);
   } else {
-    await app.vault.create(MESSY_NOTE_PATH, MESSY_CONTENT);
+    await app.vault.create(notePath, content);
   }
 
-  const note = app.vault.getFileByPath(MESSY_NOTE_PATH);
+  const note = app.vault.getFileByPath(notePath);
   if (note) {
     await app.workspace.getLeaf(false).openFile(note);
   }
-
-  new Notice('Messy links note ready. Now convert it.');
 }
 
 /**
@@ -82,4 +98,79 @@ export function convertLinksInCurrentFile(app: App): void {
 export async function changeSettings(app: App, patch: DemoSettingsPatch): Promise<void> {
   await configureCommunityPlugin({ app, pluginId: PLUGIN_ID, settings: patch });
   new Notice('Applied. Reset the messy note and convert again to compare.');
+}
+
+// A note whose every link is an embed - one attachment-style embed of a real note, one with an alias,
+// one plain. Demoting turns each `![...]` into `[...]`, leaving the target and the alias untouched.
+const EMBEDDED_CONTENT = [
+  '# Embedded links',
+  '',
+  'Every link below is an embed. Run **Better Markdown Links: Demote embeds to links in current file**',
+  'and watch each `!` disappear while the target and the alias stay put.',
+  '',
+  '- A plain embed: ![](<../01 Angle bracket links/A folder with spaces/Note with spaces.md>)',
+  '- An embed with an alias: ![The simple one](<../02 Relative links/Targets/Simple note.md>)',
+  '- A wikilink embed: ![[../02 Relative links/Targets/Nested folder/Deep note.md]]',
+  ''
+].join('\n');
+
+// The note `[[The Simple One]]` is meant to find. Its file name is nothing like the link text - only its
+// `aliases` frontmatter connects the two, which is exactly what the alias lookup is for.
+const ALIASED_CONTENT = [
+  '---',
+  'aliases:',
+  '  - The Simple One',
+  '---',
+  '',
+  '# Aliased note',
+  '',
+  'This note answers to `The Simple One`, but its file name says otherwise.',
+  ''
+].join('\n');
+
+// A note whose wikilinks Obsidian cannot resolve: the first names an ALIAS rather than a file name, the
+// Second names a note that does not exist at all. Converting with the two resolution settings on turns
+// The first into a link to the aliased note and creates a note for the second.
+const UNRESOLVED_CONTENT = [
+  '# Unresolved links',
+  '',
+  'Neither wikilink below resolves as written. Convert this note with **Should resolve links via',
+  'aliases** and **Should create missing notes** enabled and watch both find a real target.',
+  '',
+  '- Named by its alias, not its file name: [[The Simple One]]',
+  '- A note that does not exist yet: [[A brand new note]]',
+  ''
+].join('\n');
+
+/**
+ * Creates (or restores) a note whose links are all embeds and opens it.
+ *
+ * Manual equivalent: create a note and write some `![...]` embeds in it.
+ */
+export async function openEmbeddedNote(app: App): Promise<void> {
+  await openDemoNote(app, EMBEDDED_FOLDER_PATH, EMBEDDED_NOTE_PATH, EMBEDDED_CONTENT);
+  new Notice('Embedded links note ready. Now demote them.');
+}
+
+/**
+ * Creates (or restores) a note whose wikilinks do not resolve, plus the aliased note one of them is
+ * meant to find, and opens the unresolved note.
+ *
+ * Manual equivalent: write `[[Some Alias]]` pointing at a note whose `aliases` frontmatter carries that
+ * alias, and `[[A brand new note]]` pointing at nothing.
+ */
+export async function openUnresolvedNote(app: App): Promise<void> {
+  await openDemoNote(app, UNRESOLVED_FOLDER_PATH, ALIASED_NOTE_PATH, ALIASED_CONTENT);
+  await openDemoNote(app, UNRESOLVED_FOLDER_PATH, UNRESOLVED_NOTE_PATH, UNRESOLVED_CONTENT);
+  new Notice('Unresolved links note ready. Now convert it.');
+}
+
+/**
+ * Runs the demote command on the active note.
+ *
+ * Manual equivalent: **Better Markdown Links: Demote embeds to links in current file** in the Command
+ * Palette.
+ */
+export function demoteEmbedsInCurrentFile(app: App): void {
+  app.commands.executeCommandById(`${PLUGIN_ID}:demote-embeds-to-links-in-current-file`);
 }

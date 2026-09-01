@@ -35,7 +35,7 @@ describe('ConvertLinksInEntireVaultCommandHandler', () => {
     handler.buildCommand().checkCallback?.(false);
 
     await vi.waitFor(() => {
-      expect(convertLinksInFolder).toHaveBeenCalledExactlyOnceWith({ folder: root });
+      expect(convertLinksInFolder).toHaveBeenCalledExactlyOnceWith({ folder: root, shouldResolveUnresolvedLinks: true });
     });
   });
 });

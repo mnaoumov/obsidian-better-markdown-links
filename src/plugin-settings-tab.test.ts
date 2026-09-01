@@ -42,6 +42,9 @@ const EXPECTED_BOUND_PROPERTIES = [
   'shouldAllowEmptyEmbedAlias',
   'shouldIncludeAttachmentExtensionToEmbedAlias',
   'shouldPreserveExistingLinkStyle',
+  'shouldAppendFileNameWhenDemotingEmbeds',
+  'shouldResolveLinksViaAliases',
+  'shouldCreateMissingNotes',
   'includePaths',
   'excludePaths'
 ];

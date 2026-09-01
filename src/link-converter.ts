@@ -18,6 +18,8 @@ import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
 
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 
+import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
+
 interface LinkConverterConstructorParams {
   readonly abortSignalComponent: AbortSignalComponent;
   readonly app: App;
@@ -30,11 +32,29 @@ interface LinkConverterConvertLinksInFileParams {
   readonly abortSignal?: AbortSignal;
   readonly file: TFile;
   readonly shouldPromptForExcludedFile?: boolean;
+
+  /**
+   * Whether to first repoint wikilinks that Obsidian cannot resolve, per the
+   * `Should resolve links via aliases` / `Should create missing notes` settings.
+   *
+   * Set by the explicit convert commands only. The automatic conversion paths must never enable it:
+   * creating notes on every auto-save or every file modification would litter the vault.
+   *
+   * @default `false`
+   */
+  readonly shouldResolveUnresolvedLinks?: boolean;
 }
 
 interface LinkConverterConvertLinksInFolderParams {
   readonly abortSignal?: AbortSignal;
   readonly folder: TFolder;
+
+  /**
+   * See {@link LinkConverterConvertLinksInFileParams.shouldResolveUnresolvedLinks}.
+   *
+   * @default `false`
+   */
+  readonly shouldResolveUnresolvedLinks?: boolean;
 }
 
 export class LinkConverter {
@@ -69,6 +89,18 @@ export class LinkConverter {
       if (!shouldConvert) {
         return;
       }
+    }
+
+    if (params.shouldResolveUnresolvedLinks && (settings.shouldResolveLinksViaAliases || settings.shouldCreateMissingNotes)) {
+      await resolveUnresolvedLinksInFile({
+        abortSignal,
+        app: this.app,
+        file: params.file,
+        pluginNoticeComponent: this.pluginNoticeComponent,
+        resourceLockComponent: this.resourceLockComponent,
+        shouldCreateMissingNotes: settings.shouldCreateMissingNotes,
+        shouldResolveLinksViaAliases: settings.shouldResolveLinksViaAliases
+      });
     }
 
     await updateLinksInFile({
@@ -106,7 +138,8 @@ export class LinkConverter {
       processItem: async (file) => {
         await this.convertLinksInFile({
           abortSignal,
-          file
+          file,
+          shouldResolveUnresolvedLinks: params.shouldResolveUnresolvedLinks ?? false
         });
       },
       progressBarTitle: params.folder.path === '/'

@@ -19,6 +19,10 @@ Open **Settings -> Community plugins -> Better Markdown Links** to configure the
 
 - `linkConversionMode`
   - when links are converted automatically: on explicit command, on save command, on auto save, or on every modification (see [03 Convert links](<./03 Convert links.md>)).
+- `shouldResolveLinksViaAliases`
+  - look an unresolved wikilink up against every note's `aliases` frontmatter and basename before converting it; explicit commands only (see [03 Convert links](<./03 Convert links.md>)).
+- `shouldCreateMissingNotes`
+  - create the note when a wikilink still does not resolve after the alias lookup; explicit commands only, and it writes new files (see [03 Convert links](<./03 Convert links.md>)).
 
 ## Embeds
 
@@ -26,6 +30,8 @@ Open **Settings -> Community plugins -> Better Markdown Links** to configure the
   - allow embeds to keep an empty alias instead of filling one in.
 - `shouldIncludeAttachmentExtensionToEmbedAlias`
   - include the file extension in an attachment embed's generated alias.
+- `shouldAppendFileNameWhenDemotingEmbeds`
+  - append the target's file name as a sub-bullet when demoting an embed to a link (see [04 Demote embeds](<./04 Demote embeds.md>)).
 
 ## Renames moved to another plugin
 

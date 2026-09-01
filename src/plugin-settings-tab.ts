@@ -198,6 +198,62 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
       }),
       this.settingEx({
         desc: createFragment((f) => {
+          f.appendText('Whether to append the target file name as a sub-bullet when demoting an embed to a link.');
+          f.createEl('br');
+          f.appendText('If enabled: ');
+          appendCodeBlock(f, '[alias](path/to/image.png)');
+          f.appendText(' followed by a ');
+          appendCodeBlock(f, '- image.png');
+          f.appendText(' sub-bullet.');
+          f.createEl('br');
+          f.appendText('If disabled: ');
+          appendCodeBlock(f, '[alias](path/to/image.png)');
+        }),
+        name: 'Should append file name when demoting embeds',
+        render: (setting) => {
+          setting.addToggle((toggle) => {
+            this.bind({ propertyName: 'shouldAppendFileNameWhenDemotingEmbeds', valueComponent: toggle });
+          });
+        }
+      }),
+      this.settingEx({
+        desc: createFragment((f) => {
+          f.appendText('Whether to look an unresolved wikilink up against every note\'s ');
+          appendCodeBlock(f, 'aliases');
+          f.appendText(' frontmatter and basename before converting it.');
+          f.createEl('br');
+          f.appendText('A markdown link cannot carry an alias the way ');
+          appendCodeBlock(f, '[[Some Alias]]');
+          f.appendText(' does, so without this an alias-only wikilink converts into a link pointing at a note that does not exist.');
+          f.createEl('br');
+          f.appendText('Applies only to the explicit convert commands, never to automatic conversion.');
+        }),
+        name: 'Should resolve links via aliases',
+        render: (setting) => {
+          setting.addToggle((toggle) => {
+            this.bind({ propertyName: 'shouldResolveLinksViaAliases', valueComponent: toggle });
+          });
+        }
+      }),
+      this.settingEx({
+        desc: createFragment((f) => {
+          f.appendText('Whether to create the note when a wikilink still does not resolve after the alias lookup.');
+          f.createEl('br');
+          f.appendText('This writes new files to your vault, in the folder your ');
+          appendCodeBlock(f, 'Default location for new notes');
+          f.appendText(' Obsidian setting names.');
+          f.createEl('br');
+          f.appendText('Applies only to the explicit convert commands, never to automatic conversion.');
+        }),
+        name: 'Should create missing notes',
+        render: (setting) => {
+          setting.addToggle((toggle) => {
+            this.bind({ propertyName: 'shouldCreateMissingNotes', valueComponent: toggle });
+          });
+        }
+      }),
+      this.settingEx({
+        desc: createFragment((f) => {
           f.appendText('Include notes from the following paths');
           f.createEl('br');
           f.appendText('Insert each path on a new line');
