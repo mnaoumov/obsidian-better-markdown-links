@@ -26,7 +26,8 @@ export class ConvertLinksInEntireVaultCommandHandler extends GlobalCommandHandle
 
   protected override async execute(): Promise<void> {
     await this.linkConverter.convertLinksInFolder({
-      folder: this.app.vault.getRoot()
+      folder: this.app.vault.getRoot(),
+      shouldResolveUnresolvedLinks: true
     });
   }
 }

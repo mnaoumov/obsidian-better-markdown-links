@@ -14,9 +14,12 @@ export class PluginSettings {
   public proposedShouldHandleRenames: boolean | null = null;
 
   public shouldAllowEmptyEmbedAlias = true;
+  public shouldAppendFileNameWhenDemotingEmbeds = false;
+  public shouldCreateMissingNotes = false;
   public shouldIncludeAttachmentExtensionToEmbedAlias = false;
   public shouldNormalizeFileLinks = true;
   public shouldPreserveExistingLinkStyle = false;
+  public shouldResolveLinksViaAliases = false;
   public shouldUseAngleBrackets = true;
   public shouldUseLeadingDotForRelativePaths = true;
   public shouldUseLeadingSlashForAbsolutePaths = true;

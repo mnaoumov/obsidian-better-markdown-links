@@ -29,7 +29,7 @@ import {
   vi
 } from 'vitest';
 
-import type { LinkConverter } from '../link-converter.ts';
+import type { EmbedDemoter } from '../embed-demoter.ts';
 
 vi.mock('obsidian-dev-utils/obsidian/file-system', async (importOriginal) => ({
   ...await importOriginal<typeof import('obsidian-dev-utils/obsidian/file-system')>(),
@@ -40,7 +40,7 @@ vi.mock('obsidian-dev-utils/obsidian/file-system', async (importOriginal) => ({
 import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/file-system';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { ConvertLinksInFileCommandHandler } from './convert-links-in-file-command-handler.ts';
+import { DemoteEmbedsInFileCommandHandler } from './demote-embeds-in-file-command-handler.ts';
 
 let app: AppOriginal;
 
@@ -56,19 +56,19 @@ interface MenuMock {
   menu: MenuOriginal;
 }
 
-describe('ConvertLinksInFileCommandHandler', () => {
+describe('DemoteEmbedsInFileCommandHandler', () => {
   let activeFile: null | TFileOriginal;
-  let convertLinksInFile: ReturnType<typeof vi.fn<LinkConverter['convertLinksInFile']>>;
+  let demoteEmbedsInFile: ReturnType<typeof vi.fn<EmbedDemoter['demoteEmbedsInFile']>>;
   let fileMenuHandlers: FileMenuEventHandler[];
-  let handler: ConvertLinksInFileCommandHandler;
+  let handler: DemoteEmbedsInFileCommandHandler;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.mocked(isMarkdownFile).mockReturnValue(true);
     app = App.createConfigured__().asOriginalType__();
-    convertLinksInFile = vi.fn<LinkConverter['convertLinksInFile']>().mockResolvedValue(undefined);
-    const linkConverter = strictProxy<LinkConverter>({ convertLinksInFile });
-    handler = new ConvertLinksInFileCommandHandler({ linkConverter });
+    demoteEmbedsInFile = vi.fn<EmbedDemoter['demoteEmbedsInFile']>().mockResolvedValue(undefined);
+    const embedDemoter = strictProxy<EmbedDemoter>({ demoteEmbedsInFile });
+    handler = new DemoteEmbedsInFileCommandHandler({ embedDemoter });
 
     activeFile = null;
     fileMenuHandlers = [];
@@ -97,7 +97,7 @@ describe('ConvertLinksInFileCommandHandler', () => {
   });
 
   it('should create an instance', () => {
-    expect(handler).toBeInstanceOf(ConvertLinksInFileCommandHandler);
+    expect(handler).toBeInstanceOf(DemoteEmbedsInFileCommandHandler);
   });
 
   it('should allow executing when the active file is a markdown file', () => {
@@ -140,7 +140,7 @@ describe('ConvertLinksInFileCommandHandler', () => {
     expect(addItem).not.toHaveBeenCalled();
   });
 
-  it('should convert links in the file when the menu item is clicked', async () => {
+  it('should demote embeds in the file when the menu item is clicked', async () => {
     vi.mocked(isMarkdownFile).mockReturnValue(true);
     const file = createFile('note.md');
     const { menu } = createMenu();
@@ -148,10 +148,9 @@ describe('ConvertLinksInFileCommandHandler', () => {
     fileMenuHandlers[0]?.(menu, file, 'file-explorer-context-menu');
 
     await vi.waitFor(() => {
-      expect(convertLinksInFile).toHaveBeenCalledWith({
+      expect(demoteEmbedsInFile).toHaveBeenCalledWith({
         file,
-        shouldPromptForExcludedFile: true,
-        shouldResolveUnresolvedLinks: true
+        shouldPromptForExcludedFile: true
       });
     });
   });

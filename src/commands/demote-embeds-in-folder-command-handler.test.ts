@@ -29,23 +29,23 @@ import {
   vi
 } from 'vitest';
 
-import type { LinkConverter } from '../link-converter.ts';
+import type { EmbedDemoter } from '../embed-demoter.ts';
 
-import { ConvertLinksInFolderCommandHandler } from './convert-links-in-folder-command-handler.ts';
+import { DemoteEmbedsInFolderCommandHandler } from './demote-embeds-in-folder-command-handler.ts';
 
 let app: AppOriginal;
 
-describe('ConvertLinksInFolderCommandHandler', () => {
-  let convertLinksInFolder: ReturnType<typeof vi.fn<LinkConverter['convertLinksInFolder']>>;
+describe('DemoteEmbedsInFolderCommandHandler', () => {
+  let demoteEmbedsInFolder: ReturnType<typeof vi.fn<EmbedDemoter['demoteEmbedsInFolder']>>;
   let fileMenuHandlers: FileMenuEventHandler[];
-  let handler: ConvertLinksInFolderCommandHandler;
+  let handler: DemoteEmbedsInFolderCommandHandler;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     app = App.createConfigured__().asOriginalType__();
-    convertLinksInFolder = vi.fn<LinkConverter['convertLinksInFolder']>().mockResolvedValue(undefined);
-    const linkConverter = strictProxy<LinkConverter>({ convertLinksInFolder });
-    handler = new ConvertLinksInFolderCommandHandler({ linkConverter });
+    demoteEmbedsInFolder = vi.fn<EmbedDemoter['demoteEmbedsInFolder']>().mockResolvedValue(undefined);
+    const embedDemoter = strictProxy<EmbedDemoter>({ demoteEmbedsInFolder });
+    handler = new DemoteEmbedsInFolderCommandHandler({ embedDemoter });
 
     fileMenuHandlers = [];
     const activeFileProvider: ActiveFileProvider = { getActiveFile: () => null };
@@ -73,7 +73,7 @@ describe('ConvertLinksInFolderCommandHandler', () => {
   });
 
   it('should create an instance', () => {
-    expect(handler).toBeInstanceOf(ConvertLinksInFolderCommandHandler);
+    expect(handler).toBeInstanceOf(DemoteEmbedsInFolderCommandHandler);
   });
 
   it('should always add to the folder menu', () => {
@@ -103,7 +103,7 @@ describe('ConvertLinksInFolderCommandHandler', () => {
     expect(addItem).toHaveBeenCalledOnce();
   });
 
-  it('should convert links in the folder on executeFolder', async () => {
+  it('should demote embeds in the folder on executeFolder', async () => {
     const folder = createFolder('some/folder');
     const menu = strictProxy<MenuOriginal>({ setSectionSubmenu: vi.fn() });
     const addItem = vi.fn((callback: (item: unknown) => void) => {
@@ -124,7 +124,7 @@ describe('ConvertLinksInFolderCommandHandler', () => {
     fileMenuHandlers[0]?.(menu, folder, 'file-explorer-context-menu');
 
     await vi.waitFor(() => {
-      expect(convertLinksInFolder).toHaveBeenCalledExactlyOnceWith({ folder, shouldResolveUnresolvedLinks: true });
+      expect(demoteEmbedsInFolder).toHaveBeenCalledExactlyOnceWith({ folder });
     });
   });
 

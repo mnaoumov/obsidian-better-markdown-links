@@ -73,6 +73,51 @@ await require('/demoSetup.ts').changeSettings(app, { linkConversionMode: 'OnSave
 
 Manual equivalent: pick from the **Convert links** dropdown in **Settings -> Community plugins -> Better Markdown Links**.
 
+## Links that do not resolve
+
+A wikilink can name a note by an **alias** — `[[The Simple One]]`, where `The Simple One` appears in another note's `aliases` frontmatter rather than in its file name. Obsidian resolves that fine. A markdown link cannot: it has only a path. So converting an alias-only wikilink naively produces `[The Simple One](<The Simple One.md>)`, pointing at a note that does not exist.
+
+Two opt-in settings deal with this, applied in order and **only when you run a convert command yourself**. The automatic modes above never trigger them — creating notes on every auto-save would litter the vault.
+
+- **Should resolve links via aliases** (`shouldResolveLinksViaAliases`)
+  - looks an unresolved wikilink up against every note's `aliases` frontmatter and its basename, and points the converted link at whatever it finds.
+- **Should create missing notes** (`shouldCreateMissingNotes`)
+  - creates the note when the alias lookup finds nothing, in the folder your **Default location for new notes** Obsidian setting names. This writes new files to your vault.
+
+The button writes a note with one of each — a wikilink naming an alias, and a wikilink naming nothing at all — plus the aliased note the first one is meant to find:
+
+```code-button
+---
+caption: Create a note with unresolved wikilinks
+---
+await require('/demoSetup.ts').openUnresolvedNote(app);
+```
+
+```code-button
+---
+caption: Turn both resolution settings on
+---
+await require('/demoSetup.ts').changeSettings(app, { shouldCreateMissingNotes: true, shouldResolveLinksViaAliases: true });
+```
+
+```code-button
+---
+caption: Convert the unresolved links note
+---
+require('/demoSetup.ts').convertLinksInCurrentFile(app);
+```
+
+The first link now points at `Aliased note.md`; the second has a freshly created note behind it.
+
+```code-button
+---
+caption: Back to the defaults (both off)
+---
+await require('/demoSetup.ts').changeSettings(app, { shouldCreateMissingNotes: false, shouldResolveLinksViaAliases: false });
+```
+
+Manual equivalent: toggle the two settings in **Settings -> Community plugins -> Better Markdown Links**, then run **Better Markdown Links: Convert links in current file**.
+
 ## File link normalization
 
 With **Should normalize file links** enabled (the default), external `file://` links are tidied up during conversion - backslashes become forward slashes and percent-encoding is decoded:
@@ -81,4 +126,4 @@ With **Should normalize file links** enabled (the default), external `file://` l
 [note](file:///C:%5Cnotes%5Ctodo.md)   ->   [note](file:///C:/notes/todo.md)
 ```
 
-See [04 Settings](<./04 Settings.md>) for every option that shapes the conversion.
+See [05 Settings](<./05 Settings.md>) for every option that shapes the conversion.

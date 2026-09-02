@@ -31,7 +31,8 @@ export class ConvertLinksInFolderCommandHandler extends FolderCommandHandler {
 
   protected override async executeFolder(folder: TFolder): Promise<void> {
     await this.linkConverter.convertLinksInFolder({
-      folder
+      folder,
+      shouldResolveUnresolvedLinks: true
     });
   }
 

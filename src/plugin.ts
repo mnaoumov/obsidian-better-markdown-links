@@ -13,6 +13,10 @@ import { BetterMarkdownLinksComponent } from './better-markdown-links-component.
 import { ConvertLinksInEntireVaultCommandHandler } from './commands/convert-links-in-entire-vault-command-handler.ts';
 import { ConvertLinksInFileCommandHandler } from './commands/convert-links-in-file-command-handler.ts';
 import { ConvertLinksInFolderCommandHandler } from './commands/convert-links-in-folder-command-handler.ts';
+import { DemoteEmbedsInEntireVaultCommandHandler } from './commands/demote-embeds-in-entire-vault-command-handler.ts';
+import { DemoteEmbedsInFileCommandHandler } from './commands/demote-embeds-in-file-command-handler.ts';
+import { DemoteEmbedsInFolderCommandHandler } from './commands/demote-embeds-in-folder-command-handler.ts';
+import { EmbedDemoter } from './embed-demoter.ts';
 import { LinkConverter } from './link-converter.ts';
 import { PluginSettingsComponent } from './plugin-settings-component.ts';
 import { PluginSettingsTab } from './plugin-settings-tab.ts';
@@ -69,6 +73,14 @@ export class Plugin extends PluginBase {
       resourceLockComponent: this.resourceLockComponent
     });
 
+    const embedDemoter = new EmbedDemoter({
+      abortSignalComponent: this.abortSignalComponent,
+      app: this.app,
+      pluginNoticeComponent: this.pluginNoticeComponent,
+      pluginSettingsComponent,
+      resourceLockComponent: this.resourceLockComponent
+    });
+
     this.addChild(
       new BetterMarkdownLinksComponent({
         abortSignalComponent: this.abortSignalComponent,
@@ -97,6 +109,16 @@ export class Plugin extends PluginBase {
       new ConvertLinksInEntireVaultCommandHandler({
         app: this.app,
         linkConverter
+      }),
+      new DemoteEmbedsInFileCommandHandler({
+        embedDemoter
+      }),
+      new DemoteEmbedsInFolderCommandHandler({
+        embedDemoter
+      }),
+      new DemoteEmbedsInEntireVaultCommandHandler({
+        app: this.app,
+        embedDemoter
       }),
       new OpenDemoVaultCommandHandler({
         app: this.app,

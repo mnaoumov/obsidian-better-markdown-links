@@ -42,6 +42,10 @@ vi.mock('obsidian-dev-utils/obsidian/modals/confirm', () => ({
   confirm: vi.fn()
 }));
 
+vi.mock('./unresolved-link-resolver.ts', () => ({
+  resolveUnresolvedLinksInFile: vi.fn()
+}));
+
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
@@ -58,11 +62,15 @@ import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { LinkConverter } from './link-converter.ts';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
 
 const LINK_STYLE = castTo<LinkStyle>('ObsidianSettingsDefault');
 
 interface CreateConverterOptions {
+  readonly shouldCreateMissingNotes?: boolean;
   readonly shouldNormalizeFileLinks?: boolean;
+  readonly shouldResolveLinksViaAliases?: boolean;
 }
 
 interface CreateConverterResult {
@@ -90,7 +98,9 @@ function createConverter(options: CreateConverterOptions = {}): CreateConverterR
   const settings = strictProxy<PluginSettings>({
     getLinkStyle,
     isPathIgnored,
+    shouldCreateMissingNotes: options.shouldCreateMissingNotes ?? false,
     shouldNormalizeFileLinks: options.shouldNormalizeFileLinks ?? true,
+    shouldResolveLinksViaAliases: options.shouldResolveLinksViaAliases ?? false,
     shouldUseAngleBrackets: true
   });
   const pluginSettingsComponent = strictProxy<PluginSettingsComponent>({ settings });
@@ -128,6 +138,7 @@ beforeEach(() => {
   vi.mocked(updateFileUrlLinksInFile).mockResolvedValue(undefined);
   vi.mocked(loop).mockResolvedValue(undefined);
   vi.mocked(getMarkdownFiles).mockReturnValue([]);
+  vi.mocked(resolveUnresolvedLinksInFile).mockResolvedValue(undefined);
 });
 
 describe('LinkConverter', () => {
@@ -220,6 +231,92 @@ describe('LinkConverter', () => {
       });
 
       expect(vi.mocked(updateLinksInFile)).toHaveBeenCalledOnce();
+    });
+
+    describe('unresolved link resolution', () => {
+      it('should not resolve unresolved links when the caller does not ask for it', async () => {
+        const context = createConverter({ shouldCreateMissingNotes: true, shouldResolveLinksViaAliases: true });
+
+        await context.converter.convertLinksInFile({ file: createFile('note.md') });
+
+        expect(vi.mocked(resolveUnresolvedLinksInFile)).not.toHaveBeenCalled();
+      });
+
+      it('should not resolve unresolved links when both settings are disabled', async () => {
+        const context = createConverter();
+
+        await context.converter.convertLinksInFile({
+          file: createFile('note.md'),
+          shouldResolveUnresolvedLinks: true
+        });
+
+        expect(vi.mocked(resolveUnresolvedLinksInFile)).not.toHaveBeenCalled();
+      });
+
+      it('should resolve unresolved links before updating them when the alias setting is enabled', async () => {
+        const context = createConverter({ shouldResolveLinksViaAliases: true });
+        const file = createFile('note.md');
+
+        await context.converter.convertLinksInFile({
+          file,
+          shouldResolveUnresolvedLinks: true
+        });
+
+        expect(vi.mocked(resolveUnresolvedLinksInFile)).toHaveBeenCalledExactlyOnceWith({
+          abortSignal: context.abortSignal,
+          app: context.app,
+          file,
+          pluginNoticeComponent: context.pluginNoticeComponent,
+          resourceLockComponent: context.resourceLockComponent,
+          shouldCreateMissingNotes: false,
+          shouldResolveLinksViaAliases: true
+        });
+        expect(vi.mocked(resolveUnresolvedLinksInFile).mock.invocationCallOrder[0])
+          .toBeLessThan(vi.mocked(updateLinksInFile).mock.invocationCallOrder[0] ?? 0);
+      });
+
+      it('should resolve unresolved links when only the create setting is enabled', async () => {
+        const context = createConverter({ shouldCreateMissingNotes: true });
+
+        await context.converter.convertLinksInFile({
+          file: createFile('note.md'),
+          shouldResolveUnresolvedLinks: true
+        });
+
+        expect(vi.mocked(resolveUnresolvedLinksInFile).mock.calls[0]?.[0]).toMatchObject({
+          shouldCreateMissingNotes: true,
+          shouldResolveLinksViaAliases: false
+        });
+      });
+
+      it('should propagate the flag from the folder conversion to each file', async () => {
+        const context = createConverter({ shouldResolveLinksViaAliases: true });
+        const folder = strictProxy<TFolder>({ path: 'sub' });
+        const file = createFile('sub/note.md');
+        vi.mocked(loop).mockImplementation(async (params) => {
+          await params.processItem(file);
+        });
+
+        await context.converter.convertLinksInFolder({
+          folder,
+          shouldResolveUnresolvedLinks: true
+        });
+
+        expect(vi.mocked(resolveUnresolvedLinksInFile)).toHaveBeenCalledOnce();
+      });
+
+      it('should not resolve unresolved links on a folder conversion that does not ask for it', async () => {
+        const context = createConverter({ shouldResolveLinksViaAliases: true });
+        const folder = strictProxy<TFolder>({ path: 'sub' });
+        const file = createFile('sub/note.md');
+        vi.mocked(loop).mockImplementation(async (params) => {
+          await params.processItem(file);
+        });
+
+        await context.converter.convertLinksInFolder({ folder });
+
+        expect(vi.mocked(resolveUnresolvedLinksInFile)).not.toHaveBeenCalled();
+      });
     });
   });
 
