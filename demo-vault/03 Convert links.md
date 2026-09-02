@@ -123,7 +123,7 @@ Manual equivalent: toggle the two settings in **Settings -> Community plugins ->
 With **Should normalize file links** enabled (the default), external `file://` links are tidied up during conversion - backslashes become forward slashes and percent-encoding is decoded:
 
 ```markdown
-[note](file:///C:%5Cnotes%5Ctodo.md)   ->   [note](file:///C:/notes/todo.md)
+[note](file:///C:%5Cnotes%5Cplan.md)   ->   [note](file:///C:/notes/plan.md)
 ```
 
 See [05 Settings](<./05 Settings.md>) for every option that shapes the conversion.
