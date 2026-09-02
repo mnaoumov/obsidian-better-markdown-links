@@ -12,6 +12,7 @@ import {
 } from 'vitest';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
+import { LinkStyleMode } from './link-style-mode.ts';
 import { PluginSettingsComponent } from './plugin-settings-component.ts';
 import { PluginSettings } from './plugin-settings.ts';
 
@@ -174,6 +175,35 @@ describe('PluginSettingsComponent', () => {
       await component.loadWithPromises();
 
       expect(component.settings.proposedShouldHandleRenames).toBe(false);
+    });
+
+    it('should convert shouldPreserveExistingLinkStyle to the PreserveExisting link style mode when true', async () => {
+      const component = createComponent({
+        loadDataReturnValue: { shouldPreserveExistingLinkStyle: true }
+      });
+      await component.loadWithPromises();
+
+      expect(component.settings.linkStyleMode).toBe(LinkStyleMode.PreserveExisting);
+    });
+
+    it('should convert shouldPreserveExistingLinkStyle to the ObsidianSettingsDefault link style mode when false', async () => {
+      const component = createComponent({
+        loadDataReturnValue: { shouldPreserveExistingLinkStyle: false }
+      });
+      await component.loadWithPromises();
+
+      expect(component.settings.linkStyleMode).toBe(LinkStyleMode.ObsidianSettingsDefault);
+    });
+
+    // The legacy key is deleted from `data.json` once converted, so every later load arrives without it. If
+    // The converter read that absence as `false` it would reset a user who has since picked `Markdown`.
+    it('should leave an explicit link style mode alone once the legacy key is gone', async () => {
+      const component = createComponent({
+        loadDataReturnValue: { linkStyleMode: LinkStyleMode.Markdown }
+      });
+      await component.loadWithPromises();
+
+      expect(component.settings.linkStyleMode).toBe(LinkStyleMode.Markdown);
     });
 
     it('should convert includeAttachmentExtensionToEmbedAlias to shouldIncludeAttachmentExtensionToEmbedAlias', async () => {

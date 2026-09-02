@@ -5,6 +5,7 @@ import {
 } from 'vitest';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
+import { LinkStyleMode } from './link-style-mode.ts';
 import { PluginSettings } from './plugin-settings.ts';
 
 describe('PluginSettings', () => {
@@ -14,10 +15,10 @@ describe('PluginSettings', () => {
 
       expect(settings.isAdvancedRenameAndDeleteHandlerSuggestionDeclined).toBe(false);
       expect(settings.linkConversionMode).toBe(LinkConversionMode.OnSaveCommand);
+      expect(settings.linkStyleMode).toBe(LinkStyleMode.ObsidianSettingsDefault);
       expect(settings.shouldAllowEmptyEmbedAlias).toBe(true);
       expect(settings.shouldIncludeAttachmentExtensionToEmbedAlias).toBe(false);
       expect(settings.shouldNormalizeFileLinks).toBe(true);
-      expect(settings.shouldPreserveExistingLinkStyle).toBe(false);
       expect(settings.shouldUseAngleBrackets).toBe(true);
       expect(settings.shouldUseLeadingDotForRelativePaths).toBe(true);
       expect(settings.shouldUseLeadingSlashForAbsolutePaths).toBe(true);
@@ -66,32 +67,36 @@ describe('PluginSettings', () => {
     });
   });
 
+  describe('getGeneratedLinkStyle', () => {
+    it('should force Markdown only in the Markdown mode', () => {
+      const settings = new PluginSettings();
+
+      settings.linkStyleMode = LinkStyleMode.Markdown;
+      expect(settings.getGeneratedLinkStyle()).toBe('Markdown');
+    });
+
+    // The other two modes ARE what obsidian-dev-utils does with no style at all, and saying so out loud
+    // Would beat the `originalLink` inference embed demotion depends on.
+    it('should say nothing in the other modes, leaving the inference alone', () => {
+      const settings = new PluginSettings();
+
+      settings.linkStyleMode = LinkStyleMode.PreserveExisting;
+      expect(settings.getGeneratedLinkStyle()).toBeUndefined();
+      settings.linkStyleMode = LinkStyleMode.ObsidianSettingsDefault;
+      expect(settings.getGeneratedLinkStyle()).toBeUndefined();
+    });
+  });
+
   describe('getLinkStyle', () => {
-    it('should return PreserveExisting when isExistingLink is true and shouldPreserveExistingLinkStyle is true', () => {
+    it('should map each mode to its link style', () => {
       const settings = new PluginSettings();
-      settings.shouldPreserveExistingLinkStyle = true;
 
-      const result = settings.getLinkStyle(true);
-
-      expect(result).toBe('PreserveExisting');
-    });
-
-    it('should return ObsidianSettingsDefault when isExistingLink is true but shouldPreserveExistingLinkStyle is false', () => {
-      const settings = new PluginSettings();
-      settings.shouldPreserveExistingLinkStyle = false;
-
-      const result = settings.getLinkStyle(true);
-
-      expect(result).toBe('ObsidianSettingsDefault');
-    });
-
-    it('should return ObsidianSettingsDefault when isExistingLink is false regardless of shouldPreserveExistingLinkStyle', () => {
-      const settings = new PluginSettings();
-      settings.shouldPreserveExistingLinkStyle = true;
-
-      const result = settings.getLinkStyle(false);
-
-      expect(result).toBe('ObsidianSettingsDefault');
+      settings.linkStyleMode = LinkStyleMode.Markdown;
+      expect(settings.getLinkStyle()).toBe('Markdown');
+      settings.linkStyleMode = LinkStyleMode.PreserveExisting;
+      expect(settings.getLinkStyle()).toBe('PreserveExisting');
+      settings.linkStyleMode = LinkStyleMode.ObsidianSettingsDefault;
+      expect(settings.getLinkStyle()).toBe('ObsidianSettingsDefault');
     });
   });
 

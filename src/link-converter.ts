@@ -10,6 +10,7 @@ import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource
 import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
 import { getMarkdownFiles } from 'obsidian-dev-utils/obsidian/file-system';
 import {
+  LinkStyle,
   updateFileUrlLinksInFile,
   updateLinksInFile
 } from 'obsidian-dev-utils/obsidian/link';
@@ -31,6 +32,17 @@ interface LinkConverterConstructorParams {
 interface LinkConverterConvertLinksInFileParams {
   readonly abortSignal?: AbortSignal;
   readonly file: TFile;
+
+  /**
+   * Whether to write markdown links regardless of the `Link style` setting.
+   *
+   * Set by the `Convert links to Markdown` commands, which exist so a vault that normally preserves its
+   * existing style can still force markdown for one run.
+   *
+   * @default `false`
+   */
+  readonly shouldForceMarkdownLinkStyle?: boolean;
+
   readonly shouldPromptForExcludedFile?: boolean;
 
   /**
@@ -48,6 +60,13 @@ interface LinkConverterConvertLinksInFileParams {
 interface LinkConverterConvertLinksInFolderParams {
   readonly abortSignal?: AbortSignal;
   readonly folder: TFolder;
+
+  /**
+   * See {@link LinkConverterConvertLinksInFileParams.shouldForceMarkdownLinkStyle}.
+   *
+   * @default `false`
+   */
+  readonly shouldForceMarkdownLinkStyle?: boolean;
 
   /**
    * See {@link LinkConverterConvertLinksInFileParams.shouldResolveUnresolvedLinks}.
@@ -106,7 +125,7 @@ export class LinkConverter {
     await updateLinksInFile({
       abortSignal,
       app: this.app,
-      linkStyle: settings.getLinkStyle(true),
+      linkStyle: params.shouldForceMarkdownLinkStyle ? LinkStyle.Markdown : settings.getLinkStyle(),
       newSourcePathOrFile: params.file,
       pluginNoticeComponent: this.pluginNoticeComponent,
       resourceLockComponent: this.resourceLockComponent
@@ -126,9 +145,11 @@ export class LinkConverter {
 
   public async convertLinksInFolder(params: LinkConverterConvertLinksInFolderParams): Promise<void> {
     const abortSignal = abortSignalAny(this.abortSignalComponent.abortSignal, params.abortSignal);
+    const shouldForceMarkdownLinkStyle = params.shouldForceMarkdownLinkStyle ?? false;
+    const what = shouldForceMarkdownLinkStyle ? 'links to Markdown' : 'links';
     await loop({
       abortSignal,
-      buildNoticeMessage: ({ item, iterationString }) => `Converting links in note ${iterationString} - ${item.path}`,
+      buildNoticeMessage: ({ item, iterationString }) => `Converting ${what} in note ${iterationString} - ${item.path}`,
       items: getMarkdownFiles({
         app: this.app,
         isRecursive: true,
@@ -139,12 +160,13 @@ export class LinkConverter {
         await this.convertLinksInFile({
           abortSignal,
           file,
+          shouldForceMarkdownLinkStyle,
           shouldResolveUnresolvedLinks: params.shouldResolveUnresolvedLinks ?? false
         });
       },
       progressBarTitle: params.folder.path === '/'
-        ? 'Better Markdown Links: Converting links in entire vault...'
-        : `Better Markdown Links: Converting links in folder "${params.folder.path}" ...`,
+        ? `Better Markdown Links: Converting ${what} in entire vault...`
+        : `Better Markdown Links: Converting ${what} in folder "${params.folder.path}" ...`,
       shouldContinueOnError: true,
       shouldShowProgressBar: true
     });

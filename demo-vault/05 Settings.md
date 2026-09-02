@@ -10,8 +10,8 @@ Open **Settings -> Community plugins -> Better Markdown Links** to configure the
   - prepend `./` to relative links (see [02 Relative links](<./02 Relative links.md>)).
 - `shouldUseLeadingSlashForAbsolutePaths`
   - prepend `/` to vault-absolute links.
-- `shouldPreserveExistingLinkStyle`
-  - when converting, keep a link's existing wikilink/markdown style instead of forcing Obsidian's default.
+- `linkStyleMode`
+  - which link style to write: `PreserveExisting` keeps each link's existing wikilink-vs-markdown style, `ObsidianSettingsDefault` follows Obsidian's **Use `[[Wikilinks]]`** setting, and `Markdown` always writes markdown links whatever that setting says (see [03 Convert links](<./03 Convert links.md>)).
 - `shouldNormalizeFileLinks`
   - tidy external `file://` links (decode and use forward slashes) while converting (see [03 Convert links](<./03 Convert links.md>)).
 

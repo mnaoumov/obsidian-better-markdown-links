@@ -9,6 +9,7 @@ import { PluginSettingsTabBase } from 'obsidian-dev-utils/obsidian/plugin/plugin
 import type { PluginSettings } from './plugin-settings.ts';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
+import { LinkStyleMode } from './link-style-mode.ts';
 
 interface PluginSettingsTabConstructorParams extends PluginSettingsTabBaseConstructorParams<PluginSettings> {
   readonly pluginSuggestionComponent: PluginSuggestionComponent;
@@ -183,16 +184,32 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
       }),
       this.settingEx({
         desc: createFragment((f) => {
-          f.appendText('Whether to preserve the existing link style when converting links.');
+          f.appendText('Which link style to write.');
           f.createEl('br');
-          f.appendText('If enabled, the existing link style will be preserved when converting links.');
+          appendCodeBlock(f, 'Preserve existing');
+          f.appendText(' - keep each link\'s existing wikilink-vs-markdown style when converting it.');
           f.createEl('br');
-          f.appendText('If disabled, the existing links style will be changed to the default link style defined in Obsidian settings.');
+          appendCodeBlock(f, 'Obsidian settings default');
+          f.appendText(' - follow the ');
+          appendCodeBlock(f, 'Use [[Wikilinks]]');
+          f.appendText(' Obsidian setting.');
+          f.createEl('br');
+          appendCodeBlock(f, 'Markdown');
+          f.appendText(' - always write ');
+          appendCodeBlock(f, '[alias](path/to/target.md)');
+          f.appendText(', whatever that Obsidian setting says. Applies to links this plugin generates and to embeds being demoted, not only to links being converted.');
         }),
-        name: 'Should preserve existing link style',
+        name: 'Link style',
         render: (setting) => {
-          setting.addToggle((toggle) => {
-            this.bind({ propertyName: 'shouldPreserveExistingLinkStyle', valueComponent: toggle });
+          setting.addDropdown((dropdown) => {
+            dropdown.addOptions({
+              /* eslint-disable perfectionist/sort-objects -- Need to keep order. */
+              [LinkStyleMode.PreserveExisting]: 'Preserve existing',
+              [LinkStyleMode.ObsidianSettingsDefault]: 'Obsidian settings default',
+              [LinkStyleMode.Markdown]: 'Markdown'
+              /* eslint-enable perfectionist/sort-objects -- Need to keep order. */
+            });
+            this.bind({ propertyName: 'linkStyleMode', valueComponent: dropdown });
           });
         }
       }),

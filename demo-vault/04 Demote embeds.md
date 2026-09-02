@@ -4,6 +4,8 @@ An embed and a link differ by a single `!`: `![note](<note.md>)` renders the who
 
 Demoting turns every embed in a note back into a plain link. The target, the alias and the link style are all left as they were; only the `!` goes.
 
+The one thing that does change the style is the **Link style** setting on `Markdown` — a vault that has asked for markdown links everywhere gets them here too, so `![[note]]` demotes to `[note](<note.md>)` rather than to `[[note]]`. See [03 Convert links](<./03 Convert links.md>).
+
 The one exception is an embed with an **empty** alias pointing at a note. `![](<Some note.md>)` needs no text — it renders the note inline — but `[](<Some note.md>)` would render as nothing at all, so the target's name is filled in: `[Some note](<Some note.md>)`. An embed of an attachment keeps its empty alias, since **Should allow empty embed alias** governs that case.
 
 ## On demand
