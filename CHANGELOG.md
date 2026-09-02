@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 5.0.0
+
+- feat!: hand rename/delete over to Advanced Rename and Delete Handler
+- fix(build): wire build:compile to buildCompile and drop the duplicate leaf script
+
 ## 4.2.5
 
 - chore(deps): sweep caret-ranged dependencies to latest
