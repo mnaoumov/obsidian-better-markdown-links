@@ -11,6 +11,10 @@ import {
 import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
 import { convertAsyncToSync } from 'obsidian-dev-utils/async';
 import { SilentError } from 'obsidian-dev-utils/error';
+import {
+  normalizeOptionalProperties,
+  removeUndefinedProperties
+} from 'obsidian-dev-utils/object-utils';
 import { GenerateMarkdownLinkDefaultParamsComponent } from 'obsidian-dev-utils/obsidian/components/generate-markdown-link-default-params-component';
 import { LayoutReadyComponent } from 'obsidian-dev-utils/obsidian/components/layout-ready-component';
 import { convertLink } from 'obsidian-dev-utils/obsidian/link';
@@ -88,13 +92,17 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
       new GenerateMarkdownLinkDefaultParamsComponent({
         getDefaultParams: (): Partial<GenerateMarkdownLinkParams> => {
           const settings = this.pluginSettingsComponent.settings;
-          return {
+          // `removeUndefinedProperties`, because outside the force-Markdown mode `linkStyle` is `undefined`
+          // And these params are merged with `Object.assign`: leaving the key in place would clobber a style
+          // Another plugin's default-params function had set, instead of standing aside for it.
+          return removeUndefinedProperties(normalizeOptionalProperties<Partial<GenerateMarkdownLinkParams>>({
             isEmptyEmbedAliasAllowed: settings.shouldAllowEmptyEmbedAlias,
+            linkStyle: settings.getGeneratedLinkStyle(),
             shouldIncludeAttachmentExtensionToEmbedAlias: settings.shouldIncludeAttachmentExtensionToEmbedAlias,
             shouldUseAngleBrackets: settings.shouldUseAngleBrackets,
             shouldUseLeadingDotForRelativePaths: settings.shouldUseLeadingDotForRelativePaths,
             shouldUseLeadingSlashForAbsolutePaths: settings.shouldUseLeadingSlashForAbsolutePaths
-          };
+          }));
         }
       })
     );
@@ -179,7 +187,7 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
         link.original !== convertLink({
           app: this.app,
           link,
-          linkStyle: this.pluginSettingsComponent.settings.getLinkStyle(true),
+          linkStyle: this.pluginSettingsComponent.settings.getLinkStyle(),
           newSourcePathOrFile: file
         })
       );

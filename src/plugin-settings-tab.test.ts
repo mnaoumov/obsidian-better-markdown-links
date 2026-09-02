@@ -18,6 +18,7 @@ import {
   vi
 } from 'vitest';
 
+import { LinkStyleMode } from './link-style-mode.ts';
 import { PluginSettingsTab } from './plugin-settings-tab.ts';
 import { PluginSettings } from './plugin-settings.ts';
 
@@ -41,7 +42,7 @@ const EXPECTED_BOUND_PROPERTIES = [
   'linkConversionMode',
   'shouldAllowEmptyEmbedAlias',
   'shouldIncludeAttachmentExtensionToEmbedAlias',
-  'shouldPreserveExistingLinkStyle',
+  'linkStyleMode',
   'shouldAppendFileNameWhenDemotingEmbeds',
   'shouldResolveLinksViaAliases',
   'shouldCreateMissingNotes',
@@ -74,11 +75,11 @@ function createTab(): PluginSettingsTab {
         includePaths: '',
         isAdvancedRenameAndDeleteHandlerSuggestionDeclined: '',
         linkConversionMode: '',
+        linkStyleMode: '',
         proposedShouldHandleRenames: '',
         shouldAllowEmptyEmbedAlias: '',
         shouldIncludeAttachmentExtensionToEmbedAlias: '',
         shouldNormalizeFileLinks: '',
-        shouldPreserveExistingLinkStyle: '',
         shouldUseAngleBrackets: '',
         shouldUseLeadingDotForRelativePaths: '',
         shouldUseLeadingSlashForAbsolutePaths: ''
@@ -151,6 +152,23 @@ describe('PluginSettingsTab', () => {
     const tab = createTab();
 
     expect(isBannerRowVisible(tab)).toBe(false);
+  });
+
+  // The Markdown option is the whole point of the row: without it the plugin can only ever write whatever
+  // Obsidian's own `Use [[Wikilinks]]` setting says.
+  it('should offer all three link styles, Markdown last', () => {
+    const tab = createTab();
+    vi.spyOn(tab, 'bind').mockReturnValue(undefined);
+    const setting = new SettingEx(tab.containerEl);
+
+    renderRow(tab, settingNames(tab).indexOf('Link style'), setting);
+
+    const select = ensureNonNullable(setting.controlEl.querySelector('select'));
+    expect([...select.options].map((option) => option.value)).toEqual([
+      LinkStyleMode.PreserveExisting,
+      LinkStyleMode.ObsidianSettingsDefault,
+      LinkStyleMode.Markdown
+    ]);
   });
 
   it('should render the banner into an emptied row element', () => {

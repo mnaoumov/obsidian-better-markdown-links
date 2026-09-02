@@ -13,6 +13,9 @@ import { BetterMarkdownLinksComponent } from './better-markdown-links-component.
 import { ConvertLinksInEntireVaultCommandHandler } from './commands/convert-links-in-entire-vault-command-handler.ts';
 import { ConvertLinksInFileCommandHandler } from './commands/convert-links-in-file-command-handler.ts';
 import { ConvertLinksInFolderCommandHandler } from './commands/convert-links-in-folder-command-handler.ts';
+import { ConvertLinksToMarkdownInEntireVaultCommandHandler } from './commands/convert-links-to-markdown-in-entire-vault-command-handler.ts';
+import { ConvertLinksToMarkdownInFileCommandHandler } from './commands/convert-links-to-markdown-in-file-command-handler.ts';
+import { ConvertLinksToMarkdownInFolderCommandHandler } from './commands/convert-links-to-markdown-in-folder-command-handler.ts';
 import { DemoteEmbedsInEntireVaultCommandHandler } from './commands/demote-embeds-in-entire-vault-command-handler.ts';
 import { DemoteEmbedsInFileCommandHandler } from './commands/demote-embeds-in-file-command-handler.ts';
 import { DemoteEmbedsInFolderCommandHandler } from './commands/demote-embeds-in-folder-command-handler.ts';
@@ -107,6 +110,16 @@ export class Plugin extends PluginBase {
         linkConverter
       }),
       new ConvertLinksInEntireVaultCommandHandler({
+        app: this.app,
+        linkConverter
+      }),
+      new ConvertLinksToMarkdownInFileCommandHandler({
+        linkConverter
+      }),
+      new ConvertLinksToMarkdownInFolderCommandHandler({
+        linkConverter
+      }),
+      new ConvertLinksToMarkdownInEntireVaultCommandHandler({
         app: this.app,
         linkConverter
       }),

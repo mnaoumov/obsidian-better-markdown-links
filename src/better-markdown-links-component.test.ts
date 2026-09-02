@@ -6,6 +6,7 @@ import type {
 } from 'obsidian';
 import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
 import type { ConsoleDebugComponent } from 'obsidian-dev-utils/obsidian/components/console-debug-component';
+import type { LinkStyle } from 'obsidian-dev-utils/obsidian/link';
 import type { CachedMetadataEx } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 import { castTo } from 'obsidian-dev-utils/object-utils';
@@ -85,6 +86,7 @@ interface CommandsStub {
 type ConfiguredFiles = NonNullable<Parameters<typeof AppCls.createConfigured__>[0]>['files'];
 
 interface CreateContextOptions {
+  readonly generatedLinkStyle?: LinkStyle;
   readonly shouldNormalizeFileLinks?: boolean;
 }
 
@@ -142,6 +144,7 @@ function createContext(files: ConfiguredFiles = {}, options: CreateContextOption
   const shouldConvertLinksOnNavigation = vi.fn<() => boolean>().mockReturnValue(true);
   const shouldConvertLinksOnSave = vi.fn<(isSaveCommand: boolean) => boolean>().mockReturnValue(true);
   const settings = strictProxy<PluginSettings>({
+    getGeneratedLinkStyle: vi.fn().mockReturnValue(options.generatedLinkStyle),
     getLinkStyle: vi.fn().mockReturnValue('ObsidianSettingsDefault'),
     isPathIgnored,
     shouldAllowEmptyEmbedAlias: false,
@@ -278,6 +281,17 @@ describe('BetterMarkdownLinksComponent', () => {
         shouldUseLeadingDotForRelativePaths: false,
         shouldUseLeadingSlashForAbsolutePaths: true
       });
+      // No `linkStyle` KEY at all, not a `linkStyle: undefined`: these params are merged with
+      // `Object.assign`, so the key would clobber a style another plugin's function had set.
+      expect(lastFunction?.()).not.toHaveProperty('linkStyle');
+    });
+
+    it('should carry the forced markdown style into the default link generation params', () => {
+      const context = createContext({}, { generatedLinkStyle: castTo<LinkStyle>('Markdown') });
+
+      loadComponent(context);
+
+      expect(getGenerateMarkdownLinkDefaultParamsFns().at(-1)?.()).toMatchObject({ linkStyle: 'Markdown' });
     });
   });
 

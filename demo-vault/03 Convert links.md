@@ -4,7 +4,7 @@ Beyond formatting new links, Better Markdown Links can rewrite links that alread
 
 ## On demand
 
-Three commands are available in the Command Palette:
+Three style-agnostic commands are available in the Command Palette (three more force the Markdown style - see [Forcing Markdown links](#forcing-markdown-links) below):
 
 - **Better Markdown Links: Convert links in current file**
   - rewrites links in the active note.
@@ -72,6 +72,70 @@ await require('/demoSetup.ts').changeSettings(app, { linkConversionMode: 'OnSave
 ```
 
 Manual equivalent: pick from the **Convert links** dropdown in **Settings -> Community plugins -> Better Markdown Links**.
+
+## Forcing Markdown links
+
+Everything above rewrites a link's *path* while leaving its *style* to Obsidian. With Obsidian's own **Use `[[Wikilinks]]`** setting on, that means a wikilink stays a wikilink - and a vault that wants Markdown links everywhere never gets them.
+
+The **Link style** setting (`linkStyleMode`) decides which style is written:
+
+- **Preserve existing**
+  - keep each link's existing wikilink-vs-markdown style when converting it.
+- **Obsidian settings default** (the default)
+  - follow the **Use `[[Wikilinks]]`** Obsidian setting.
+- **Markdown**
+  - always write `[alias](<path/to/target.md>)`, whatever that Obsidian setting says. This one also applies to links the plugin generates from scratch and to embeds being demoted, not only to links being converted.
+
+Three commands force the Markdown style for a single run, leaving the setting alone - the replacement for **Replace all wikilinks with markdown links** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links):
+
+- **Better Markdown Links: Convert links to Markdown in current file**
+- **Better Markdown Links: Convert links to Markdown in current folder**
+- **Better Markdown Links: Convert links to Markdown in entire vault**
+
+The button writes a note of plain wikilinks and opens it:
+
+```code-button
+---
+caption: Create a note full of wikilinks
+---
+await require('/demoSetup.ts').openWikilinkNote(app);
+```
+
+Manual equivalent: create a note and write some `[[wikilinks]]` in it.
+
+```code-button
+---
+caption: Convert links normally (wikilinks survive)
+---
+require('/demoSetup.ts').convertLinksInCurrentFile(app);
+```
+
+```code-button
+---
+caption: Convert links to Markdown (wikilinks do not)
+---
+require('/demoSetup.ts').convertLinksToMarkdownInCurrentFile(app);
+```
+
+Manual equivalent: run **Better Markdown Links: Convert links to Markdown in current file** from the Command Palette.
+
+The same thing permanently, by setting rather than by command:
+
+```code-button
+---
+caption: Always write Markdown links
+---
+await require('/demoSetup.ts').changeSettings(app, { linkStyleMode: 'Markdown' });
+```
+
+```code-button
+---
+caption: Back to the default (follow the Obsidian setting)
+---
+await require('/demoSetup.ts').changeSettings(app, { linkStyleMode: 'ObsidianSettingsDefault' });
+```
+
+Manual equivalent: pick from the **Link style** dropdown in **Settings -> Community plugins -> Better Markdown Links**.
 
 ## Links that do not resolve
 

@@ -2,10 +2,12 @@ import { LinkStyle } from 'obsidian-dev-utils/obsidian/link';
 import { PathSettings } from 'obsidian-dev-utils/obsidian/path-settings';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
+import { LinkStyleMode } from './link-style-mode.ts';
 
 export class PluginSettings {
   public isAdvancedRenameAndDeleteHandlerSuggestionDeclined = false;
   public linkConversionMode: LinkConversionMode = LinkConversionMode.OnSaveCommand;
+  public linkStyleMode: LinkStyleMode = LinkStyleMode.ObsidianSettingsDefault;
 
   // The legacy `shouldAutomaticallyUpdateLinksOnRenameOrMove` value, waiting to be offered to Advanced Rename
   // And Delete Handler. Non-`null` means an offer is still pending; `null` means there is nothing to offer,
@@ -18,7 +20,6 @@ export class PluginSettings {
   public shouldCreateMissingNotes = false;
   public shouldIncludeAttachmentExtensionToEmbedAlias = false;
   public shouldNormalizeFileLinks = true;
-  public shouldPreserveExistingLinkStyle = false;
   public shouldResolveLinksViaAliases = false;
   public shouldUseAngleBrackets = true;
   public shouldUseLeadingDotForRelativePaths = true;
@@ -46,8 +47,33 @@ export class PluginSettings {
     this.excludePaths = [String.raw`/.+\.excalidraw\.md$/`, String.raw`/.+\.tldraw\.md$/`];
   }
 
-  public getLinkStyle(isExistingLink: boolean): LinkStyle {
-    if (isExistingLink && this.shouldPreserveExistingLinkStyle) {
+  /**
+   * The style to force on a link this plugin GENERATES — a brand new one, or the plain link an embed is
+   * demoted to. `undefined` leaves `obsidian-dev-utils`' own inference in place, which resolves an absent
+   * style to `PreserveExisting`: for a link with no original that means Obsidian's `Use [[Wikilinks]]`
+   * setting, and for a rewritten one it means the style the link already had.
+   *
+   * Only {@link LinkStyleMode.Markdown} has anything to say here. The other two modes ARE that inference, so
+   * returning a style for them would be worse than returning nothing: it would beat the `originalLink`
+   * inference `EmbedDemoter` relies on to keep an embed's existing style.
+   *
+   * @returns The style to force, or `undefined` to leave the inference alone.
+   */
+  public getGeneratedLinkStyle(): LinkStyle | undefined {
+    return this.linkStyleMode === LinkStyleMode.Markdown ? LinkStyle.Markdown : undefined;
+  }
+
+  /**
+   * The style to write when an EXISTING link is converted.
+   *
+   * @returns The style.
+   */
+  public getLinkStyle(): LinkStyle {
+    if (this.linkStyleMode === LinkStyleMode.Markdown) {
+      return LinkStyle.Markdown;
+    }
+
+    if (this.linkStyleMode === LinkStyleMode.PreserveExisting) {
       return LinkStyle.PreserveExisting;
     }
 

@@ -30,6 +30,13 @@ vi.mock('obsidian-dev-utils/obsidian/file-system', () => ({
 }));
 
 vi.mock('obsidian-dev-utils/obsidian/link', () => ({
+  // `LinkStyle` is a real value import in the converter now, so the mock has to carry it.
+  LinkStyle: {
+    Markdown: 'Markdown',
+    ObsidianSettingsDefault: 'ObsidianSettingsDefault',
+    PreserveExisting: 'PreserveExisting',
+    Wikilink: 'Wikilink'
+  },
   updateFileUrlLinksInFile: vi.fn(),
   updateLinksInFile: vi.fn()
 }));
@@ -94,7 +101,7 @@ function createConverter(options: CreateConverterOptions = {}): CreateConverterR
     }
   });
   const isPathIgnored = vi.fn<(path: string) => boolean>().mockReturnValue(false);
-  const getLinkStyle = vi.fn<(isExistingLink: boolean) => LinkStyle>().mockReturnValue(LINK_STYLE);
+  const getLinkStyle = vi.fn<() => LinkStyle>().mockReturnValue(LINK_STYLE);
   const settings = strictProxy<PluginSettings>({
     getLinkStyle,
     isPathIgnored,
@@ -159,7 +166,7 @@ describe('LinkConverter', () => {
 
       await context.converter.convertLinksInFile({ file });
 
-      expect(context.getLinkStyle).toHaveBeenCalledWith(true);
+      expect(context.getLinkStyle).toHaveBeenCalledOnce();
       expect(vi.mocked(updateLinksInFile)).toHaveBeenCalledExactlyOnceWith({
         abortSignal: context.abortSignal,
         app: context.app,
@@ -168,6 +175,18 @@ describe('LinkConverter', () => {
         pluginNoticeComponent: context.pluginNoticeComponent,
         resourceLockComponent: context.resourceLockComponent
       });
+    });
+
+    it('should force the markdown style without consulting the setting when asked to', async () => {
+      const context = createConverter();
+
+      await context.converter.convertLinksInFile({
+        file: createFile('note.md'),
+        shouldForceMarkdownLinkStyle: true
+      });
+
+      expect(context.getLinkStyle).not.toHaveBeenCalled();
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkStyle).toBe('Markdown');
     });
 
     it('should normalize file links after updating links when the setting is enabled', async () => {
@@ -346,6 +365,27 @@ describe('LinkConverter', () => {
 
       const loopParams = vi.mocked(loop).mock.calls[0]?.[0];
       expect(loopParams?.progressBarTitle).toBe('Better Markdown Links: Converting links in folder "sub/folder" ...');
+    });
+
+    it('should say what it is doing and force the style on every file when converting to Markdown', async () => {
+      const context = createConverter();
+      const folder = strictProxy<TFolder>({ path: '/' });
+      const file = createFile('note.md');
+      vi.mocked(loop).mockImplementation(async (params) => {
+        params.buildNoticeMessage({ item: file, iterationString: '1/1' });
+        await params.processItem(file);
+      });
+
+      await context.converter.convertLinksInFolder({
+        folder,
+        shouldForceMarkdownLinkStyle: true
+      });
+
+      const loopParams = vi.mocked(loop).mock.calls[0]?.[0];
+      expect(loopParams?.progressBarTitle).toBe('Better Markdown Links: Converting links to Markdown in entire vault...');
+      expect(loopParams?.buildNoticeMessage({ item: file, iterationString: '1/1' }))
+        .toBe('Converting links to Markdown in note 1/1 - note.md');
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkStyle).toBe('Markdown');
     });
 
     it('should build a notice message and convert each looped file', async () => {

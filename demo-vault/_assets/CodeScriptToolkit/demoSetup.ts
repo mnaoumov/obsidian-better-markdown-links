@@ -11,13 +11,14 @@ const EMBEDDED_NOTE_PATH = `${EMBEDDED_FOLDER_PATH}/Embedded links.md`;
 const UNRESOLVED_FOLDER_PATH = 'Materials/03 Convert links';
 const UNRESOLVED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/Unresolved links.md`;
 const ALIASED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/Aliased note.md`;
+const WIKILINK_NOTE_PATH = `${MESSY_FOLDER_PATH}/Wikilinks.md`;
 
 interface DemoSettingsPatch {
   linkConversionMode?: string;
+  linkStyleMode?: string;
   shouldAppendFileNameWhenDemotingEmbeds?: boolean;
   shouldCreateMissingNotes?: boolean;
   shouldNormalizeFileLinks?: boolean;
-  shouldPreserveExistingLinkStyle?: boolean;
   shouldResolveLinksViaAliases?: boolean;
   shouldUseAngleBrackets?: boolean;
   shouldUseLeadingDotForRelativePaths?: boolean;
@@ -173,4 +174,39 @@ export async function openUnresolvedNote(app: App): Promise<void> {
  */
 export function demoteEmbedsInCurrentFile(app: App): void {
   app.commands.executeCommandById(`${PLUGIN_ID}:demote-embeds-to-links-in-current-file`);
+}
+
+// A note of plain wikilinks. Nothing here is malformed - with Obsidian's `Use [[Wikilinks]]` setting on,
+// This is what Obsidian itself writes, and what a plain convert run leaves untouched. It is the note the
+// Force-Markdown surfaces exist for.
+const WIKILINK_CONTENT = [
+  '# Wikilinks',
+  '',
+  'Every link below is a wikilink. A plain **Convert links** run leaves them alone while Obsidian\'s',
+  '`Use [[Wikilinks]]` setting is on; forcing the Markdown style rewrites them.',
+  '',
+  '- A link: [[../01 Angle bracket links/A folder with spaces/Note with spaces]]',
+  '- A link with an alias: [[../02 Relative links/Targets/Simple note|The simple one]]',
+  '- An embed: ![[../02 Relative links/Targets/Nested folder/Deep note]]',
+  ''
+].join('\n');
+
+/**
+ * Creates (or restores) a note of plain wikilinks and opens it.
+ *
+ * Manual equivalent: create a note and write some `[[wikilinks]]` in it.
+ */
+export async function openWikilinkNote(app: App): Promise<void> {
+  await openDemoNote(app, MESSY_FOLDER_PATH, WIKILINK_NOTE_PATH, WIKILINK_CONTENT);
+  new Notice('Wikilinks note ready. Now force the Markdown style.');
+}
+
+/**
+ * Runs the force-Markdown convert command on the active note.
+ *
+ * Manual equivalent: **Better Markdown Links: Convert links to Markdown in current file** in the Command
+ * Palette.
+ */
+export function convertLinksToMarkdownInCurrentFile(app: App): void {
+  app.commands.executeCommandById(`${PLUGIN_ID}:convert-links-to-markdown-in-current-file`);
 }

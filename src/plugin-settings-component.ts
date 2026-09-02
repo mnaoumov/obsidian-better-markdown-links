@@ -6,6 +6,7 @@ import { PluginSettingsComponentBase } from 'obsidian-dev-utils/obsidian/compone
 import { isValidRegExp } from 'obsidian-dev-utils/reg-exp';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
+import { LinkStyleMode } from './link-style-mode.ts';
 import { PluginSettings } from './plugin-settings.ts';
 
 interface PluginSettingsComponentConstructorParams {
@@ -24,6 +25,9 @@ class LegacySettings {
   // The saved record is rebuilt from the declared properties alone, so the first save after the property was
   // Dropped would otherwise strip it from `data.json` before it could ever be offered.
   public shouldAutomaticallyUpdateLinksOnRenameOrMove = true;
+
+  // Replaced by `linkStyleMode`, which has a third value (force markdown) the boolean could not express.
+  public shouldPreserveExistingLinkStyle = false;
 
   public shouldUseLeadingDot = true;
   public useAngleBrackets = true;
@@ -63,6 +67,15 @@ export class PluginSettingsComponent extends PluginSettingsComponentBase<PluginS
       // Reaches here with its value already carried forward.
       if (legacySettings.shouldAutomaticallyUpdateLinksOnRenameOrMove !== undefined) {
         legacySettings.proposedShouldHandleRenames = legacySettings.shouldAutomaticallyUpdateLinksOnRenameOrMove;
+      }
+
+      // The guard is load-bearing: the converter is handed the RAW `data.json` record, and the legacy key is
+      // Deleted from it once this runs. Without the guard, the next load would read the missing key as
+      // `false` and reset a user who has since picked `Markdown`.
+      if (legacySettings.shouldPreserveExistingLinkStyle !== undefined) {
+        legacySettings.linkStyleMode = legacySettings.shouldPreserveExistingLinkStyle
+          ? LinkStyleMode.PreserveExisting
+          : LinkStyleMode.ObsidianSettingsDefault;
       }
 
       if (legacySettings.includeAttachmentExtensionToEmbedAlias !== undefined) {

@@ -8,6 +8,9 @@
  * - and the invariant that makes the last one safe: the AUTOMATIC conversion paths must never create a
  *   note, however the settings are set, because they fire on every save.
  *
+ * It also covers the force-Markdown link style added by T845, both as a setting and as its own command,
+ * against a vault whose own `Use [[Wikilinks]]` setting is on — the one thing no unit test can prove.
+ *
  * Each scenario uses its own source file so a pending async conversion never leaks between tests.
  *
  * It is named `*.desktop.integration.test.ts` so it runs only in the desktop integration project.
@@ -30,6 +33,7 @@ import {
 import type { PluginSettings } from './plugin-settings.ts';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
+import { LinkStyleMode } from './link-style-mode.ts';
 
 /**
  * Parameters for {@link runScenario}.
@@ -72,6 +76,7 @@ interface ScenarioResult {
  */
 interface ScenarioSettings {
   readonly linkConversionMode?: LinkConversionMode;
+  readonly linkStyleMode?: LinkStyleMode;
   readonly shouldAppendFileNameWhenDemotingEmbeds?: boolean;
   readonly shouldCreateMissingNotes?: boolean;
   readonly shouldResolveLinksViaAliases?: boolean;
@@ -184,8 +189,8 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
       expect(result.createdNotePaths).toContain('A brand new note.md');
       // Deliberately NOT asserting the link became a markdown link. The conversion runs at
       // `LinkStyle.ObsidianSettingsDefault`, and the test vault leaves Obsidian's own `Use [[Wikilinks]]`
-      // Setting on, so the link correctly stays a wikilink - pointed at the new note, not restyled. Forcing markdown
-      // Regardless of that setting is the gap [[T845-P14]] exists to close.
+      // Setting on, so the link correctly stays a wikilink - pointed at the new note, not restyled. The
+      // `forcing the markdown link style` scenarios below are the ones that override that setting.
     });
 
     it('should leave an unresolved wikilink alone when both settings are disabled', async () => {
@@ -197,6 +202,51 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
       });
 
       expect(result.createdNotePaths).toHaveLength(0);
+    });
+  });
+
+  // The capability inherited from Consistent Attachments and Links: writing markdown links even in a vault
+  // Whose own `Use [[Wikilinks]]` setting says otherwise. The test vault leaves that setting ON, so a
+  // Wikilink surviving as a wikilink is the baseline these two scenarios have to beat.
+  describe('forcing the markdown link style', () => {
+    it('should leave a wikilink alone when the link style follows the Obsidian setting', async () => {
+      const result = await runScenario({
+        commandId: CONVERT_COMMAND_ID,
+        companions: { [EMBED_TARGET_PATH]: 'body\n' },
+        content: '[[Embed target]]',
+        settings: {},
+        sourceKey: 'link-style-baseline'
+      });
+
+      expect(result.content).toBe('[[Embed target]]');
+    });
+
+    it('should force markdown for one run via the convert-to-markdown command', async () => {
+      const result = await runScenario({
+        commandId: `${PLUGIN_ID}:convert-links-to-markdown-in-current-file`,
+        companions: { [EMBED_TARGET_PATH]: 'body\n' },
+        content: '[[Embed target]]',
+        settings: {},
+        settledMarker: '](',
+        sourceKey: 'link-style-command'
+      });
+
+      expect(result.content).toContain(`](<${EMBED_TARGET_PATH}>)`);
+      expect(result.content).not.toContain('[[');
+    });
+
+    it('should force markdown on the plain convert command when the Markdown link style is selected', async () => {
+      const result = await runScenario({
+        commandId: CONVERT_COMMAND_ID,
+        companions: { [EMBED_TARGET_PATH]: 'body\n' },
+        content: '[[Embed target]]',
+        settings: { linkStyleMode: LinkStyleMode.Markdown },
+        settledMarker: '](',
+        sourceKey: 'link-style-setting'
+      });
+
+      expect(result.content).toContain(`](<${EMBED_TARGET_PATH}>)`);
+      expect(result.content).not.toContain('[[');
     });
   });
 
@@ -229,7 +279,7 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
  */
 async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
   return evalInObsidian({
-    async callback({ app, commandId, companions, content, explicitCommandMode, obsidianModule, pluginId, settings, settledAbsentMarker, settledMarker, sourcePath }): Promise<ScenarioResult> {
+    async callback({ app, commandId, companions, content, explicitCommandMode, obsidianModule, obsidianSettingsDefaultStyle, pluginId, settings, settledAbsentMarker, settledMarker, sourcePath }): Promise<ScenarioResult> {
       const EDITOR_WAIT_ATTEMPTS = 50;
       const EDITOR_WAIT_INTERVAL_IN_MILLISECONDS = 50;
       const SETTLE_TIMEOUT_IN_MILLISECONDS = 3000;
@@ -243,6 +293,7 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
       await (settingTab as TestableSettingsTab).pluginSettingsComponent.editAndSave((pluginSettings) => {
         // Pinned so the scenarios assert the conversion, not the ambient link style.
         pluginSettings.linkConversionMode = settings.linkConversionMode ?? explicitCommandMode;
+        pluginSettings.linkStyleMode = settings.linkStyleMode ?? obsidianSettingsDefaultStyle;
         pluginSettings.shouldUseAngleBrackets = true;
         pluginSettings.shouldAppendFileNameWhenDemotingEmbeds = settings.shouldAppendFileNameWhenDemotingEmbeds ?? false;
         pluginSettings.shouldCreateMissingNotes = settings.shouldCreateMissingNotes ?? false;
@@ -346,6 +397,7 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
       companions: params.companions ?? {},
       content: params.content,
       explicitCommandMode: LinkConversionMode.OnExplicitCommand,
+      obsidianSettingsDefaultStyle: LinkStyleMode.ObsidianSettingsDefault,
       pluginId: PLUGIN_ID,
       settings: params.settings,
       settledAbsentMarker: params.settledAbsentMarker ?? '',

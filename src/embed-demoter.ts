@@ -45,6 +45,10 @@ interface EmbedDemoterDemoteEmbedsInFolderParams {
  * This is a conversion of the link's *form*, not of its path style or its wikilink-vs-markdown syntax —
  * those belong to {@link LinkConverter}. The generated link keeps whatever style the embed already had,
  * because {@link generateMarkdownLink} infers the style from `originalLink`.
+ *
+ * The one exception is the force-Markdown link style, which `BetterMarkdownLinksComponent` registers as a
+ * default param for every generated link and which beats that inference: in that mode a wiki embed demotes
+ * to a markdown link. That is the mode's point — a vault that has asked for markdown links everywhere.
  */
 export class EmbedDemoter {
   private readonly abortSignalComponent: AbortSignalComponent;
