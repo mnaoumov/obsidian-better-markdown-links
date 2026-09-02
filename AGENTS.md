@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Better Markdown Links is an Obsidian plugin that adds support for angle bracket links (`[Title](<path with space/note.md>)`) and manages relative links properly (prepending `./`), plus link conversion (per-file, per-folder, entire-vault, and automatic), automatic rename/move link updates, and an extended `app.fileManager.generateMarkdownLink()` overload. It is built on `obsidian-dev-utils` (a dev dependency providing the `PluginBase`, component, command-handler, and link utilities the plugin composes).
+Better Markdown Links is an Obsidian plugin that adds support for angle bracket links (`[Title](<path with space/note.md>)`) and manages relative links properly (prepending `./`), plus link conversion (per-file, per-folder, entire-vault, and automatic) and an extended `app.fileManager.generateMarkdownLink()` overload. Rename/delete handling was dropped in 5.0.0 and belongs to the `advanced-rename-and-delete-handler` plugin; this plugin only suggests that plugin and offers it the settings the old handler used. It is built on `obsidian-dev-utils` (a dev dependency providing the `PluginBase`, component, command-handler, and link utilities the plugin composes).
 
 ## Commands
 
@@ -30,11 +30,13 @@ Better Markdown Links is an Obsidian plugin that adds support for angle bracket 
 - **Root config files** are thin re-exports — actual logic lives in `scripts/` (e.g. `eslint.config.mts` → `scripts/eslint-config.ts`).
 - **`src/`** — plugin source:
   - `main.ts` — Obsidian entry point (imports the SCSS bundle and re-exports `Plugin` as the default export)
-  - `plugin.ts` — `Plugin extends PluginBase`; `onloadImpl()` wires up all child components (settings, link conversion, rename/delete handling, and command handlers)
+  - `plugin.ts` — `Plugin extends PluginBase`; `onloadImpl()` wires up all child components (settings, the Advanced Rename and Delete Handler suggestion, link conversion, the rename/delete settings migration, and command handlers)
+  - `advanced-rename-and-delete-handler.ts` — the id and display name of the plugin that owns rename/delete handling since 5.0.0, written once and shared by the suggestion and the migration
+  - `rename-delete-handler-migration-component.ts` — offers the legacy rename setting (with the include/exclude paths that scoped it) to that plugin's `migrateSettings` API under contract `^1`, and retires the pending value only once the user applies the migration
   - `better-markdown-links-component.ts` — `LayoutReadyComponent` that installs the patches and dispatches conversion by trigger: `handleModify` (vault `modify`), `handleSave` (editor save, via the save patch), and `handleNavigation` (link navigation). Gating lives on `PluginSettings` (`shouldConvertLinksOn*`). The `processFile` gate also triggers conversion when a note's only pending change is a `file://` normalization — it parses external links (`getCacheSafe` with `shouldParse{External,FrontmatterExternal,MultiValueFrontmatterExternal}Links`) and checks `parseLinkResult.isFileUrl`
   - `link-converter.ts` — `LinkConverter` performing the actual link conversion in the current file, a file, a folder, or the entire vault; also normalizes `file://` links (via `updateFileUrlLinksInFile`) when `shouldNormalizeFileLinks` is enabled, so every conversion surface (commands + automatic triggers) picks it up
   - `link-conversion-mode.ts` — `LinkConversionMode` enum (dependency-free so it can be imported as a value from node-based integration tests without loading `obsidian`)
-  - `plugin-settings.ts` — `PluginSettings` model (angle brackets, leading dot/slash, `linkConversionMode`, auto-update toggle, include/exclude paths, link style, `shouldNormalizeFileLinks` for `file://` link normalization)
+  - `plugin-settings.ts` — `PluginSettings` model (angle brackets, leading dot/slash, `linkConversionMode`, include/exclude paths, link style, `shouldNormalizeFileLinks` for `file://` link normalization, plus the two rename-handover bookkeeping keys)
   - `plugin-settings-component.ts` — settings persistence, legacy-settings converters, and validators
   - `plugin-settings-tab.ts` — settings UI tab (`PluginSettingsTabBase`)
   - `generate-markdown-link-extended.d.ts` — type declarations for the extended `generateMarkdownLink` overload (`LinkPathStyle`/`LinkStyle` enums, options interface)

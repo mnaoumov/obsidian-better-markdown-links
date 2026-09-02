@@ -43,7 +43,12 @@ A copy of the vault ships with every release. You can access it via any of the f
 - **Explicit relative links** — a leading `./`, so a relative path cannot be [mistaken for an absolute one](https://forum.obsidian.md/t/add-settings-to-control-link-resolution-mode/69560) by anything that reads your vault. [02 Relative links](<./demo-vault/02 Relative links.md>)
 - **Convert what you already have** — one note, one folder, or the whole vault; on command, on save, on auto-save, or on every modification, whichever suits how eagerly you want it to work. [03 Convert links](<./demo-vault/03 Convert links.md>)
 - **`file://` normalization** — `[note](file:///C:%5Cnotes%5Ctodo.md)` becomes `[note](file:///C:/notes/todo.md)`. Other links are left alone. [03 Convert links](<./demo-vault/03 Convert links.md>)
-- **Links keep working when notes move** — renames and moves update the links pointing at them. [04 Settings](<./demo-vault/04 Settings.md>)
+
+## Renames
+
+Up to version 4 this plugin updated the links pointing at a note when you renamed or moved it. Since **5.0.0** it does not, and rename and delete handling belongs to [Advanced Rename and Delete Handler](https://github.com/mnaoumov/obsidian-advanced-rename-and-delete-handler) instead — one plugin owning it for the whole vault, rather than a copy inside each plugin that happened to need it.
+
+This plugin offers to install it, once, and carries your old rename-handling value — along with the include and exclude paths that scoped it — over for you to approve. Declining costs you nothing else: every feature above keeps working, with Obsidian's own link update in charge of renames.
 
 ## For plugin developers
 
@@ -51,12 +56,7 @@ This plugin adds an [additional overload](./src/generate-markdown-link-extended.
 
 ## Integration with other plugins
 
-This plugin handles rename and delete events according to its settings. Similar handlers ship in:
-
-- [`Consistent Attachments and Links`](https://community.obsidian.md/plugins/consistent-attachments-and-links)
-- [`Custom Attachment Location`](https://community.obsidian.md/plugins/obsidian-custom-attachment-location)
-
-Those handlers are designed to work with each other, so the plugins can be installed together.
+Rename and delete handling is not this plugin's any more — see [Renames](#renames) above. Install [`Advanced Rename and Delete Handler`](https://community.obsidian.md/plugins/advanced-rename-and-delete-handler) to keep it.
 
 For better performance on a large vault, consider also installing [Backlink Cache](https://community.obsidian.md/plugins/backlink-cache).
 

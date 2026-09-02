@@ -19,6 +19,12 @@ class LegacySettings {
   public automaticallyUpdateLinksOnRenameOrMove = true;
   public includeAttachmentExtensionToEmbedAlias = false;
   public shouldAutomaticallyConvertNewLinks = true;
+
+  // Owned by Advanced Rename and Delete Handler since 5.0.0. The converter is what keeps the user's value:
+  // The saved record is rebuilt from the declared properties alone, so the first save after the property was
+  // Dropped would otherwise strip it from `data.json` before it could ever be offered.
+  public shouldAutomaticallyUpdateLinksOnRenameOrMove = true;
+
   public shouldUseLeadingDot = true;
   public useAngleBrackets = true;
   public useLeadingDot = true;
@@ -50,6 +56,13 @@ export class PluginSettingsComponent extends PluginSettingsComponentBase<PluginS
 
       if (legacySettings.automaticallyUpdateLinksOnRenameOrMove !== undefined) {
         legacySettings.shouldAutomaticallyUpdateLinksOnRenameOrMove = legacySettings.automaticallyUpdateLinksOnRenameOrMove;
+      }
+
+      // The end of that chain is no longer a setting of this plugin's — it is parked for Advanced Rename and
+      // Delete Handler to be offered. Runs after the block above, so a vault still on the oldest key name
+      // Reaches here with its value already carried forward.
+      if (legacySettings.shouldAutomaticallyUpdateLinksOnRenameOrMove !== undefined) {
+        legacySettings.proposedShouldHandleRenames = legacySettings.shouldAutomaticallyUpdateLinksOnRenameOrMove;
       }
 
       if (legacySettings.includeAttachmentExtensionToEmbedAlias !== undefined) {

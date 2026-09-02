@@ -12,15 +12,23 @@ describe('PluginSettings', () => {
     it('should set default values', () => {
       const settings = new PluginSettings();
 
+      expect(settings.isAdvancedRenameAndDeleteHandlerSuggestionDeclined).toBe(false);
       expect(settings.linkConversionMode).toBe(LinkConversionMode.OnSaveCommand);
       expect(settings.shouldAllowEmptyEmbedAlias).toBe(true);
-      expect(settings.shouldAutomaticallyUpdateLinksOnRenameOrMove).toBe(true);
       expect(settings.shouldIncludeAttachmentExtensionToEmbedAlias).toBe(false);
       expect(settings.shouldNormalizeFileLinks).toBe(true);
       expect(settings.shouldPreserveExistingLinkStyle).toBe(false);
       expect(settings.shouldUseAngleBrackets).toBe(true);
       expect(settings.shouldUseLeadingDotForRelativePaths).toBe(true);
       expect(settings.shouldUseLeadingSlashForAbsolutePaths).toBe(true);
+    });
+
+    // A fresh install has nothing to hand to Advanced Rename and Delete Handler, and must never be told it
+    // Has a migration waiting — only a legacy converter puts a value here.
+    it('should have no pending rename-handling migration', () => {
+      const settings = new PluginSettings();
+
+      expect(settings.proposedShouldHandleRenames).toBeNull();
     });
 
     it('should set default exclude paths for excalidraw and tldraw', () => {

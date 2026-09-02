@@ -155,13 +155,25 @@ describe('PluginSettingsComponent', () => {
       expect(component.settings.linkConversionMode).toBe(LinkConversionMode.OnEveryModification);
     });
 
-    it('should convert automaticallyUpdateLinksOnRenameOrMove to shouldAutomaticallyUpdateLinksOnRenameOrMove', async () => {
+    // Both rename keys now end up parked for Advanced Rename and Delete Handler, which owns the setting since
+    // 5.0.0. Without the converter the value would be stripped from `data.json` on the first save, before it
+    // Could ever be offered.
+    it('should park automaticallyUpdateLinksOnRenameOrMove as the proposed rename handling', async () => {
       const component = createComponent({
         loadDataReturnValue: { automaticallyUpdateLinksOnRenameOrMove: false }
       });
       await component.loadWithPromises();
 
-      expect(component.settings.shouldAutomaticallyUpdateLinksOnRenameOrMove).toBe(false);
+      expect(component.settings.proposedShouldHandleRenames).toBe(false);
+    });
+
+    it('should park shouldAutomaticallyUpdateLinksOnRenameOrMove as the proposed rename handling', async () => {
+      const component = createComponent({
+        loadDataReturnValue: { shouldAutomaticallyUpdateLinksOnRenameOrMove: false }
+      });
+      await component.loadWithPromises();
+
+      expect(component.settings.proposedShouldHandleRenames).toBe(false);
     });
 
     it('should convert includeAttachmentExtensionToEmbedAlias to shouldIncludeAttachmentExtensionToEmbedAlias', async () => {

@@ -4,9 +4,16 @@ import { PathSettings } from 'obsidian-dev-utils/obsidian/path-settings';
 import { LinkConversionMode } from './link-conversion-mode.ts';
 
 export class PluginSettings {
+  public isAdvancedRenameAndDeleteHandlerSuggestionDeclined = false;
   public linkConversionMode: LinkConversionMode = LinkConversionMode.OnSaveCommand;
+
+  // The legacy `shouldAutomaticallyUpdateLinksOnRenameOrMove` value, waiting to be offered to Advanced Rename
+  // And Delete Handler. Non-`null` means an offer is still pending; `null` means there is nothing to offer,
+  // Which is also what a fresh install has. One property rather than a flag plus a value, so a fresh install
+  // Can never be told it has a migration waiting.
+  public proposedShouldHandleRenames: boolean | null = null;
+
   public shouldAllowEmptyEmbedAlias = true;
-  public shouldAutomaticallyUpdateLinksOnRenameOrMove = true;
   public shouldIncludeAttachmentExtensionToEmbedAlias = false;
   public shouldNormalizeFileLinks = true;
   public shouldPreserveExistingLinkStyle = false;
