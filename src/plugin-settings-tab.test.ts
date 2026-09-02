@@ -3,11 +3,15 @@ import type {
   SettingGroup
 } from 'obsidian';
 import type { PluginSettingsComponentBase } from 'obsidian-dev-utils/obsidian/components/plugin-settings-component';
+import type { PluginSuggestionComponent } from 'obsidian-dev-utils/obsidian/components/plugin-suggestion-component';
 
 import { castTo } from 'obsidian-dev-utils/object-utils';
+import { SuggestedPluginState } from 'obsidian-dev-utils/obsidian/components/plugin-suggestion-component';
 import { SettingEx } from 'obsidian-dev-utils/obsidian/setting-ex';
 import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
+import { ensureNonNullable } from 'obsidian-dev-utils/type-guards';
 import {
+  beforeEach,
   describe,
   expect,
   it,
@@ -21,19 +25,38 @@ vi.mock('obsidian-dev-utils/html-element', () => ({
   appendCodeBlock: vi.fn()
 }));
 
+interface SearchableDefinition {
+  searchable?: boolean;
+}
+
+interface VisibleDefinition {
+  visible(): boolean;
+}
+
 const EXPECTED_BOUND_PROPERTIES = [
   'shouldUseLeadingDotForRelativePaths',
   'shouldUseLeadingSlashForAbsolutePaths',
   'shouldUseAngleBrackets',
   'shouldNormalizeFileLinks',
   'linkConversionMode',
-  'shouldAutomaticallyUpdateLinksOnRenameOrMove',
   'shouldAllowEmptyEmbedAlias',
   'shouldIncludeAttachmentExtensionToEmbedAlias',
   'shouldPreserveExistingLinkStyle',
   'includePaths',
   'excludePaths'
 ];
+
+// The suggestion banner rides along as an extra row that binds nothing.
+const EXPECTED_DEFINITION_COUNT = EXPECTED_BOUND_PROPERTIES.length + 1;
+
+let getSuggestedPluginState: ReturnType<typeof vi.fn<() => SuggestedPluginState>>;
+let renderBanner: ReturnType<typeof vi.fn<(containerEl: HTMLElement) => void>>;
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  getSuggestedPluginState = vi.fn<() => SuggestedPluginState>(() => SuggestedPluginState.NotInstalled);
+  renderBanner = vi.fn<(containerEl: HTMLElement) => void>();
+});
 
 function createTab(): PluginSettingsTab {
   const pluginSettingsComponent = strictProxy<PluginSettingsComponentBase<PluginSettings>>({
@@ -46,9 +69,10 @@ function createTab(): PluginSettingsTab {
       validationMessages: {
         excludePaths: '',
         includePaths: '',
+        isAdvancedRenameAndDeleteHandlerSuggestionDeclined: '',
         linkConversionMode: '',
+        proposedShouldHandleRenames: '',
         shouldAllowEmptyEmbedAlias: '',
-        shouldAutomaticallyUpdateLinksOnRenameOrMove: '',
         shouldIncludeAttachmentExtensionToEmbedAlias: '',
         shouldNormalizeFileLinks: '',
         shouldPreserveExistingLinkStyle: '',
@@ -67,7 +91,14 @@ function createTab(): PluginSettingsTab {
     }
   });
 
-  const tab = new PluginSettingsTab({ plugin, pluginSettingsComponent });
+  const tab = new PluginSettingsTab({
+    plugin,
+    pluginSettingsComponent,
+    pluginSuggestionComponent: strictProxy<PluginSuggestionComponent>({
+      getSuggestedPluginState,
+      renderBanner
+    })
+  });
   tab.containerEl = activeWindow.createDiv();
   return tab;
 }
@@ -91,6 +122,79 @@ describe('PluginSettingsTab', () => {
     }
 
     expect(bindSpy.mock.calls.map((call) => call[0].propertyName)).toEqual(EXPECTED_BOUND_PROPERTIES);
-    expect(definitions.length).toBe(EXPECTED_BOUND_PROPERTIES.length);
+    expect(definitions.length).toBe(EXPECTED_DEFINITION_COUNT);
+  });
+
+  it('should declare the suggestion banner as the first row', () => {
+    const tab = createTab();
+
+    expect(settingNames(tab)[0]).toBe('');
+  });
+
+  it('should keep the banner row out of the settings search', () => {
+    const tab = createTab();
+
+    expect(castTo<SearchableDefinition>(ensureNonNullable(tab.getSettingDefinitions()[0])).searchable).toBe(false);
+  });
+
+  it('should show the banner row while the suggested plugin is not enabled', () => {
+    const tab = createTab();
+
+    expect(isBannerRowVisible(tab)).toBe(true);
+  });
+
+  it('should hide the banner row once the suggested plugin is enabled', () => {
+    getSuggestedPluginState.mockReturnValue(SuggestedPluginState.Enabled);
+    const tab = createTab();
+
+    expect(isBannerRowVisible(tab)).toBe(false);
+  });
+
+  it('should render the banner into an emptied row element', () => {
+    const tab = createTab();
+    const setting = new SettingEx(tab.containerEl);
+    setting.setName('Leftover');
+
+    renderRow(tab, 0, setting);
+
+    expect(renderBanner).toHaveBeenCalledWith(setting.settingEl);
+    expect(setting.settingEl.textContent).toBe('');
   });
 });
+
+/**
+ * Evaluates the banner row's `visible` predicate the way Obsidian does on every render.
+ *
+ * @param tab - The settings tab.
+ * @returns Whether the row would be rendered.
+ */
+function isBannerRowVisible(tab: PluginSettingsTab): boolean {
+  const visible = castTo<VisibleDefinition>(ensureNonNullable(tab.getSettingDefinitions()[0])).visible;
+  return visible();
+}
+
+/**
+ * Invokes one declared row's `render` callback the way Obsidian does when the tab is opened.
+ *
+ * @param tab - The settings tab.
+ * @param index - The index of the row.
+ * @param setting - The setting to render into.
+ */
+function renderRow(tab: PluginSettingsTab, index: number, setting: SettingEx): void {
+  const definition = ensureNonNullable(tab.getSettingDefinitions()[index]);
+  if (!('render' in definition)) {
+    throw new Error(`The setting definition at index ${String(index)} does not render.`);
+  }
+
+  definition.render(setting, castTo<SettingGroup>(null));
+}
+
+/**
+ * Reads the declared rows' names, in order.
+ *
+ * @param tab - The settings tab.
+ * @returns The names.
+ */
+function settingNames(tab: PluginSettingsTab): (string | undefined)[] {
+  return tab.getSettingDefinitions().map((definition) => 'name' in definition ? castTo<string>(definition.name) : undefined);
+}

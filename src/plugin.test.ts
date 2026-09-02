@@ -22,14 +22,37 @@ vi.mock('./plugin-settings-component.ts', () => ({
   // Extends the real obsidian-test-mocks Component so the real addChild lifecycle can load it.
   PluginSettingsComponent: class extends Component {
     public settings = new PluginSettings();
+
+    public editAndSave(settingsEditor: (settings: PluginSettings) => void): Promise<void> {
+      settingsEditor(this.settings);
+      // eslint-disable-next-line obsidian-dev-utils/prefer-noop-async -- a vi.mock factory cannot reach a top-level import.
+      return Promise.resolve();
+    }
   }
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/components/rename-delete-handler-component', () => ({
-  // eslint-disable-next-line prefer-arrow-callback, func-names -- mock must be constructable with `new` and return a loadable Component.
-  RenameDeleteHandlerComponent: vi.fn(function (): Component {
+// Capture the `PluginSuggestionComponent` constructor argument so the closures the plugin hands it — the
+// Declined-flag getter and setter — can be invoked directly. The stub returns a fresh real `Component` so
+// The real `PluginBase` lifecycle can load it as a child without reaching the community-plugin registry.
+const { pluginSuggestionStub } = vi.hoisted(() => ({
+  pluginSuggestionStub: vi.fn<(params: PluginSuggestionComponentParams) => object>()
+}));
+
+vi.mock('obsidian-dev-utils/obsidian/components/plugin-suggestion-component', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('obsidian-dev-utils/obsidian/components/plugin-suggestion-component')>();
+  // eslint-disable-next-line prefer-arrow-callback -- a vi.fn used with `new` must be a non-arrow function returning a fresh real Component.
+  pluginSuggestionStub.mockImplementation(function NamedStub(): Component {
     return new Component();
-  })
+  });
+  return {
+    ...actual,
+    PluginSuggestionComponent: pluginSuggestionStub
+  };
+});
+
+vi.mock('./rename-delete-handler-migration-component.ts', () => ({
+  // Extends the real obsidian-test-mocks Component so the real addChild lifecycle can load it.
+  RenameDeleteHandlerMigrationComponent: class extends Component {}
 }));
 
 // `PluginDataHandler` and `PluginEventSourceImpl` are NOT stubbed: since obsidian-dev-utils 93.2 the base
@@ -54,13 +77,18 @@ vi.mock('./better-markdown-links-component.ts', () => ({
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { RenameDeleteHandlerComponent } from 'obsidian-dev-utils/obsidian/components/rename-delete-handler-component';
-
-// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { Plugin } from './plugin.ts';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { RenameDeleteHandlerMigrationComponent } from './rename-delete-handler-migration-component.ts';
 
 interface AppGlobal {
   app: AppOriginal;
+}
+
+interface PluginSuggestionComponentParams {
+  isSuggestionDeclined(this: void): boolean;
+  setSuggestionDeclined(this: void, isDeclined: boolean): Promise<void>;
+  readonly suggestedPluginId: string;
 }
 
 const STRICT_PROXY_TARGET_SYMBOL = Symbol.for('strictProxyTarget');
@@ -99,17 +127,61 @@ beforeEach(() => {
   seedOnRawTarget(app, 'obsidianDevUtilsState', {});
   // Since obsidian-dev-utils 89.0.0 the base bridges its command handlers into Notebook Navigator's
   // Menus, which looks the plugin up on layout-ready -- so `plugins` has to answer on the strict mock.
-  seedOnRawTarget(app, 'plugins', { getPlugin: vi.fn().mockReturnValue(null) });
+  // The suggestion component reads the registry too, to decide whether there is anything to suggest.
+  seedOnRawTarget(app, 'plugins', {
+    enabledPlugins: new Set<string>(),
+    getPlugin: vi.fn().mockReturnValue(null),
+    manifests: {}
+  });
 
   // Expose the app as the global instance so dev-utils helpers that resolve shared state without an explicit app argument read/write the same seeded holder.
   castTo<AppGlobal>(window).app = app;
 });
 
 describe('Plugin', () => {
-  it('should wire up the rename/delete handler once on load', async () => {
+  // Advanced Rename and Delete Handler owns rename/delete handling since 5.0.0. Two handlers acting on one
+  // Rename corrupts links, so this plugin must register none — the inverse of what it used to assert.
+  it('should not construct a rename/delete handler of its own', async () => {
+    const renameDeleteHandlerModule = await import('obsidian-dev-utils/obsidian/components/rename-delete-handler-component');
+    const renameDeleteHandlerSpy = vi.spyOn(renameDeleteHandlerModule, 'RenameDeleteHandlerComponent');
+
     await createLoadedPlugin();
 
-    expect(vi.mocked(RenameDeleteHandlerComponent)).toHaveBeenCalledOnce();
+    expect(renameDeleteHandlerSpy).not.toHaveBeenCalled();
+  });
+
+  it('should suggest Advanced Rename and Delete Handler instead', async () => {
+    await createLoadedPlugin();
+
+    expect(pluginSuggestionStub).toHaveBeenCalledOnce();
+    expect(suggestionParams().suggestedPluginId).toBe('advanced-rename-and-delete-handler');
+  });
+
+  it('should report the suggestion as not declined until the user says otherwise', async () => {
+    await createLoadedPlugin();
+
+    expect(suggestionParams().isSuggestionDeclined()).toBe(false);
+  });
+
+  // Through `editAndSave`, not `setProperty`: a decline has to outlive a reload, and `setProperty` only
+  // Edits the in-memory state.
+  it('should remember a declined suggestion in its own settings', async () => {
+    await createLoadedPlugin();
+    const params = suggestionParams();
+
+    await params.setSuggestionDeclined(true);
+
+    expect(params.isSuggestionDeclined()).toBe(true);
+  });
+
+  it('should wire up the settings migration once on load', async () => {
+    const plugin = new Plugin(app, manifest);
+    const addChildSpy = vi.spyOn(plugin, 'addChild');
+
+    await plugin.onload();
+
+    const migrationComponents = addChildSpy.mock.calls.filter((call) => call[0] instanceof RenameDeleteHandlerMigrationComponent);
+    expect(migrationComponents).toHaveLength(1);
   });
 
   it('should register the plugin command handlers after the base command handler', async () => {
@@ -140,38 +212,13 @@ describe('Plugin', () => {
       expect.objectContaining({ id: 'open-demo-vault' })
     );
   });
-
-  describe('rename/delete settings builder', () => {
-    it('should enable rename handling based on the settings', async () => {
-      await createLoadedPlugin();
-
-      const builtSettings = vi.mocked(RenameDeleteHandlerComponent).mock.calls[0]?.[0].settingsBuilder();
-
-      expect(builtSettings?.shouldHandleRenames).toBe(true);
-    });
-
-    it('should always update file name aliases', async () => {
-      await createLoadedPlugin();
-
-      const builtSettings = vi.mocked(RenameDeleteHandlerComponent).mock.calls[0]?.[0].settingsBuilder();
-
-      expect(builtSettings?.shouldUpdateFileNameAliases).toBe(true);
-    });
-
-    it('should not ignore a regular markdown path', async () => {
-      await createLoadedPlugin();
-
-      const builtSettings = vi.mocked(RenameDeleteHandlerComponent).mock.calls[0]?.[0].settingsBuilder();
-
-      expect(builtSettings?.isPathIgnored?.('note.md')).toBe(false);
-    });
-
-    it('should ignore an excalidraw path', async () => {
-      await createLoadedPlugin();
-
-      const builtSettings = vi.mocked(RenameDeleteHandlerComponent).mock.calls[0]?.[0].settingsBuilder();
-
-      expect(builtSettings?.isPathIgnored?.('diagram.excalidraw.md')).toBe(true);
-    });
-  });
 });
+
+function suggestionParams(): PluginSuggestionComponentParams {
+  const call = pluginSuggestionStub.mock.calls[0];
+  if (!call) {
+    throw new Error('The plugin did not construct a PluginSuggestionComponent.');
+  }
+
+  return call[0];
+}
