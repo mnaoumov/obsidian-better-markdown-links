@@ -125,14 +125,10 @@ beforeEach(() => {
 
   // Seed the obsidianDevUtilsState holder on the raw target behind the strict-proxy App so the real dev-utils universal components can read/write shared state during load.
   seedOnRawTarget(app, 'obsidianDevUtilsState', {});
-  // Since obsidian-dev-utils 89.0.0 the base bridges its command handlers into Notebook Navigator's
-  // Menus, which looks the plugin up on layout-ready -- so `plugins` has to answer on the strict mock.
-  // The suggestion component reads the registry too, to decide whether there is anything to suggest.
-  seedOnRawTarget(app, 'plugins', {
-    enabledPlugins: new Set<string>(),
-    getPlugin: vi.fn().mockReturnValue(null),
-    manifests: {}
-  });
+  // The suggestion component reads the registry to decide whether there is anything to suggest.
+  // Obsidian-test-mocks models `getPlugin` and `enabledPlugins`, but leaves `manifests` to throw, so only
+  // That one is seeded.
+  seedOnRawTarget(app.plugins, 'manifests', {});
 
   // Expose the app as the global instance so dev-utils helpers that resolve shared state without an explicit app argument read/write the same seeded holder.
   castTo<AppGlobal>(window).app = app;
