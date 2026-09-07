@@ -34,7 +34,7 @@ This plugin makes Obsidian generate the readable, unambiguous form instead: angl
 A copy of the vault ships with every release. You can access it via any of the following:
 
 1. Running the **Better Markdown Links: Open demo vault** command.
-2. Downloading `better-markdown-links-demo-vault-<version>.zip` (`<version>` is the release version) from the [Releases](https://github.com/mnaoumov/obsidian-better-markdown-links/releases).
+2. Downloading `better-markdown-links-demo-vault.zip` from the [Releases](https://github.com/mnaoumov/obsidian-better-markdown-links/releases). It unzips into a single `better-markdown-links-demo-vault-<version>` folder.
 3. Browsing its source in [`demo-vault/`](./demo-vault/README.md) in this repository.
 
 ## What it does
