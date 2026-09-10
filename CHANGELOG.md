@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 5.0.1
+
+- refactor: replace the hand-rolled settings-migration copy with the shared component
+- chore: adopt the npm run gate branch gate
+- docs: say where the debug command is run
+- test: bring the in-closure wait ceiling under the transport's per-eval cap
+- docs: name the unversioned demo-vault asset and the folder it unzips into
+- chore: make the LICENSE copyright line lintable and guard it against the year roll-over
+- fix(deps): move onto obsidian-dev-utils 101, and drop the hand-rolled app.plugins seed
+- feat: force Markdown links, as a style setting and its own command triad
+- docs: rename the file:// example path off the word "todo"
+- feat: demote embeds to links, and resolve wikilinks that do not resolve
+
 ## 5.0.0
 
 - feat!: hand rename/delete over to Advanced Rename and Delete Handler

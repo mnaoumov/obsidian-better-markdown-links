@@ -1,7 +1,7 @@
 {
   "id": "better-markdown-links",
   "name": "Better Markdown Links",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Adds support for angle bracket links, manages relative links properly, converts links in bulk, and demotes embeds to plain links.",
   "author": "mnaoumov",
   "authorUrl": "https://github.com/mnaoumov/",
