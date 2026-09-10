@@ -16,6 +16,8 @@ import {
   vi
 } from 'vitest';
 
+import type { MigratableSettings } from './advanced-rename-and-delete-handler.ts';
+
 import { PluginSettings } from './plugin-settings.ts';
 
 vi.mock('./plugin-settings-component.ts', () => ({
@@ -29,6 +31,10 @@ vi.mock('./plugin-settings-component.ts', () => ({
       return Promise.resolve();
     }
   }
+}));
+
+const { settingsMigrationStub } = vi.hoisted(() => ({
+  settingsMigrationStub: vi.fn<(params: SettingsMigrationComponentParams) => object>()
 }));
 
 // Capture the `PluginSuggestionComponent` constructor argument so the closures the plugin hands it — the
@@ -50,10 +56,21 @@ vi.mock('obsidian-dev-utils/obsidian/components/plugin-suggestion-component', as
   };
 });
 
-vi.mock('./rename-delete-handler-migration-component.ts', () => ({
-  // Extends the real obsidian-test-mocks Component so the real addChild lifecycle can load it.
-  RenameDeleteHandlerMigrationComponent: class extends Component {}
-}));
+// The same treatment for the dev-utils settings-migration component. What is this plugin's own is the pair
+// Of closures it hands over — which pending values are offered, and how the retirement is persisted — so
+// They are captured and invoked directly. The offer-and-retire dance around them belongs to dev-utils and is
+// Tested there.
+vi.mock('obsidian-dev-utils/obsidian/components/settings-migration-component', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('obsidian-dev-utils/obsidian/components/settings-migration-component')>();
+  // eslint-disable-next-line prefer-arrow-callback -- a vi.fn used with `new` must be a non-arrow function returning a fresh real Component.
+  settingsMigrationStub.mockImplementation(function NamedStub(): Component {
+    return new Component();
+  });
+  return {
+    ...actual,
+    SettingsMigrationComponent: settingsMigrationStub
+  };
+});
 
 // `PluginDataHandler` and `PluginEventSourceImpl` are NOT stubbed: since obsidian-dev-utils 93.2 the base
 // Builds its own settings component out of them during `onload`, and that component really calls
@@ -77,9 +94,9 @@ vi.mock('./better-markdown-links-component.ts', () => ({
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { Plugin } from './plugin.ts';
+import { PluginSettingsComponent } from './plugin-settings-component.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { RenameDeleteHandlerMigrationComponent } from './rename-delete-handler-migration-component.ts';
+import { Plugin } from './plugin.ts';
 
 interface AppGlobal {
   app: AppOriginal;
@@ -89,6 +106,14 @@ interface PluginSuggestionComponentParams {
   isSuggestionDeclined(this: void): boolean;
   setSuggestionDeclined(this: void, isDeclined: boolean): Promise<void>;
   readonly suggestedPluginId: string;
+}
+
+interface SettingsMigrationComponentParams {
+  readonly apiVersionRange: string;
+  getProposedSettings(this: void): MigratableSettings | null;
+  readonly providerPluginId: string;
+  retireProposedSettings(this: void): Promise<void>;
+  readonly sourcePluginId: string;
 }
 
 const STRICT_PROXY_TARGET_SYMBOL = Symbol.for('strictProxyTarget');
@@ -106,6 +131,24 @@ async function createLoadedPlugin(): Promise<Plugin> {
   // PluginBase.onload is async; driving the real async load path directly (as the obsidian-dev-utils reference test does) runs every universal component plus onloadImpl.
   await plugin.onload();
   return plugin;
+}
+
+// The plugin's settings component is protected on `PluginBase`, so the instance it actually handed to the
+// Migration component is taken from the children it added.
+async function loadAndTakeSettingsComponent(): Promise<PluginSettingsComponent> {
+  const plugin = new Plugin(app, manifest);
+  const addChildSpy = vi.spyOn(plugin, 'addChild');
+
+  await plugin.onload();
+
+  const settingsComponent = addChildSpy.mock.calls
+    .map((call) => call[0])
+    .find((child) => child instanceof PluginSettingsComponent);
+  if (!settingsComponent) {
+    throw new Error('The plugin did not add a PluginSettingsComponent.');
+  }
+
+  return settingsComponent;
 }
 
 function seedOnRawTarget(strictProxiedObject: object, key: string, value: unknown): void {
@@ -171,13 +214,63 @@ describe('Plugin', () => {
   });
 
   it('should wire up the settings migration once on load', async () => {
-    const plugin = new Plugin(app, manifest);
-    const addChildSpy = vi.spyOn(plugin, 'addChild');
+    await createLoadedPlugin();
 
-    await plugin.onload();
+    expect(settingsMigrationStub).toHaveBeenCalledOnce();
+    expect(migrationParams().providerPluginId).toBe('advanced-rename-and-delete-handler');
+    expect(migrationParams().sourcePluginId).toBe(manifest.id);
+    expect(migrationParams().apiVersionRange).toBe('^1');
+  });
 
-    const migrationComponents = addChildSpy.mock.calls.filter((call) => call[0] instanceof RenameDeleteHandlerMigrationComponent);
-    expect(migrationComponents).toHaveLength(1);
+  it('should offer nothing while no legacy value is pending', async () => {
+    await createLoadedPlugin();
+
+    expect(migrationParams().getProposedSettings()).toBeNull();
+  });
+
+  // The path settings travel with the toggle: they scoped this plugin's own handler, so they are what the
+  // Vault-wide handler needs to keep behaving the way this plugin did.
+  it('should offer the path settings alongside the toggle', async () => {
+    const settingsComponent = await loadAndTakeSettingsComponent();
+    await settingsComponent.editAndSave((settings) => {
+      settings.excludePaths = ['Excluded'];
+      settings.includePaths = ['Included'];
+      settings.proposedShouldHandleRenames = true;
+    });
+
+    expect(migrationParams().getProposedSettings()).toEqual({
+      excludePaths: ['Excluded'],
+      includePaths: ['Included'],
+      shouldHandleRenames: true
+    });
+  });
+
+  // They are proposed rather than moved: this plugin keeps its own copies, which still scope link conversion.
+  it('should keep its own path settings after the migration is applied', async () => {
+    const settingsComponent = await loadAndTakeSettingsComponent();
+    await settingsComponent.editAndSave((settings) => {
+      settings.excludePaths = ['Excluded'];
+      settings.proposedShouldHandleRenames = true;
+    });
+
+    await migrationParams().retireProposedSettings();
+
+    expect(settingsComponent.settings.excludePaths).toEqual(['Excluded']);
+  });
+
+  // Retiring through `editAndSave` rather than `setProperty` is what makes the retirement outlive a reload;
+  // The in-memory-only variant would offer the migration again forever.
+  it('should retire the pending value to disk once the migration is applied', async () => {
+    const settingsComponent = await loadAndTakeSettingsComponent();
+    await settingsComponent.editAndSave((settings) => {
+      settings.proposedShouldHandleRenames = true;
+    });
+    const editAndSaveSpy = vi.spyOn(settingsComponent, 'editAndSave');
+
+    await migrationParams().retireProposedSettings();
+
+    expect(editAndSaveSpy).toHaveBeenCalledOnce();
+    expect(migrationParams().getProposedSettings()).toBeNull();
   });
 
   it('should register the plugin command handlers after the base command handler', async () => {
@@ -209,6 +302,15 @@ describe('Plugin', () => {
     );
   });
 });
+
+function migrationParams(): SettingsMigrationComponentParams {
+  const call = settingsMigrationStub.mock.calls[0];
+  if (!call) {
+    throw new Error('The plugin did not construct a SettingsMigrationComponent.');
+  }
+
+  return call[0];
+}
 
 function suggestionParams(): PluginSuggestionComponentParams {
   const call = pluginSuggestionStub.mock.calls[0];

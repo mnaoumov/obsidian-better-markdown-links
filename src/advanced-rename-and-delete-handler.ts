@@ -3,3 +3,29 @@
 export const ADVANCED_RENAME_AND_DELETE_HANDLER_PLUGIN_ID = 'advanced-rename-and-delete-handler';
 
 export const ADVANCED_RENAME_AND_DELETE_HANDLER_PLUGIN_NAME = 'Advanced Rename and Delete Handler';
+
+/**
+ * The settings this plugin may hand over to that plugin.
+ *
+ * The payload half of the handover contract, which stays this plugin's own — the envelope around it
+ * (`migrateSettings`, who proposed, whether it was applied) comes from
+ * `obsidian-dev-utils/obsidian/plugin/settings-migration-api`. Optional, because a proposal carries only
+ * what this plugin actually held, so a value the owning plugin already has is never overwritten by a default
+ * nobody chose.
+ */
+export interface MigratableSettings {
+  /**
+   * Paths the handler leaves alone entirely.
+   */
+  readonly excludePaths?: readonly string[];
+
+  /**
+   * Paths the handler is limited to. Empty means the whole vault.
+   */
+  readonly includePaths?: readonly string[];
+
+  /**
+   * Whether renames and moves are handled at all.
+   */
+  readonly shouldHandleRenames?: boolean;
+}
