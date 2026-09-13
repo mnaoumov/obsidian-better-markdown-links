@@ -20,10 +20,14 @@ import {
 import { join } from 'node:path';
 import process from 'node:process';
 import {
+  captureDeviceScreenshot,
   captureObsidianScreenshot,
   evalInObsidian,
   labelScreenshot,
-  readPngDimensions
+  raiseSoftKeyboard,
+  readPngDimensions,
+  resolveEmulatorDeviceId,
+  withSoftKeyboardEnabled
 } from 'obsidian-integration-testing';
 import { getTemporaryVault } from 'obsidian-integration-testing/vitest-global-setup-plugin';
 import {
@@ -70,7 +74,40 @@ const PLAIN_NOTE_PATH = 'Screenshots/Second chapter.md';
 
 const IMAGES_DIRECTORY = join(process.cwd(), 'images', 'screenshots');
 
+/**
+ * The AVD the frames are taken on, matched by name.
+ *
+ * Never the first device `adb devices` lists: a physical phone is routinely plugged into the same
+ * machine, and the shared AVD the cross-platform suites drive is a different size.
+ */
+const AVD_NAME = 'obsidian_screenshots';
+
+/**
+ * Obsidian's command palette input, read off this suite's own palette helper rather than assumed: the
+ * palette renders `.prompt input`, which is not the `.prompt-input` a suggester renders.
+ */
+const PALETTE_INPUT_SELECTOR = '.prompt input';
+
+/**
+ * The button that turns down the companion-plugin suggestion — see
+ * {@link declineCompanionPluginSuggestion}.
+ *
+ * The label comes from the shared library's own translations, so it is quoted here rather than
+ * constructed.
+ */
+const SUGGESTION_DECLINE_LABEL = 'Not now';
+
+/**
+ * The `aria-label` on the close button the shared library appends to a notice that requires an explicit
+ * close. The button carries an icon rather than text, so the label is the only thing to match on.
+ */
+const SUGGESTION_CLOSE_ARIA_LABEL = 'Close';
+
+let deviceId = '';
+
 beforeAll(async () => {
+  deviceId = await resolveEmulatorDeviceId({ avdName: AVD_NAME });
+
   const vault = getTemporaryVault();
 
   vault.populate({
@@ -115,6 +152,8 @@ beforeAll(async () => {
     input: { fontSizeInPixels: MOBILE_FONT_SIZE_IN_PIXELS, subjectNotePath: SUBJECT_NOTE_PATH },
     vaultPath: vaultPath()
   });
+
+  await declineCompanionPluginSuggestion();
 });
 
 describe('mobile store screenshots', () => {
@@ -136,7 +175,7 @@ describe('mobile store screenshots', () => {
 
   it('3 - converting what is already there', async () => {
     await openCommandPalette('Convert links');
-    await shoot(3, 'Convert one note, one folder, or the whole vault');
+    await shootWithSoftKeyboard(3, 'Convert one note, one folder, or the whole vault');
   });
 });
 
@@ -193,6 +232,60 @@ async function convertLinksInNote(): Promise<string> {
       return await app.vault.read(file);
     },
     input: { pluginId: PLUGIN_ID, subjectNotePath: SUBJECT_NOTE_PATH },
+    vaultPath: vaultPath()
+  });
+}
+
+/**
+ * Dismisses the companion-plugin suggestion, so it is not in the frames.
+ *
+ * On load the plugin offers to install Advanced Rename and Delete Handler, through a notice carrying
+ * `Install and enable` / `Not now` and a close button. The temp vault holds only this plugin, so the
+ * offer always fires — and the notice sat across the top of every frame, covering the first palette row
+ * in the very shot whose subject IS that list.
+ *
+ * **Two clicks, and both are needed.** `Not now` records the decline so the offer does not return, but
+ * it deliberately does not take the notice off screen: the suggestion is shown with
+ * `shouldHideOnClick: false`, so only the close button removes it. Clicking `Not now` alone was tried
+ * first and timed out waiting for a notice that was never going to leave.
+ *
+ * @returns A {@link Promise} that resolves once the suggestion is off screen.
+ */
+async function declineCompanionPluginSuggestion(): Promise<void> {
+  await evalInObsidian({
+    async callback({ closeLabel, declineLabel, lib: { clickElement, waitUntil } }) {
+      const NOTICE_TIMEOUT_IN_MILLISECONDS = 15_000;
+
+      // Nothing to dismiss is a perfectly good state: the suggestion is skipped once the setting records
+      // That it was declined, and that setting outlives a reload.
+      const declineButton = findNoticeButton(declineLabel, null);
+      if (declineButton) {
+        await clickElement({ element: declineButton });
+      }
+
+      const closeButton = findNoticeButton(null, closeLabel);
+      if (closeButton) {
+        await clickElement({ element: closeButton });
+      }
+
+      // Waits for THIS notice to go rather than for the notice area to empty, so an unrelated notice
+      // Cannot hold the wait open.
+      await waitUntil({
+        message: 'the suggestion notice to close',
+        predicate: () => !findNoticeButton(declineLabel, null),
+        timeoutInMilliseconds: NOTICE_TIMEOUT_IN_MILLISECONDS
+      });
+
+      function findNoticeButton(text: null | string, ariaLabel: null | string): HTMLElement | null {
+        const button = [...document.querySelectorAll('.notice button')].find((candidate) =>
+          (text === null || candidate.textContent === text)
+          && (ariaLabel === null || candidate.getAttribute('aria-label') === ariaLabel)
+        );
+
+        return button instanceof HTMLElement ? button : null;
+      }
+    },
+    input: { closeLabel: SUGGESTION_CLOSE_ARIA_LABEL, declineLabel: SUGGESTION_DECLINE_LABEL },
     vaultPath: vaultPath()
   });
 }
@@ -283,6 +376,61 @@ async function openNote(): Promise<string> {
 async function shoot(index: number, caption: string): Promise<void> {
   const captured = await captureObsidianScreenshot({ vaultPath: vaultPath() });
 
+  await writeFrame(index, caption, captured);
+}
+
+/**
+ * Raises the soft keyboard, captures the DEVICE, and writes the frame.
+ *
+ * For a shot whose subject is a focused field. `captureObsidianScreenshot` cannot show a keyboard: it
+ * drives Appium in the WebView context, so it photographs the page, and the IME is a system window that
+ * is not part of the page — which left such a frame as a field over a large empty band, with the caption
+ * band landing on the field and clipping the typed text.
+ *
+ * Two things are needed and both belong to the harness rather than here: the AVD is built with a hardware
+ * keyboard attached, so Android suppresses the on-screen one until `withSoftKeyboardEnabled` lifts that
+ * and puts the setting back exactly — including putting back a setting that had never been written, which
+ * takes a delete rather than a write; and a WebView will not ask for an IME on programmatic focus alone,
+ * so `raiseSoftKeyboard` lands a real touch on the field and then proves geometrically that it lifted,
+ * because nothing in the page reports the keyboard.
+ *
+ * The trade, which applies only to the shots that switch: a device capture is **not** byte-reproducible,
+ * because the status-bar clock and the battery indicator are in it. A shot with no focused field keeps
+ * {@link shoot} and stays reproducible — a real phone shows no keyboard there either, so raising one
+ * would make that frame less true rather than more.
+ *
+ * @param index - The 1-based listing position.
+ * @param caption - The caption drawn across the bottom of the frame.
+ */
+async function shootWithSoftKeyboard(index: number, caption: string): Promise<void> {
+  const captured = await withSoftKeyboardEnabled({
+    async callback() {
+      await raiseSoftKeyboard({
+        deviceId,
+        inputSelector: PALETTE_INPUT_SELECTOR,
+        vaultPath: vaultPath()
+      });
+
+      return await captureDeviceScreenshot({ deviceId });
+    },
+    deviceId
+  });
+
+  await writeFrame(index, caption, captured);
+}
+
+function vaultPath(): string {
+  return getTemporaryVault().path;
+}
+
+/**
+ * Asserts the frame is the store size, captions it, and writes it out.
+ *
+ * @param index - The 1-based listing position.
+ * @param caption - The caption drawn across the bottom of the frame.
+ * @param captured - The raw PNG, from either capture route.
+ */
+async function writeFrame(index: number, caption: string, captured: Uint8Array): Promise<void> {
   // The AVD is 900x1600, so the device frame IS the store size. Asserting it
   // Here is what keeps that true: run this against any other AVD and it fails
   // Loudly instead of quietly shipping an off-spec image.
@@ -295,8 +443,4 @@ async function shoot(index: number, caption: string): Promise<void> {
 
   mkdirSync(IMAGES_DIRECTORY, { recursive: true });
   writeFileSync(join(IMAGES_DIRECTORY, `screenshot-mobile-${String(index)}.png`), labeled);
-}
-
-function vaultPath(): string {
-  return getTemporaryVault().path;
 }
