@@ -1,14 +1,14 @@
 /**
  * @file
  *
- * Integration suite for the two conversions added by T697, driving a real Obsidian instance:
+ * Integration suite for the two conversions, driving a real Obsidian instance:
  * - demoting embeds to links, with and without the `shouldAppendFileNameWhenDemotingEmbeds` sub-bullet,
  * - resolving an alias-only wikilink through another note's `aliases` frontmatter,
  * - creating the note behind a wikilink that resolves to nothing,
  * - and the invariant that makes the last one safe: the AUTOMATIC conversion paths must never create a
  *   note, however the settings are set, because they fire on every save.
  *
- * It also covers the force-Markdown link style added by T845, both as a setting and as its own command,
+ * It also covers the force-Markdown link style, both as a setting and as its own command,
  * against a vault whose own `Use [[Wikilinks]]` setting is on — the one thing no unit test can prove.
  *
  * Each scenario uses its own source file so a pending async conversion never leaks between tests.
