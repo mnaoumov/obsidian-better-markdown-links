@@ -7,7 +7,7 @@
  * asserts the exact resulting markdown — proving the setting is actually wired into link generation
  * rather than silently ignored.
  *
- * Named `*.cross-platform.integration.test.ts` (per G47), so the desktop AND android projects both
+ * Named `*.cross-platform.integration.test.ts`, so the desktop AND android projects both
  * collect it and the same flow is verified on each.
  */
 
