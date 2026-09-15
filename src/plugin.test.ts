@@ -38,8 +38,8 @@ const { settingsMigrationStub } = vi.hoisted(() => ({
 }));
 
 // Capture the `PluginSuggestionComponent` constructor argument so the closures the plugin hands it — the
-// Declined-flag getter and setter — can be invoked directly. The stub returns a fresh real `Component` so
-// The real `PluginBase` lifecycle can load it as a child without reaching the community-plugin registry.
+// declined-flag getter and setter — can be invoked directly. The stub returns a fresh real `Component` so
+// the real `PluginBase` lifecycle can load it as a child without reaching the community-plugin registry.
 const { pluginSuggestionStub } = vi.hoisted(() => ({
   pluginSuggestionStub: vi.fn<(params: PluginSuggestionComponentParams) => object>()
 }));
@@ -57,9 +57,9 @@ vi.mock('obsidian-dev-utils/obsidian/components/plugin-suggestion-component', as
 });
 
 // The same treatment for the dev-utils settings-migration component. What is this plugin's own is the pair
-// Of closures it hands over — which pending values are offered, and how the retirement is persisted — so
-// They are captured and invoked directly. The offer-and-retire dance around them belongs to dev-utils and is
-// Tested there.
+// of closures it hands over — which pending values are offered, and how the retirement is persisted — so
+// they are captured and invoked directly. The offer-and-retire dance around them belongs to dev-utils and is
+// tested there.
 vi.mock('obsidian-dev-utils/obsidian/components/settings-migration-component', async (importOriginal) => {
   const actual = await importOriginal<typeof import('obsidian-dev-utils/obsidian/components/settings-migration-component')>();
   // eslint-disable-next-line prefer-arrow-callback -- a vi.fn used with `new` must be a non-arrow function returning a fresh real Component.
@@ -73,7 +73,7 @@ vi.mock('obsidian-dev-utils/obsidian/components/settings-migration-component', a
 });
 
 // `PluginDataHandler` and `PluginEventSourceImpl` are NOT stubbed: since obsidian-dev-utils 93.2 the base
-// Builds its own settings component out of them during `onload`, and that component really calls
+// builds its own settings component out of them during `onload`, and that component really calls
 // `pluginEventSource.on`, so a bare `vi.fn()` double makes the base throw before `onloadImpl` runs.
 vi.mock('obsidian-dev-utils/obsidian/components/plugin-settings-tab-component', () => ({
   // Extends the real obsidian-test-mocks Component so the real addChild lifecycle can load it.
@@ -134,7 +134,7 @@ async function createLoadedPlugin(): Promise<Plugin> {
 }
 
 // The plugin's settings component is protected on `PluginBase`, so the instance it actually handed to the
-// Migration component is taken from the children it added.
+// migration component is taken from the children it added.
 async function loadAndTakeSettingsComponent(): Promise<PluginSettingsComponent> {
   const plugin = new Plugin(app, manifest);
   const addChildSpy = vi.spyOn(plugin, 'addChild');
@@ -170,7 +170,7 @@ beforeEach(() => {
   seedOnRawTarget(app, 'obsidianDevUtilsState', {});
   // The suggestion component reads the registry to decide whether there is anything to suggest.
   // Obsidian-test-mocks models `getPlugin` and `enabledPlugins`, but leaves `manifests` to throw, so only
-  // That one is seeded.
+  // that one is seeded.
   seedOnRawTarget(app.plugins, 'manifests', {});
 
   // Expose the app as the global instance so dev-utils helpers that resolve shared state without an explicit app argument read/write the same seeded holder.
@@ -179,7 +179,7 @@ beforeEach(() => {
 
 describe('Plugin', () => {
   // Advanced Rename and Delete Handler owns rename/delete handling since 5.0.0. Two handlers acting on one
-  // Rename corrupts links, so this plugin must register none — the inverse of what it used to assert.
+  // rename corrupts links, so this plugin must register none — the inverse of what it used to assert.
   it('should not construct a rename/delete handler of its own', async () => {
     const renameDeleteHandlerModule = await import('obsidian-dev-utils/obsidian/components/rename-delete-handler-component');
     const renameDeleteHandlerSpy = vi.spyOn(renameDeleteHandlerModule, 'RenameDeleteHandlerComponent');
@@ -203,7 +203,7 @@ describe('Plugin', () => {
   });
 
   // Through `editAndSave`, not `setProperty`: a decline has to outlive a reload, and `setProperty` only
-  // Edits the in-memory state.
+  // edits the in-memory state.
   it('should remember a declined suggestion in its own settings', async () => {
     await createLoadedPlugin();
     const params = suggestionParams();
@@ -229,7 +229,7 @@ describe('Plugin', () => {
   });
 
   // The path settings travel with the toggle: they scoped this plugin's own handler, so they are what the
-  // Vault-wide handler needs to keep behaving the way this plugin did.
+  // vault-wide handler needs to keep behaving the way this plugin did.
   it('should offer the path settings alongside the toggle', async () => {
     const settingsComponent = await loadAndTakeSettingsComponent();
     await settingsComponent.editAndSave((settings) => {

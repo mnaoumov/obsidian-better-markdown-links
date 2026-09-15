@@ -25,7 +25,7 @@ describe('PluginSettings', () => {
     });
 
     // A fresh install has nothing to hand to Advanced Rename and Delete Handler, and must never be told it
-    // Has a migration waiting — only a legacy converter puts a value here.
+    // has a migration waiting — only a legacy converter puts a value here.
     it('should have no pending rename-handling migration', () => {
       const settings = new PluginSettings();
 
@@ -76,7 +76,7 @@ describe('PluginSettings', () => {
     });
 
     // The other two modes ARE what obsidian-dev-utils does with no style at all, and saying so out loud
-    // Would beat the `originalLink` inference embed demotion depends on.
+    // would beat the `originalLink` inference embed demotion depends on.
     it('should say nothing in the other modes, leaving the inference alone', () => {
       const settings = new PluginSettings();
 

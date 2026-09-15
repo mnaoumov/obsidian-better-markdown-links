@@ -158,7 +158,7 @@ describe('PluginSettingsComponent', () => {
 
     // Both rename keys now end up parked for Advanced Rename and Delete Handler, which owns the setting since
     // 5.0.0. Without the converter the value would be stripped from `data.json` on the first save, before it
-    // Could ever be offered.
+    // could ever be offered.
     it('should park automaticallyUpdateLinksOnRenameOrMove as the proposed rename handling', async () => {
       const component = createComponent({
         loadDataReturnValue: { automaticallyUpdateLinksOnRenameOrMove: false }
@@ -196,7 +196,7 @@ describe('PluginSettingsComponent', () => {
     });
 
     // The legacy key is deleted from `data.json` once converted, so every later load arrives without it. If
-    // The converter read that absence as `false` it would reset a user who has since picked `Markdown`.
+    // the converter read that absence as `false` it would reset a user who has since picked `Markdown`.
     it('should leave an explicit link style mode alone once the legacy key is gone', async () => {
       const component = createComponent({
         loadDataReturnValue: { linkStyleMode: LinkStyleMode.Markdown }

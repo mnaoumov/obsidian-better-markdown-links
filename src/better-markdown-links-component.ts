@@ -93,8 +93,8 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
         getDefaultParams: (): Partial<GenerateMarkdownLinkParams> => {
           const settings = this.pluginSettingsComponent.settings;
           // `removeUndefinedProperties`, because outside the force-Markdown mode `linkStyle` is `undefined`
-          // And these params are merged with `Object.assign`: leaving the key in place would clobber a style
-          // Another plugin's default-params function had set, instead of standing aside for it.
+          // and these params are merged with `Object.assign`: leaving the key in place would clobber a style
+          // another plugin's default-params function had set, instead of standing aside for it.
           return removeUndefinedProperties(normalizeOptionalProperties<Partial<GenerateMarkdownLinkParams>>({
             isEmptyEmbedAliasAllowed: settings.shouldAllowEmptyEmbedAlias,
             linkStyle: settings.getGeneratedLinkStyle(),

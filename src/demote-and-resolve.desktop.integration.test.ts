@@ -119,7 +119,7 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
       });
 
       // An embed with an empty alias renders its target inline, so it needs no text; the link it becomes
-      // Would render as nothing at all, so the target's basename is filled in.
+      // would render as nothing at all, so the target's basename is filled in.
       expect(result.content).toBe('[Embed target](<Embed target.md>)');
     });
 
@@ -189,7 +189,7 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
       expect(result.createdNotePaths).toContain('A brand new note.md');
       // Deliberately NOT asserting the link became a markdown link. The conversion runs at
       // `LinkStyle.ObsidianSettingsDefault`, and the test vault leaves Obsidian's own `Use [[Wikilinks]]`
-      // Setting on, so the link correctly stays a wikilink - pointed at the new note, not restyled. The
+      // setting on, so the link correctly stays a wikilink - pointed at the new note, not restyled. The
       // `forcing the markdown link style` scenarios below are the ones that override that setting.
     });
 
@@ -206,8 +206,8 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
   });
 
   // The capability inherited from Consistent Attachments and Links: writing markdown links even in a vault
-  // Whose own `Use [[Wikilinks]]` setting says otherwise. The test vault leaves that setting ON, so a
-  // Wikilink surviving as a wikilink is the baseline these two scenarios have to beat.
+  // whose own `Use [[Wikilinks]]` setting says otherwise. The test vault leaves that setting ON, so a
+  // wikilink surviving as a wikilink is the baseline these two scenarios have to beat.
   describe('forcing the markdown link style', () => {
     it('should leave a wikilink alone when the link style follows the Obsidian setting', async () => {
       const result = await runScenario({
@@ -251,8 +251,8 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
   });
 
   // The reason `shouldCreateMissingNotes` is safe to offer at all: it is wired to the explicit convert
-  // Commands only. Were it reachable from the automatic paths, every auto-save on a note with a typo'd
-  // Wikilink would silently add a file to the vault.
+  // commands only. Were it reachable from the automatic paths, every auto-save on a note with a typo'd
+  // wikilink would silently add a file to the vault.
   it('should never create a note on the automatic save path, even with creation enabled', async () => {
     const result = await runScenario({
       commandId: SAVE_COMMAND_ID,
@@ -316,8 +316,8 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
       view.editor.setValue(content);
 
       // Both commands work off the metadata cache, so the typed content has to be on disk AND indexed
-      // Before the command runs. Without this the command sees a file with no references and no-ops,
-      // Which reads as "the feature is broken" only intermittently — whichever way the race lands.
+      // before the command runs. Without this the command sees a file with no references and no-ops,
+      // which reads as "the feature is broken" only intermittently — whichever way the race lands.
       await view.save();
       await waitForIndexedReference(sourceFile);
 
@@ -343,7 +343,7 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
       }
 
       // Polls until Obsidian's metadata cache reports the link or embed that was just typed. Every
-      // Scenario writes exactly one reference, so "at least one" is the whole condition.
+      // scenario writes exactly one reference, so "at least one" is the whole condition.
       async function waitForIndexedReference(file: TFile): Promise<void> {
         const start = performance.now();
         while (performance.now() - start < SETTLE_TIMEOUT_IN_MILLISECONDS) {
@@ -372,7 +372,7 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
       }
 
       // Returns as soon as the marker appears; with no marker (a "nothing should happen" scenario) it
-      // Waits the full timeout, so the assertion is made after the conversion has had every chance to run.
+      // waits the full timeout, so the assertion is made after the conversion has had every chance to run.
       async function waitForSettledContent(file: TFile): Promise<string> {
         const start = performance.now();
         let fileContent = await app.vault.read(file);

@@ -98,7 +98,7 @@ beforeAll(async () => {
       });
 
       // The link text is the subject; the file explorer and an empty right dock
-      // Would otherwise take a third of a 1200x800 frame.
+      // would otherwise take a third of a 1200x800 frame.
       app.workspace.leftSplit.collapse();
       const rightSplit: unknown = app.workspace.rightSplit;
       (rightSplit as ResizableSideDock).setSize(0);
@@ -106,8 +106,8 @@ beforeAll(async () => {
 
       // The plugin generates links in the style the VAULT is set to. Left at
       // Obsidian's default the convert command produced wikilinks, and the
-      // Angle-bracket form the shots are about never appeared. Relative paths
-      // Are what makes the leading './' meaningful.
+      // angle-bracket form the shots are about never appeared. Relative paths
+      // are what makes the leading './' meaningful.
       app.vault.setConfig('useMarkdownLinks', true);
       app.vault.setConfig('newLinkFormat', 'relative');
 
@@ -134,7 +134,7 @@ describe('desktop store screenshots', () => {
     const content = await convertLinksInNote();
     expect(content).not.toContain('%20');
     // Angle brackets around the path with spaces, and an explicit `./` so the
-    // Link means the same thing outside Obsidian as it does inside.
+    // link means the same thing outside Obsidian as it does inside.
     expect(content).toContain('(<./');
     await shoot(2, 'Readable paths, angle brackets, an explicit ./');
   });
@@ -174,7 +174,7 @@ async function convertLinksInNote(): Promise<string> {
       const RESIZE_SETTLE_DELAY_IN_MILLISECONDS = 2000;
 
       // Let the previous shot's capture settle: the device-metrics override it
-      // Sets and clears disturbs anything driven too soon afterwards.
+      // sets and clears disturbs anything driven too soon afterwards.
       await sleep(RESIZE_SETTLE_DELAY_IN_MILLISECONDS);
 
       const file = app.vault.getFileByPath(subjectNotePath);
@@ -234,7 +234,7 @@ async function openCommandPalette(query: string): Promise<void> {
 
       input.value = text;
       // The palette filters from its own `input` handler, so setting `value`
-      // Alone would leave every command in the vault on screen.
+      // alone would leave every command in the vault on screen.
       input.dispatchEvent(new Event('input'));
 
       await sleep(SETTLE_DELAY_IN_MILLISECONDS);
@@ -263,7 +263,7 @@ async function openNote(): Promise<string> {
       const leaf = app.workspace.getLeaf(false);
       await leaf.openFile(file);
       // `source: true` forces RAW Markdown, which is where the link spelling is
-      // Visible at all.
+      // visible at all.
       await leaf.setViewState({
         state: { file: subjectNotePath, mode: 'source', source: true },
         type: 'markdown'

@@ -101,7 +101,7 @@ async function runHandover(isApplied: boolean): Promise<HandoverProbeResult> {
       }
 
       // A holder rather than a bare variable: the only assignment happens inside the stub the registry
-      // Calls, which the compiler cannot see, so a bare variable would be narrowed to `null` at every read.
+      // calls, which the compiler cannot see, so a bare variable would be narrowed to `null` at every read.
       interface OfferHolder {
         value: MigrateSettingsParamsLike | null;
       }
@@ -127,13 +127,13 @@ async function runHandover(isApplied: boolean): Promise<HandoverProbeResult> {
       const offerHolder: OfferHolder = { value: null };
 
       // The desktop project shares ONE Obsidian instance across its test files, so everything this scenario
-      // Changes — the plugin's own `data.json` and the process-wide API registry — is put back before it
-      // Returns. Leaving the seeded `includePaths` behind scopes the plugin to one folder and every later
-      // Conversion test silently converts nothing.
+      // changes — the plugin's own `data.json` and the process-wide API registry — is put back before it
+      // returns. Leaving the seeded `includePaths` behind scopes the plugin to one folder and every later
+      // conversion test silently converts nothing.
       const originalData = await app.vault.adapter.exists(dataPath) ? await app.vault.adapter.read(dataPath) : null;
 
       // The plugin must not be running while `data.json` is rewritten underneath it, or its own save would
-      // Put the defaults straight back.
+      // put the defaults straight back.
       await app.plugins.disablePlugin(pluginId);
 
       await app.vault.adapter.write(
@@ -146,7 +146,7 @@ async function runHandover(isApplied: boolean): Promise<HandoverProbeResult> {
       );
 
       // Published BEFORE the plugin loads, deliberately: that is the ordering in which the settings
-      // Component is still reading from disk when the migration component wires itself up.
+      // component is still reading from disk when the migration component wires itself up.
       const registry = getRegistryValue();
       registry.records[providerPluginId] = [{
         api: {
@@ -191,10 +191,10 @@ async function runHandover(isApplied: boolean): Promise<HandoverProbeResult> {
       };
 
       // Puts the shared instance back the way it was found: the stub provider out of the registry, and the
-      // Plugin reloaded off its original `data.json`.
+      // plugin reloaded off its original `data.json`.
       async function restoreSharedState(): Promise<void> {
         // Emptied rather than deleted: the registry reads `records[pluginId] ?? []`, so an empty list is
-        // Indistinguishable from an absent one, and the key is dynamic.
+        // indistinguishable from an absent one, and the key is dynamic.
         const currentRegistry = getRegistryValue();
         currentRegistry.records[providerPluginId] = [];
         for (const subscriber of currentRegistry.subscribers) {
@@ -212,7 +212,7 @@ async function runHandover(isApplied: boolean): Promise<HandoverProbeResult> {
       }
 
       // The registry is a `ValueWrapper` on the realm global, created lazily by whoever touches it first —
-      // Here that is this test, since it publishes before the plugin loads.
+      // here that is this test, since it publishes before the plugin loads.
       function getRegistryValue(): RegistryValue {
         let bag = Reflect.get(window, STATE_BAG_KEY) as Record<string, RegistryWrapper> | undefined;
         if (!bag) {

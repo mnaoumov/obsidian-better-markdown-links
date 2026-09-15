@@ -23,7 +23,7 @@ class LegacySettings {
 
   // Owned by Advanced Rename and Delete Handler since 5.0.0. The converter is what keeps the user's value:
   // The saved record is rebuilt from the declared properties alone, so the first save after the property was
-  // Dropped would otherwise strip it from `data.json` before it could ever be offered.
+  // dropped would otherwise strip it from `data.json` before it could ever be offered.
   public shouldAutomaticallyUpdateLinksOnRenameOrMove = true;
 
   // Replaced by `linkStyleMode`, which has a third value (force markdown) the boolean could not express.
@@ -63,14 +63,14 @@ export class PluginSettingsComponent extends PluginSettingsComponentBase<PluginS
       }
 
       // The end of that chain is no longer a setting of this plugin's — it is parked for Advanced Rename and
-      // Delete Handler to be offered. Runs after the block above, so a vault still on the oldest key name
-      // Reaches here with its value already carried forward.
+      // delete Handler to be offered. Runs after the block above, so a vault still on the oldest key name
+      // reaches here with its value already carried forward.
       if (legacySettings.shouldAutomaticallyUpdateLinksOnRenameOrMove !== undefined) {
         legacySettings.proposedShouldHandleRenames = legacySettings.shouldAutomaticallyUpdateLinksOnRenameOrMove;
       }
 
       // The guard is load-bearing: the converter is handed the RAW `data.json` record, and the legacy key is
-      // Deleted from it once this runs. Without the guard, the next load would read the missing key as
+      // deleted from it once this runs. Without the guard, the next load would read the missing key as
       // `false` and reset a user who has since picked `Markdown`.
       if (legacySettings.shouldPreserveExistingLinkStyle !== undefined) {
         legacySettings.linkStyleMode = legacySettings.shouldPreserveExistingLinkStyle

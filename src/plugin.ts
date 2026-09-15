@@ -49,7 +49,7 @@ export class Plugin extends PluginBase {
         pluginSettingsComponent,
         reason: SUGGESTION_REASON,
         // `editAndSave`, not `setProperty`: a decline has to outlive a reload, and `setProperty` only edits
-        // The in-memory state.
+        // the in-memory state.
         setSuggestionDeclined: async (isDeclined): Promise<void> => {
           await pluginSettingsComponent.editAndSave((settings) => {
             settings.isAdvancedRenameAndDeleteHandlerSuggestionDeclined = isDeclined;
@@ -108,8 +108,8 @@ export class Plugin extends PluginBase {
           }
 
           // The path settings travel with the toggle: they scoped this plugin's own handler, so they are
-          // What the vault-wide handler needs to keep behaving the way this plugin did. They are proposed
-          // Rather than moved — this plugin keeps its own copies, which still scope link conversion.
+          // what the vault-wide handler needs to keep behaving the way this plugin did. They are proposed
+          // rather than moved — this plugin keeps its own copies, which still scope link conversion.
           return {
             excludePaths: settings.excludePaths,
             includePaths: settings.includePaths,

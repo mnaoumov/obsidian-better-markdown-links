@@ -26,11 +26,11 @@ interface DemoSettingsPatch {
 }
 
 // Deliberately written the way Obsidian and older notes write them: percent-encoded spaces, no angle
-// Brackets, no leading `./`, and a percent-encoded `file://` URL.
+// brackets, no leading `./`, and a percent-encoded `file://` URL.
 // The convert command's whole job is to turn these into the readable forms the other notes describe.
 // The backslash half of `file://` normalization is shown in the note's own prose rather than here: an
-// Encoded Windows separator glues the drive letter onto the next path segment, and the spellchecker
-// Reads the result as a misspelt word.
+// encoded Windows separator glues the drive letter onto the next path segment, and the spellchecker
+// reads the result as a misspelt word.
 const MESSY_CONTENT = [
   '# Messy links',
   '',
@@ -130,8 +130,8 @@ const ALIASED_CONTENT = [
 ].join('\n');
 
 // A note whose wikilinks Obsidian cannot resolve: the first names an ALIAS rather than a file name, the
-// Second names a note that does not exist at all. Converting with the two resolution settings on turns
-// The first into a link to the aliased note and creates a note for the second.
+// second names a note that does not exist at all. Converting with the two resolution settings on turns
+// the first into a link to the aliased note and creates a note for the second.
 const UNRESOLVED_CONTENT = [
   '# Unresolved links',
   '',
@@ -177,7 +177,7 @@ export function demoteEmbedsInCurrentFile(app: App): void {
 }
 
 // A note of plain wikilinks. Nothing here is malformed - with Obsidian's `Use [[Wikilinks]]` setting on,
-// This is what Obsidian itself writes, and what a plain convert run leaves untouched. It is the note the
+// this is what Obsidian itself writes, and what a plain convert run leaves untouched. It is the note the
 // Force-Markdown surfaces exist for.
 const WIKILINK_CONTENT = [
   '# Wikilinks',

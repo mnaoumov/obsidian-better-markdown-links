@@ -50,7 +50,7 @@ interface TestableSettingsTab extends SettingTab {
 const PLUGIN_ID = 'better-markdown-links';
 
 // `file://` links whose paths use encoded backslashes (`%5C`); normalizing decodes them and converts
-// The backslashes to forward slashes, yielding an observably different string.
+// the backslashes to forward slashes, yielding an observably different string.
 const BODY_CONTENT = '[body](file:///F:%5Cover%5Cage.txt)';
 const FRONTMATTER_MULTI_LINK_CONTENT = '---\nkey: "file:///F:%5Cover%5Care.txt file:///F:%5Cover%5Cage.txt"\n---\n\nbody\n';
 const ENCODED_BACKSLASH_MARKER = '%5C';
@@ -159,8 +159,8 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
       }
 
       // Returns as soon as the links are normalized (no encoded backslash remains); otherwise waits the
-      // Full timeout so the write has flushed and any (absent) normalization has had time to happen, then
-      // Returns the on-disk content.
+      // full timeout so the write has flushed and any (absent) normalization has had time to happen, then
+      // returns the on-disk content.
       async function waitForSettledContent(file: TFile): Promise<string> {
         const start = performance.now();
         let fileContent = await app.vault.read(file);

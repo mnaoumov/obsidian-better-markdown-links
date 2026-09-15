@@ -32,13 +32,13 @@ import type { PluginSettings } from './plugin-settings.ts';
 // These factories only stub the return values of pure utility functions the component reads
 // (allowed thin `vi.fn()` stubs). The dev-utils base classes (LayoutReadyComponent,
 // MonkeyAroundComponent, GenerateMarkdownLinkDefaultParamsComponent) and the plugin's own patch
-// Siblings are intentionally NOT mocked, so they run for real against the configured app.
+// siblings are intentionally NOT mocked, so they run for real against the configured app.
 vi.mock('obsidian-dev-utils/abort-controller', () => ({
   abortSignalAny: vi.fn()
 }));
 
 // Stub only the return value of the pure utility handleSilentError so the silent/non-silent branches
-// Of the openLinkText patch handler can be exercised. convertAsyncToSync keeps its real behavior
+// of the openLinkText patch handler can be exercised. convertAsyncToSync keeps its real behavior
 // (re-exported via importOriginal) so the real layout-ready/event wiring runs unchanged.
 vi.mock('obsidian-dev-utils/async', async (importOriginal) => ({
   ...await importOriginal<typeof import('obsidian-dev-utils/async')>(),
@@ -124,7 +124,7 @@ function createContext(files: ConfiguredFiles = {}, options: CreateContextOption
   const appMock = AppCls.createConfigured__({ files });
   // The configured App mock has no `obsidianDevUtilsState`; the real dev-utils shared-state helpers
   // (used by the real `GenerateMarkdownLinkDefaultParamsComponent`) read it, so seed it like the
-  // Sibling-plugin tests do rather than mocking those helpers.
+  // sibling-plugin tests do rather than mocking those helpers.
   castTo<ObsidianDevUtilsStateHolder>(appMock).obsidianDevUtilsState = {};
   // Seed a stub `commands` on the configured App mock, which lacks one.
   // The real `EditorSaveFileCommandPatchComponent` reads `app.commands.findCommand` in `onload`.

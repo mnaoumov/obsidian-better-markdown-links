@@ -121,7 +121,7 @@ beforeAll(async () => {
   await evalInObsidian({
     async callback({ app, fontSizeInPixels, lib: { waitUntil }, subjectNotePath }) {
       // A closure runs inside ONE Appium execute/sync call, which WebDriver caps
-      // Around 30s, so every wait in here stays comfortably under it.
+      // around 30s, so every wait in here stays comfortably under it.
       const SETTLE_TIMEOUT_IN_MILLISECONDS = 15_000;
       const SETTLE_DELAY_IN_MILLISECONDS = 1000;
 
@@ -139,8 +139,8 @@ beforeAll(async () => {
 
       // The plugin generates links in the style the VAULT is set to. Left at
       // Obsidian's default the convert command produced wikilinks, and the
-      // Angle-bracket form the shots are about never appeared. Relative paths
-      // Are what makes the leading './' meaningful.
+      // angle-bracket form the shots are about never appeared. Relative paths
+      // are what makes the leading './' meaningful.
       app.vault.setConfig('useMarkdownLinks', true);
       app.vault.setConfig('newLinkFormat', 'relative');
 
@@ -169,7 +169,7 @@ describe('mobile store screenshots', () => {
     const content = await convertLinksInNote();
     expect(content).not.toContain('%20');
     // Angle brackets around the path with spaces, and an explicit `./` so the
-    // Link means the same thing outside Obsidian as it does inside.
+    // link means the same thing outside Obsidian as it does inside.
     expect(content).toContain('(<./');
     await shoot(2, 'Readable paths, angle brackets, an explicit ./');
   });
@@ -208,7 +208,7 @@ async function convertLinksInNote(): Promise<string> {
       const SETTLE_DELAY_IN_MILLISECONDS = 1500;
 
       // Let the previous shot's capture settle: the device-metrics override it
-      // Sets and clears disturbs anything driven too soon afterwards.
+      // sets and clears disturbs anything driven too soon afterwards.
       const file = app.vault.getFileByPath(subjectNotePath);
       if (!file) {
         throw new Error(`Note is missing from the vault: ${subjectNotePath}`);
@@ -258,7 +258,7 @@ async function declineCompanionPluginSuggestion(): Promise<void> {
       const NOTICE_TIMEOUT_IN_MILLISECONDS = 15_000;
 
       // Nothing to dismiss is a perfectly good state: the suggestion is skipped once the setting records
-      // That it was declined, and that setting outlives a reload.
+      // that it was declined, and that setting outlives a reload.
       const declineButton = findNoticeButton(declineLabel, null);
       if (declineButton) {
         await clickElement({ element: declineButton });
@@ -270,7 +270,7 @@ async function declineCompanionPluginSuggestion(): Promise<void> {
       }
 
       // Waits for THIS notice to go rather than for the notice area to empty, so an unrelated notice
-      // Cannot hold the wait open.
+      // cannot hold the wait open.
       await waitUntil({
         message: 'the suggestion notice to close',
         predicate: () => !findNoticeButton(declineLabel, null),
@@ -317,7 +317,7 @@ async function openCommandPalette(query: string): Promise<void> {
 
       input.value = text;
       // The palette filters from its own `input` handler, so setting `value`
-      // Alone would leave every command in the vault on screen.
+      // alone would leave every command in the vault on screen.
       input.dispatchEvent(new Event('input'));
 
       await sleep(SETTLE_DELAY_IN_MILLISECONDS);
@@ -346,7 +346,7 @@ async function openNote(): Promise<string> {
       const leaf = app.workspace.getLeaf(false);
       await leaf.openFile(file);
       // `source: true` forces RAW Markdown, which is where the link spelling is
-      // Visible at all.
+      // visible at all.
       await leaf.setViewState({
         state: { file: subjectNotePath, mode: 'source', source: true },
         type: 'markdown'
@@ -433,8 +433,8 @@ function vaultPath(): string {
  */
 async function writeFrame(index: number, caption: string, captured: Uint8Array): Promise<void> {
   // The AVD is 900x1600, so the device frame IS the store size. Asserting it
-  // Here is what keeps that true: run this against any other AVD and it fails
-  // Loudly instead of quietly shipping an off-spec image.
+  // here is what keeps that true: run this against any other AVD and it fails
+  // loudly instead of quietly shipping an off-spec image.
   expect(readPngDimensions(captured)).toStrictEqual({
     heightInPixels: HEIGHT_IN_PIXELS,
     widthInPixels: WIDTH_IN_PIXELS
