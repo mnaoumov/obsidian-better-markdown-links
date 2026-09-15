@@ -119,7 +119,7 @@ describe('ConvertLinksToMarkdownInFileCommandHandler', () => {
   });
 
   // The `Convert links in file` row is already in the file menu; a second, nearly identically named row
-  // Beside it would cost more than it explains.
+  // beside it would cost more than it explains.
   it('should stay out of the file menu', () => {
     const file = createFile('note.md');
     const addItem = vi.fn();

@@ -51,7 +51,7 @@ describe('ConvertLinksToMarkdownInFolderCommandHandler', () => {
 
     fileMenuHandlers = [];
     // The palette command resolves the folder from the active file's parent, so the provider has to hand
-    // Back a file that has one.
+    // back a file that has one.
     activeFolder = ensureNonNullable(app.vault.getFolderByPath('some/folder'));
     const activeFileProvider: ActiveFileProvider = {
       getActiveFile: () => app.vault.getFileByPath('some/folder/note.md')
@@ -100,7 +100,7 @@ describe('ConvertLinksToMarkdownInFolderCommandHandler', () => {
   });
 
   // See the sibling file handler's test: the style-agnostic `Convert links in folder` row already owns the
-  // Folder menu.
+  // folder menu.
   it('should stay out of the folder menu', () => {
     const folder = TFolder.create__(castTo(app.vault), 'some/folder').asOriginalType2__();
     const addItem = vi.fn();

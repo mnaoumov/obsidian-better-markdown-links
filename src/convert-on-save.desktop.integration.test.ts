@@ -182,7 +182,7 @@ async function runSaveScenario(params: RunSaveScenarioParams): Promise<string> {
       }
 
       // Returns as soon as the link is converted; otherwise waits the full timeout so the write has
-      // Flushed and any (absent) conversion has had time to happen, then returns the on-disk content.
+      // flushed and any (absent) conversion has had time to happen, then returns the on-disk content.
       async function waitForSettledContent(file: TFile): Promise<string> {
         const start = performance.now();
         let content = await app.vault.read(file);
