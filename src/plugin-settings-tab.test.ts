@@ -31,7 +31,7 @@ interface SearchableDefinition {
 }
 
 interface VisibleDefinition {
-  visible(): boolean;
+  visible: () => boolean;
 }
 
 const EXPECTED_BOUND_PROPERTIES = [
