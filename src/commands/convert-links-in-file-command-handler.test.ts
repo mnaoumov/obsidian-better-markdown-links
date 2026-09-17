@@ -45,10 +45,10 @@ import { ConvertLinksInFileCommandHandler } from './convert-links-in-file-comman
 let app: AppOriginal;
 
 interface MenuItemMock {
-  onClick(callback: () => void): MenuItemMock;
-  setIcon(): MenuItemMock;
-  setSection(): MenuItemMock;
-  setTitle(): MenuItemMock;
+  onClick: (callback: () => void) => MenuItemMock;
+  setIcon: () => MenuItemMock;
+  setSection: () => MenuItemMock;
+  setTitle: () => MenuItemMock;
 }
 
 interface MenuMock {

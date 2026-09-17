@@ -81,7 +81,7 @@ interface CreateContextResult {
   readonly markdownFiles: TFile[];
   readonly pluginNoticeComponent: PluginNoticeComponent;
   readonly resourceLockComponent: ResourceLockComponent;
-  run(): Promise<void>;
+  readonly run: () => Promise<void>;
 }
 
 function createContext(options: CreateContextOptions = {}): CreateContextResult {

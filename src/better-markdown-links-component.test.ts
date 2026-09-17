@@ -80,7 +80,7 @@ interface CommandsHolder {
 }
 
 interface CommandsStub {
-  findCommand(commandId: string): unknown;
+  findCommand: (commandId: string) => unknown;
 }
 
 type ConfiguredFiles = NonNullable<Parameters<typeof AppCls.createConfigured__>[0]>['files'];
@@ -91,7 +91,7 @@ interface CreateContextOptions {
 }
 
 interface HandleModifyHolder {
-  handleModify(file: TAbstractFile): Promise<void>;
+  handleModify: (file: TAbstractFile) => Promise<void>;
 }
 
 interface MutableAbortSignalHolder {
