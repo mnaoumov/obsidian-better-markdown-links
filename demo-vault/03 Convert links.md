@@ -213,6 +213,7 @@ Two opt-in settings deal with this, applied in order and **only when you run a c
 
 - **Should resolve links via aliases** (`shouldResolveLinksViaAliases`)
   - looks an unresolved wikilink up against every note's `aliases` frontmatter and its basename, and points the converted link at whatever it finds.
+  - off by default because the answer can be arbitrary: when several notes carry the same name, the first one in vault order wins, and a link Obsidian was showing you as unresolved is rewritten to point at it.
 - **Should create missing notes** (`shouldCreateMissingNotes`)
   - creates the note when the alias lookup finds nothing, in the folder your **Default location for new notes** Obsidian setting names. This writes new files to your vault.
 
