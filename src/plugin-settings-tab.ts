@@ -285,6 +285,8 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
           appendCodeBlock(f, '[[Some Alias]]');
           f.appendText(' does, so without this an alias-only wikilink converts into a link pointing at a note that does not exist.');
           f.createEl('br');
+          f.appendText('Off by default because the answer can be arbitrary: when several notes carry the same name, the first one in vault order wins, and the link Obsidian was showing you as unresolved is rewritten to point at it.');
+          f.createEl('br');
           f.appendText('Applies only to the explicit convert commands, never to automatic conversion.');
         }),
         name: 'Should resolve links via aliases',

@@ -23,6 +23,11 @@ vi.mock('obsidian', () => ({
   Platform: { isWin: true }
 }));
 
+vi.mock('obsidian-dev-utils/obsidian/file-system', () => ({
+  getFileOrNull: vi.fn(),
+  isMarkdownFile: vi.fn()
+}));
+
 vi.mock('obsidian-dev-utils/obsidian/link', () => ({
   editLinks: vi.fn(),
   generateMarkdownLink: vi.fn(),
@@ -40,6 +45,11 @@ import {
   parseFrontMatterAliases,
   Platform
 } from 'obsidian';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import {
+  getFileOrNull,
+  isMarkdownFile
+} from 'obsidian-dev-utils/obsidian/file-system';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
   editLinks,
@@ -66,6 +76,12 @@ const GENERATED_LINK = '[Some Alias](<Real Note.md>)';
 const SOURCE_FILE_PATH = 'folder/note.md';
 
 interface CreateContextOptions {
+  /**
+   * Whether `metadataCache.getLinkSuggestions` carries the `getPathsByNameSafe` graft, i.e. whether
+   * the `Advanced Metadata Cache` plugin's `Names` module is on.
+   */
+  readonly isNameIndexInstalled?: boolean;
+
   readonly shouldCreateMissingNotes?: boolean;
   readonly shouldResolveLinksViaAliases?: boolean;
 }
@@ -78,6 +94,7 @@ interface CreateContextResult {
   readonly getFileCache: ReturnType<typeof vi.fn>;
   readonly getFirstLinkpathDestination: ReturnType<typeof vi.fn>;
   readonly getNewFileParent: ReturnType<typeof vi.fn>;
+  readonly getPathsByNameSafe: ReturnType<typeof vi.fn>;
   readonly markdownFiles: TFile[];
   readonly pluginNoticeComponent: PluginNoticeComponent;
   readonly resourceLockComponent: ResourceLockComponent;
@@ -91,12 +108,19 @@ function createContext(options: CreateContextOptions = {}): CreateContextResult 
   const getFileCache = vi.fn().mockReturnValue({ frontmatter: {} });
   const getNewFileParent = vi.fn<() => TFolder>().mockReturnValue(strictProxy<TFolder>({ path: 'Inbox' }));
   const create = vi.fn<(path: string) => Promise<TFile>>();
+  const getPathsByNameSafe = vi.fn<(name: string) => Promise<string[]>>().mockResolvedValue([]);
+  // Core's own method, with the `Names` module's graft on it or without, which is the whole of what
+  // this plugin looks at to decide which implementation it has.
+  const getLinkSuggestions = options.isNameIndexInstalled
+    ? Object.assign(vi.fn(), { getPathsByNameSafe })
+    : vi.fn();
   const app = strictProxy<App>({
     fileManager: { getNewFileParent },
     metadataCache: {
       getFileCache,
       // eslint-disable-next-line unicorn/name-replacements -- `getFirstLinkpathDest` is Obsidian's own API name; the mock must match it.
-      getFirstLinkpathDest: getFirstLinkpathDestination
+      getFirstLinkpathDest: getFirstLinkpathDestination,
+      getLinkSuggestions: castTo(getLinkSuggestions)
     },
     vault: {
       create,
@@ -115,6 +139,7 @@ function createContext(options: CreateContextOptions = {}): CreateContextResult 
     getFileCache,
     getFirstLinkpathDestination,
     getNewFileParent,
+    getPathsByNameSafe,
     markdownFiles,
     pluginNoticeComponent,
     resourceLockComponent,
@@ -159,6 +184,8 @@ beforeEach(() => {
   vi.mocked(generateMarkdownLink).mockReturnValue(GENERATED_LINK);
   vi.mocked(createFolderSafe).mockResolvedValue(castTo({}));
   vi.mocked(getAvailablePath).mockImplementation((_app, path) => path);
+  vi.mocked(isMarkdownFile).mockImplementation((pathOrFile) => typeof pathOrFile === 'string' && pathOrFile.endsWith('.md'));
+  vi.mocked(getFileOrNull).mockReturnValue(null);
 });
 
 describe('normalizeAlias', () => {
@@ -292,6 +319,101 @@ describe('resolveUnresolvedLinksInFile', () => {
       await runLinkConverter(createLink('[[Some Alias]]'));
 
       expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(namedFile);
+    });
+
+    describe('the name index, when the Advanced Metadata Cache plugin has grafted it on', () => {
+      it('should resolve through the index rather than by walking the vault', async () => {
+        const context = createContext({ isNameIndexInstalled: true, shouldResolveLinksViaAliases: true });
+        const indexedFile = createFile('Real Note.md', 'Real Note');
+        // A note the WALK would find, so a pass here cannot be the walk answering.
+        context.markdownFiles.push(createFile('Some Alias.md', 'Some Alias'));
+        context.getPathsByNameSafe.mockResolvedValue(['Real Note.md']);
+        vi.mocked(getFileOrNull).mockReturnValue(indexedFile);
+        await context.run();
+
+        await runLinkConverter(createLink('[[Some Alias]]'));
+
+        // The RAW link text, not the normalized one: the index normalizes its own keys.
+        expect(context.getPathsByNameSafe).toHaveBeenCalledExactlyOnceWith('Some Alias');
+        expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(indexedFile);
+      });
+
+      it('should take the first note the index names', async () => {
+        const context = createContext({ isNameIndexInstalled: true, shouldResolveLinksViaAliases: true });
+        const firstFile = createFile('First.md', 'First');
+        const secondFile = createFile('Second.md', 'Second');
+        context.getPathsByNameSafe.mockResolvedValue(['First.md', 'Second.md']);
+        vi.mocked(getFileOrNull).mockImplementation((params) => params.pathOrFile === 'First.md' ? firstFile : secondFile);
+        await context.run();
+
+        await runLinkConverter(createLink('[[Some Alias]]'));
+
+        expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(firstFile);
+      });
+
+      it('should skip a non-markdown path the index names', async () => {
+        const context = createContext({ isNameIndexInstalled: true, shouldResolveLinksViaAliases: true });
+        const note = createFile('Real Note.md', 'Real Note');
+        context.getPathsByNameSafe.mockResolvedValue(['Board.canvas', 'Real Note.md']);
+        vi.mocked(getFileOrNull).mockReturnValue(note);
+        await context.run();
+
+        await runLinkConverter(createLink('[[Some Alias]]'));
+
+        expect(vi.mocked(getFileOrNull)).toHaveBeenCalledExactlyOnceWith({ app: context.app, pathOrFile: 'Real Note.md' });
+        expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(note);
+      });
+
+      it('should skip a path no file answers to', async () => {
+        const context = createContext({ isNameIndexInstalled: true, shouldResolveLinksViaAliases: true });
+        const note = createFile('Real Note.md', 'Real Note');
+        context.getPathsByNameSafe.mockResolvedValue(['Gone.md', 'Real Note.md']);
+        vi.mocked(getFileOrNull).mockImplementation((params) => params.pathOrFile === 'Real Note.md' ? note : null);
+        await context.run();
+
+        await runLinkConverter(createLink('[[Some Alias]]'));
+
+        expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(note);
+      });
+
+      it('should take an empty index answer as final rather than falling back to the walk', async () => {
+        const context = createContext({ isNameIndexInstalled: true, shouldResolveLinksViaAliases: true });
+        context.markdownFiles.push(createFile('Some Alias.md', 'Some Alias'));
+        context.getPathsByNameSafe.mockResolvedValue([]);
+        await context.run();
+
+        const result = await runLinkConverter(createLink('[[Some Alias]]'));
+
+        expect(result).toBeUndefined();
+        expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
+      });
+
+      it('should still create the missing note when the index names nothing', async () => {
+        const context = createContext({
+          isNameIndexInstalled: true,
+          shouldCreateMissingNotes: true,
+          shouldResolveLinksViaAliases: true
+        });
+        const createdFile = createFile('Inbox/Some Alias.md', 'Some Alias');
+        context.create.mockResolvedValue(createdFile);
+        await context.run();
+
+        await runLinkConverter(createLink('[[Some Alias]]'));
+
+        expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(createdFile);
+      });
+
+      it('should walk the vault when the graft is absent', async () => {
+        const context = createContext({ shouldResolveLinksViaAliases: true });
+        const namedFile = createFile('Some Alias.md', 'Some Alias');
+        context.markdownFiles.push(namedFile);
+        await context.run();
+
+        await runLinkConverter(createLink('[[Some Alias]]'));
+
+        expect(context.getPathsByNameSafe).not.toHaveBeenCalled();
+        expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(namedFile);
+      });
     });
 
     it('should pass an empty alias when the wikilink has no display text', async () => {
