@@ -7,6 +7,8 @@ Obsidian can [resolve a relative path as if it were absolute](https://forum.obsi
 
 Together these make every generated link unambiguous about whether it is relative to the current note or to the vault root.
 
+They decide how a relative path is *written*. Whether one is written at all is Obsidian's own **New link format** setting - unless you override it with **Link path style**, described in [Forcing a link path style](<./03 Convert links.md#forcing-a-link-path-style>).
+
 ## Try it
 
 These links are written exactly as the plugin generates them - relative, dot-prefixed, and wrapped in angle brackets where the path has spaces:

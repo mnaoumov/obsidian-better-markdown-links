@@ -12,9 +12,11 @@ const UNRESOLVED_FOLDER_PATH = 'Materials/03 Convert links';
 const UNRESOLVED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/Unresolved links.md`;
 const ALIASED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/Aliased note.md`;
 const WIKILINK_NOTE_PATH = `${MESSY_FOLDER_PATH}/Wikilinks.md`;
+const PATH_STYLE_NOTE_PATH = `${MESSY_FOLDER_PATH}/Non-relative paths.md`;
 
 interface DemoSettingsPatch {
   linkConversionMode?: string;
+  linkPathStyleMode?: string;
   linkStyleMode?: string;
   shouldAppendFileNameWhenDemotingEmbeds?: boolean;
   shouldCreateMissingNotes?: boolean;
@@ -209,4 +211,39 @@ export async function openWikilinkNote(app: App): Promise<void> {
  */
 export function convertLinksToMarkdownInCurrentFile(app: App): void {
   app.commands.executeCommandById(`${PLUGIN_ID}:convert-links-to-markdown-in-current-file`);
+}
+
+// A note whose links name their targets any way BUT relatively - by bare file name, and from the vault
+// root. Nothing here is malformed: with Obsidian's own `New link format` setting at its default, this is
+// what Obsidian itself writes. It is the note the force-relative surfaces exist for.
+const PATH_STYLE_CONTENT = [
+  '# Non-relative paths',
+  '',
+  'Every link below names its target without a relative path. Forcing the relative style rewrites each',
+  'one into the dot-prefixed form [02 Relative links](<../../02 Relative links.md>) describes.',
+  '',
+  '- By bare file name: [Deep note](<Deep note.md>)',
+  '- By bare file name again: [Simple note](<Simple note.md>)',
+  '- From the vault root: [Note with spaces](</Materials/01 Angle bracket links/A folder with spaces/Note with spaces.md>)',
+  ''
+].join('\n');
+
+/**
+ * Creates (or restores) a note whose link paths are anything but relative, and opens it.
+ *
+ * Manual equivalent: create a note and write some links that name their target by file name alone.
+ */
+export async function openPathStyleNote(app: App): Promise<void> {
+  await openDemoNote(app, MESSY_FOLDER_PATH, PATH_STYLE_NOTE_PATH, PATH_STYLE_CONTENT);
+  new Notice('Non-relative paths note ready. Now force the relative style.');
+}
+
+/**
+ * Runs the force-relative convert command on the active note.
+ *
+ * Manual equivalent: **Better Markdown Links: Convert link paths to relative in current file** in the
+ * Command Palette.
+ */
+export function convertLinkPathsToRelativeInCurrentFile(app: App): void {
+  app.commands.executeCommandById(`${PLUGIN_ID}:convert-link-paths-to-relative-in-current-file`);
 }

@@ -9,6 +9,7 @@ import { PluginSettingsTabBase } from 'obsidian-dev-utils/obsidian/plugin/plugin
 import type { PluginSettings } from './plugin-settings.ts';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
+import { LinkPathStyleMode } from './link-path-style-mode.ts';
 import { LinkStyleMode } from './link-style-mode.ts';
 
 interface PluginSettingsTabConstructorParams extends PluginSettingsTabBaseConstructorParams<PluginSettings> {
@@ -210,6 +211,47 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
               /* eslint-enable perfectionist/sort-objects -- Need to keep order. */
             });
             this.bind({ propertyName: 'linkStyleMode', valueComponent: dropdown });
+          });
+        }
+      }),
+      this.settingEx({
+        desc: createFragment((f) => {
+          f.appendText('Which link path style to write.');
+          f.createEl('br');
+          appendCodeBlock(f, 'Obsidian settings default');
+          f.appendText(' - follow the ');
+          appendCodeBlock(f, 'New link format');
+          f.appendText(' Obsidian setting.');
+          f.createEl('br');
+          appendCodeBlock(f, 'Relative path to the source');
+          f.appendText(' - always write the path relative to the note the link is in, e.g. ');
+          appendCodeBlock(f, '[alias](<./folder/target.md>)');
+          f.appendText('.');
+          f.createEl('br');
+          appendCodeBlock(f, 'Shortest path when possible');
+          f.appendText(' - always write the shortest path that still resolves to a single note, e.g. ');
+          appendCodeBlock(f, '[alias](<target.md>)');
+          f.appendText('.');
+          f.createEl('br');
+          appendCodeBlock(f, 'Absolute path in vault');
+          f.appendText(' - always write the path from the vault root, e.g. ');
+          appendCodeBlock(f, '[alias](</folder/target.md>)');
+          f.appendText('.');
+          f.createEl('br');
+          f.appendText('Outside the default, the two leading dot and slash settings above are applied as written rather than copied from the link being replaced.');
+        }),
+        name: 'Link path style',
+        render: (setting) => {
+          setting.addDropdown((dropdown) => {
+            dropdown.addOptions({
+              /* eslint-disable perfectionist/sort-objects -- Need to keep order. */
+              [LinkPathStyleMode.ObsidianSettingsDefault]: 'Obsidian settings default',
+              [LinkPathStyleMode.RelativePathToTheSource]: 'Relative path to the source',
+              [LinkPathStyleMode.ShortestPathWhenPossible]: 'Shortest path when possible',
+              [LinkPathStyleMode.AbsolutePathInVault]: 'Absolute path in vault'
+              /* eslint-enable perfectionist/sort-objects -- Need to keep order. */
+            });
+            this.bind({ propertyName: 'linkPathStyleMode', valueComponent: dropdown });
           });
         }
       }),

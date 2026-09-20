@@ -6,7 +6,10 @@ import type {
 } from 'obsidian';
 import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
 import type { ConsoleDebugComponent } from 'obsidian-dev-utils/obsidian/components/console-debug-component';
-import type { LinkStyle } from 'obsidian-dev-utils/obsidian/link';
+import type {
+  LinkPathStyle,
+  LinkStyle
+} from 'obsidian-dev-utils/obsidian/link';
 import type { CachedMetadataEx } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 import { castTo } from 'obsidian-dev-utils/object-utils';
@@ -86,6 +89,7 @@ interface CommandsStub {
 type ConfiguredFiles = NonNullable<Parameters<typeof AppCls.createConfigured__>[0]>['files'];
 
 interface CreateContextOptions {
+  readonly generatedLinkPathStyle?: LinkPathStyle;
   readonly generatedLinkStyle?: LinkStyle;
   readonly shouldNormalizeFileLinks?: boolean;
 }
@@ -144,7 +148,12 @@ function createContext(files: ConfiguredFiles = {}, options: CreateContextOption
   const shouldConvertLinksOnNavigation = vi.fn<() => boolean>().mockReturnValue(true);
   const shouldConvertLinksOnSave = vi.fn<(isSaveCommand: boolean) => boolean>().mockReturnValue(true);
   const settings = strictProxy<PluginSettings>({
+    // The decoration half belongs to `PluginSettings` and is pinned in its own suite; what this one cares
+    // about is that whatever comes back reaches the `convertLink` probe.
+    buildLinkPathStyleParams: vi.fn((linkPathStyle: LinkPathStyle) => ({ linkPathStyle })),
+    getGeneratedLinkPathStyle: vi.fn().mockReturnValue(options.generatedLinkPathStyle),
     getGeneratedLinkStyle: vi.fn().mockReturnValue(options.generatedLinkStyle),
+    getLinkPathStyle: vi.fn().mockReturnValue('ObsidianSettingsDefault'),
     getLinkStyle: vi.fn().mockReturnValue('ObsidianSettingsDefault'),
     isPathIgnored,
     shouldAllowEmptyEmbedAlias: false,
@@ -284,6 +293,8 @@ describe('BetterMarkdownLinksComponent', () => {
       // No `linkStyle` KEY at all, not a `linkStyle: undefined`: these params are merged with
       // `Object.assign`, so the key would clobber a style another plugin's function had set.
       expect(lastFunction?.()).not.toHaveProperty('linkStyle');
+      // The same argument, one axis over.
+      expect(lastFunction?.()).not.toHaveProperty('linkPathStyle');
     });
 
     it('should carry the forced markdown style into the default link generation params', () => {
@@ -292,6 +303,14 @@ describe('BetterMarkdownLinksComponent', () => {
       loadComponent(context);
 
       expect(getGenerateMarkdownLinkDefaultParamsFns().at(-1)?.()).toMatchObject({ linkStyle: 'Markdown' });
+    });
+
+    it('should carry the forced link path style into the default link generation params', () => {
+      const context = createContext({}, { generatedLinkPathStyle: castTo<LinkPathStyle>('RelativePathToTheSource') });
+
+      loadComponent(context);
+
+      expect(getGenerateMarkdownLinkDefaultParamsFns().at(-1)?.()).toMatchObject({ linkPathStyle: 'RelativePathToTheSource' });
     });
   });
 

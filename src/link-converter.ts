@@ -10,6 +10,7 @@ import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource
 import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
 import { getMarkdownFiles } from 'obsidian-dev-utils/obsidian/file-system';
 import {
+  LinkPathStyle,
   LinkStyle,
   updateFileUrlLinksInFile,
   updateLinksInFile
@@ -20,6 +21,11 @@ import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 
 import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
+
+interface GetConversionSubjectParams {
+  readonly shouldForceMarkdownLinkStyle: boolean;
+  readonly shouldForceRelativeLinkPathStyle: boolean;
+}
 
 interface LinkConverterConstructorParams {
   readonly abortSignalComponent: AbortSignalComponent;
@@ -42,6 +48,16 @@ interface LinkConverterConvertLinksInFileParams {
    * @default `false`
    */
   readonly shouldForceMarkdownLinkStyle?: boolean;
+
+  /**
+   * Whether to write paths relative to the note regardless of the `Link path style` setting.
+   *
+   * Set by the `Convert link paths to relative` commands, which exist so a vault that normally follows
+   * Obsidian's own `New link format` setting can still force relative paths for one run.
+   *
+   * @default `false`
+   */
+  readonly shouldForceRelativeLinkPathStyle?: boolean;
 
   readonly shouldPromptForExcludedFile?: boolean;
 
@@ -67,6 +83,13 @@ interface LinkConverterConvertLinksInFolderParams {
    * @default `false`
    */
   readonly shouldForceMarkdownLinkStyle?: boolean;
+
+  /**
+   * See {@link LinkConverterConvertLinksInFileParams.shouldForceRelativeLinkPathStyle}.
+   *
+   * @default `false`
+   */
+  readonly shouldForceRelativeLinkPathStyle?: boolean;
 
   /**
    * See {@link LinkConverterConvertLinksInFileParams.shouldResolveUnresolvedLinks}.
@@ -128,7 +151,10 @@ export class LinkConverter {
       linkStyle: params.shouldForceMarkdownLinkStyle ? LinkStyle.Markdown : settings.getLinkStyle(),
       newSourcePathOrFile: params.file,
       pluginNoticeComponent: this.pluginNoticeComponent,
-      resourceLockComponent: this.resourceLockComponent
+      resourceLockComponent: this.resourceLockComponent,
+      ...settings.buildLinkPathStyleParams(
+        params.shouldForceRelativeLinkPathStyle ? LinkPathStyle.RelativePathToTheSource : settings.getLinkPathStyle()
+      )
     });
 
     if (settings.shouldNormalizeFileLinks) {
@@ -146,7 +172,11 @@ export class LinkConverter {
   public async convertLinksInFolder(params: LinkConverterConvertLinksInFolderParams): Promise<void> {
     const abortSignal = abortSignalAny(this.abortSignalComponent.abortSignal, params.abortSignal);
     const shouldForceMarkdownLinkStyle = params.shouldForceMarkdownLinkStyle ?? false;
-    const what = shouldForceMarkdownLinkStyle ? 'links to Markdown' : 'links';
+    const shouldForceRelativeLinkPathStyle = params.shouldForceRelativeLinkPathStyle ?? false;
+    const what = getConversionSubject({
+      shouldForceMarkdownLinkStyle,
+      shouldForceRelativeLinkPathStyle
+    });
     await loop({
       abortSignal,
       buildNoticeMessage: ({ item, iterationString }) => `Converting ${what} in note ${iterationString} - ${item.path}`,
@@ -161,6 +191,7 @@ export class LinkConverter {
           abortSignal,
           file,
           shouldForceMarkdownLinkStyle,
+          shouldForceRelativeLinkPathStyle,
           shouldResolveUnresolvedLinks: params.shouldResolveUnresolvedLinks ?? false
         });
       },
@@ -171,4 +202,24 @@ export class LinkConverter {
       shouldShowProgressBar: true
     });
   }
+}
+
+/**
+ * The noun the progress bar and the per-note notice use for one folder run.
+ *
+ * No command sets both flags, so the order below only decides what an unreachable combination would say.
+ *
+ * @param params - See {@link GetConversionSubjectParams}.
+ * @returns The noun, ready to be interpolated after `Converting `.
+ */
+function getConversionSubject(params: GetConversionSubjectParams): string {
+  if (params.shouldForceMarkdownLinkStyle) {
+    return 'links to Markdown';
+  }
+
+  if (params.shouldForceRelativeLinkPathStyle) {
+    return 'link paths to relative';
+  }
+
+  return 'links';
 }
