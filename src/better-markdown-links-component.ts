@@ -19,8 +19,8 @@ import { GenerateMarkdownLinkDefaultParamsComponent } from 'obsidian-dev-utils/o
 import { LayoutReadyComponent } from 'obsidian-dev-utils/obsidian/components/layout-ready-component';
 import { convertLink } from 'obsidian-dev-utils/obsidian/link';
 import {
-  getCacheSafe,
-  getLinks
+  getLinks,
+  parseMetadata
 } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 import type { LinkConverter } from './link-converter.ts';
@@ -175,15 +175,29 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     try {
       const combinedAbortSignal = abortSignalAny(this.abortSignalComponent.abortSignal, processFileAbortController.signal);
       const shouldNormalizeFileLinks = this.pluginSettingsComponent.settings.shouldNormalizeFileLinks;
-      const cache = await getCacheSafe(this.app, file, {
+      // The probe parses the note's own CONTENT rather than asking for its cached metadata, and that is a
+      // correctness requirement rather than a performance choice. `getCacheSafe()` flushes every dirty
+      // `MarkdownView` of the file first, and this probe runs on the automatic triggers — the save patch
+      // reaches it while `TextFileView.save()` is still in flight. A plugin that rewrites the editor right
+      // after the save (Linter's `Lint on save` inserting YAML attributes is the reported case) then has its
+      // insert saved a second time by us, one tick after it landed, which leaves Obsidian's properties
+      // section in the editor rendering the frontmatter the file had BEFORE the insert — empty — until the
+      // note is closed and reopened. See issue #40. A probe that only decides whether there is anything to
+      // convert must not write, and this one now cannot: parsing the content answers the same question with
+      // no view, no cache and no save involved. The conversion itself still flushes, because a rewrite that
+      // did not would be clobbered by the editor's own next save.
+      const content = await this.readContentSafe(file);
+      combinedAbortSignal.throwIfAborted();
+      if (content === null) {
+        return;
+      }
+
+      const cache = await parseMetadata(this.app, content, {
         shouldParseExternalLinks: shouldNormalizeFileLinks,
         shouldParseFrontmatterExternalLinks: shouldNormalizeFileLinks,
         shouldParseMultiValueFrontmatterExternalLinks: shouldNormalizeFileLinks
       });
       combinedAbortSignal.throwIfAborted();
-      if (!cache) {
-        return;
-      }
       const links = getLinks({ cache });
       const settings = this.pluginSettingsComponent.settings;
       // The same path params `LinkConverter` writes with. A probe that asked for less would answer "no
@@ -208,6 +222,29 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
       }
     } finally {
       this.processFileAbortControllers.delete(file.path);
+    }
+  }
+
+  /**
+   * Reads the note's content, tolerating a note that is deleted while the read is in flight.
+   *
+   * The automatic triggers are all reactions to something that has already happened, so the note can be
+   * gone by the time the reaction runs. `getCacheSafe()`, which this probe used to call, answered `null`
+   * in that case rather than throwing; keeping that tolerance here is what stops a note deleted mid-save
+   * from surfacing as an error notice.
+   *
+   * @param file - The note to read.
+   * @returns The content, or `null` if the note no longer exists.
+   */
+  private async readContentSafe(file: TFile): Promise<null | string> {
+    try {
+      return await this.app.vault.cachedRead(file);
+    } catch (error) {
+      if (file.deleted) {
+        return null;
+      }
+
+      throw error;
     }
   }
 }

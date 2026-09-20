@@ -56,8 +56,8 @@ vi.mock('obsidian-dev-utils/obsidian/link', async (importOriginal) => ({
 }));
 
 vi.mock('obsidian-dev-utils/obsidian/metadata-cache', () => ({
-  getCacheSafe: vi.fn(),
-  getLinks: vi.fn()
+  getLinks: vi.fn(),
+  parseMetadata: vi.fn()
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
@@ -71,8 +71,8 @@ import {
 } from 'obsidian-dev-utils/obsidian/link';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
-  getCacheSafe,
-  getLinks
+  getLinks,
+  parseMetadata
 } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
@@ -88,10 +88,20 @@ interface CommandsStub {
 
 type ConfiguredFiles = NonNullable<Parameters<typeof AppCls.createConfigured__>[0]>['files'];
 
+/**
+ * The on-disk content of the seeded notes. Its shape is irrelevant — `parseMetadata` is mocked — but it
+ * is what the probe is asserted to have passed along, so it must not be empty.
+ */
+const NOTE_CONTENT = 'note content';
+
 interface CreateContextOptions {
   readonly generatedLinkPathStyle?: LinkPathStyle;
   readonly generatedLinkStyle?: LinkStyle;
   readonly shouldNormalizeFileLinks?: boolean;
+}
+
+interface DeletedHolder {
+  deleted: boolean;
 }
 
 interface HandleModifyHolder {
@@ -124,8 +134,23 @@ interface TestContext {
   shouldConvertLinksOnSave: ReturnType<typeof vi.fn<(isSaveCommand: boolean) => boolean>>;
 }
 
+/**
+ * The notes every scenario below drives `processFile` with. They are seeded into the configured App mock
+ * unconditionally because the probe reads the note's content for real (`Vault.cachedRead`) before handing
+ * it to the mocked `parseMetadata`; a detached `TFile` with no note behind it fails that read.
+ */
+const DEFAULT_FILES: ConfiguredFiles = {
+  'ignored.md': NOTE_CONTENT,
+  'note.md': NOTE_CONTENT
+};
+
 function createContext(files: ConfiguredFiles = {}, options: CreateContextOptions = {}): TestContext {
-  const appMock = AppCls.createConfigured__({ files });
+  const appMock = AppCls.createConfigured__({
+    files: {
+      ...DEFAULT_FILES,
+      ...files
+    }
+  });
   // The configured App mock has no `obsidianDevUtilsState`; the real dev-utils shared-state helpers
   // (used by the real `GenerateMarkdownLinkDefaultParamsComponent`) read it, so seed it like the
   // sibling-plugin tests do rather than mocking those helpers.
@@ -250,7 +275,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   activeDocument.body.replaceChildren();
   vi.mocked(abortSignalAny).mockImplementation((...signals) => signals[0] ?? new AbortController().signal);
-  vi.mocked(getCacheSafe).mockResolvedValue(castTo<CachedMetadataEx>({ features: [] }));
+  vi.mocked(parseMetadata).mockResolvedValue(castTo<CachedMetadataEx>({ features: [] }));
   vi.mocked(getLinks).mockReturnValue([]);
   vi.mocked(convertLink).mockReturnValue('converted');
   vi.mocked(handleSilentError).mockReturnValue(false);
@@ -329,7 +354,7 @@ describe('BetterMarkdownLinksComponent', () => {
 
       await handleModify(context.component, makeTFolder('folder'));
 
-      expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
+      expect(vi.mocked(parseMetadata)).not.toHaveBeenCalled();
     });
 
     it('should abort an in-progress conversion for the same file', async () => {
@@ -350,7 +375,7 @@ describe('BetterMarkdownLinksComponent', () => {
 
       await handleModify(context.component, makeTFile('note.md'));
 
-      expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
+      expect(vi.mocked(parseMetadata)).not.toHaveBeenCalled();
     });
 
     it('should do nothing while the suggestion container is shown', async () => {
@@ -362,7 +387,7 @@ describe('BetterMarkdownLinksComponent', () => {
 
       await handleModify(context.component, makeTFile('note.md'));
 
-      expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
+      expect(vi.mocked(parseMetadata)).not.toHaveBeenCalled();
     });
 
     it('should skip and log ignored files', async () => {
@@ -372,7 +397,7 @@ describe('BetterMarkdownLinksComponent', () => {
       await handleModify(context.component, makeTFile('ignored.md'));
 
       expect(context.consoleDebug).toHaveBeenCalledWith('File ignored.md is ignored in plugin settings, skipping');
-      expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
+      expect(vi.mocked(parseMetadata)).not.toHaveBeenCalled();
     });
 
     it('should throw when the combined abort signal aborts after reading the cache', async () => {
@@ -384,13 +409,34 @@ describe('BetterMarkdownLinksComponent', () => {
       await expect(handleModify(context.component, makeTFile('note.md'))).rejects.toThrow();
     });
 
-    it('should return when there is no cache', async () => {
+    it('should return when the note is deleted while its content is being read', async () => {
       const context = createContext();
-      vi.mocked(getCacheSafe).mockResolvedValue(null);
+      const file = makeTFile('note.md');
+      castTo<DeletedHolder>(file).deleted = true;
+      vi.spyOn(context.app.vault, 'cachedRead').mockRejectedValue(new Error('File not found: note.md'));
+
+      await handleModify(context.component, file);
+
+      expect(vi.mocked(parseMetadata)).not.toHaveBeenCalled();
+      expect(context.convertLinksInFile).not.toHaveBeenCalled();
+    });
+
+    it('should rethrow a read failure for a note that still exists', async () => {
+      const context = createContext();
+      vi.spyOn(context.app.vault, 'cachedRead').mockRejectedValue(new Error('boom'));
+
+      await expect(handleModify(context.component, makeTFile('note.md'))).rejects.toThrow('boom');
+    });
+
+    it('should probe the note own content rather than its cached metadata', async () => {
+      const context = createContext();
 
       await handleModify(context.component, makeTFile('note.md'));
 
-      expect(context.convertLinksInFile).not.toHaveBeenCalled();
+      // The probe reads the note and parses THAT. Asking for the cached metadata instead (`getCacheSafe`)
+      // flushes every dirty view of the note on the way, which is what broke issue #40 — so that module
+      // mock deliberately does not expose `getCacheSafe` at all, and reintroducing it fails loudly here.
+      expect(vi.mocked(parseMetadata)).toHaveBeenCalledWith(context.app, NOTE_CONTENT, expect.anything());
     });
 
     it('should not convert when all links already match the target style', async () => {
@@ -418,11 +464,11 @@ describe('BetterMarkdownLinksComponent', () => {
       const context = createContext();
       const file = makeTFile('note.md');
       vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
-      vi.mocked(getCacheSafe).mockResolvedValue(makeCacheWithExternalLinks(true, 'body'));
+      vi.mocked(parseMetadata).mockResolvedValue(makeCacheWithExternalLinks(true, 'body'));
 
       await handleModify(context.component, file);
 
-      expect(vi.mocked(getCacheSafe)).toHaveBeenCalledWith(context.app, file, {
+      expect(vi.mocked(parseMetadata)).toHaveBeenCalledWith(context.app, NOTE_CONTENT, {
         shouldParseExternalLinks: true,
         shouldParseFrontmatterExternalLinks: true,
         shouldParseMultiValueFrontmatterExternalLinks: true
@@ -435,7 +481,7 @@ describe('BetterMarkdownLinksComponent', () => {
       const context = createContext();
       const file = makeTFile('note.md');
       vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
-      vi.mocked(getCacheSafe).mockResolvedValue(makeCacheWithExternalLinks(true, 'multiValueFrontmatter'));
+      vi.mocked(parseMetadata).mockResolvedValue(makeCacheWithExternalLinks(true, 'multiValueFrontmatter'));
 
       await handleModify(context.component, file);
 
@@ -446,7 +492,7 @@ describe('BetterMarkdownLinksComponent', () => {
       const context = createContext();
       const file = makeTFile('note.md');
       vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
-      vi.mocked(getCacheSafe).mockResolvedValue(makeCacheWithExternalLinks(true, 'frontmatter'));
+      vi.mocked(parseMetadata).mockResolvedValue(makeCacheWithExternalLinks(true, 'frontmatter'));
 
       await handleModify(context.component, file);
 
@@ -456,7 +502,7 @@ describe('BetterMarkdownLinksComponent', () => {
     it('should not convert when the only external link is not a file:// link', async () => {
       const context = createContext();
       vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
-      vi.mocked(getCacheSafe).mockResolvedValue(makeCacheWithExternalLinks(false, 'body'));
+      vi.mocked(parseMetadata).mockResolvedValue(makeCacheWithExternalLinks(false, 'body'));
 
       await handleModify(context.component, makeTFile('note.md'));
 
@@ -467,11 +513,11 @@ describe('BetterMarkdownLinksComponent', () => {
       const context = createContext({}, { shouldNormalizeFileLinks: false });
       const file = makeTFile('note.md');
       vi.mocked(getLinks).mockReturnValue([makeLink('converted')]);
-      vi.mocked(getCacheSafe).mockResolvedValue(makeCacheWithExternalLinks(true, 'body'));
+      vi.mocked(parseMetadata).mockResolvedValue(makeCacheWithExternalLinks(true, 'body'));
 
       await handleModify(context.component, file);
 
-      expect(vi.mocked(getCacheSafe)).toHaveBeenCalledWith(context.app, file, {
+      expect(vi.mocked(parseMetadata)).toHaveBeenCalledWith(context.app, NOTE_CONTENT, {
         shouldParseExternalLinks: false,
         shouldParseFrontmatterExternalLinks: false,
         shouldParseMultiValueFrontmatterExternalLinks: false
@@ -496,7 +542,7 @@ describe('BetterMarkdownLinksComponent', () => {
 
       await context.component.handleNavigation(makeTFile('note.md'));
 
-      expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
+      expect(vi.mocked(parseMetadata)).not.toHaveBeenCalled();
     });
 
     it('should convert when the mode converts on navigation', async () => {
@@ -527,7 +573,7 @@ describe('BetterMarkdownLinksComponent', () => {
 
       await context.component.handleSave(makeTFile('note.md'));
 
-      expect(vi.mocked(getCacheSafe)).not.toHaveBeenCalled();
+      expect(vi.mocked(parseMetadata)).not.toHaveBeenCalled();
     });
 
     it('should ask whether to convert with isSaveCommand false for a plain save', async () => {
