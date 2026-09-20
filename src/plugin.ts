@@ -25,6 +25,7 @@ import { ConvertLinksToMarkdownInFolderCommandHandler } from './commands/convert
 import { DemoteEmbedsInEntireVaultCommandHandler } from './commands/demote-embeds-in-entire-vault-command-handler.ts';
 import { DemoteEmbedsInFileCommandHandler } from './commands/demote-embeds-in-file-command-handler.ts';
 import { DemoteEmbedsInFolderCommandHandler } from './commands/demote-embeds-in-folder-command-handler.ts';
+import { DemoteEmbedsInSelectionCommandHandler } from './commands/demote-embeds-in-selection-command-handler.ts';
 import { EmbedDemoter } from './embed-demoter.ts';
 import { LinkConverter } from './link-converter.ts';
 import { PluginSettingsComponent } from './plugin-settings-component.ts';
@@ -169,6 +170,9 @@ export class Plugin extends PluginBase {
       }),
       new DemoteEmbedsInEntireVaultCommandHandler({
         app: this.app,
+        embedDemoter
+      }),
+      new DemoteEmbedsInSelectionCommandHandler({
         embedDemoter
       }),
       new OpenDemoVaultCommandHandler({

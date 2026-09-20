@@ -5,9 +5,12 @@ import type {
 } from 'obsidian';
 import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
 import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
+import type { EditLinksParams } from 'obsidian-dev-utils/obsidian/link';
+import type { OffsetRange } from 'obsidian-dev-utils/obsidian/reference';
 import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource-lock';
 
 import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
+import { normalizeOptionalProperties } from 'obsidian-dev-utils/object-utils';
 import { getMarkdownFiles } from 'obsidian-dev-utils/obsidian/file-system';
 import {
   editLinks,
@@ -31,6 +34,22 @@ interface EmbedDemoterConstructorParams {
 interface EmbedDemoterDemoteEmbedsInFileParams {
   readonly abortSignal?: AbortSignal;
   readonly file: TFile;
+
+  /**
+   * A character range within the file's content to confine the demotion to.
+   *
+   * Set by the `in selection` command, which passes the editor selection. Both bounds are inclusive and
+   * containment is total: an embed only partly covered by the range is left alone, because rewriting part
+   * of a link corrupts it.
+   *
+   * A range also excludes every reference that carries no position within the file's content — frontmatter
+   * links, multi-value frontmatter entries and all canvas references — so it is only ever meaningful for
+   * the body of a note.
+   *
+   * @default `undefined`, meaning the whole file.
+   */
+  readonly offsetRange?: OffsetRange;
+
   readonly shouldPromptForExcludedFile?: boolean;
 }
 
@@ -85,7 +104,7 @@ export class EmbedDemoter {
       }
     }
 
-    await editLinks({
+    await editLinks(normalizeOptionalProperties<EditLinksParams>({
       abortSignal,
       app: this.app,
       linkConverter: (link) => {
@@ -114,10 +133,11 @@ export class EmbedDemoter {
 
         return settings.shouldAppendFileNameWhenDemotingEmbeds ? `${linkMarkdown}\n  - ${linkFile.name}` : linkMarkdown;
       },
+      offsetRange: params.offsetRange,
       pathOrFile: file,
       pluginNoticeComponent: this.pluginNoticeComponent,
       resourceLockComponent: this.resourceLockComponent
-    });
+    }));
   }
 
   public async demoteEmbedsInFolder(params: EmbedDemoterDemoteEmbedsInFolderParams): Promise<void> {
