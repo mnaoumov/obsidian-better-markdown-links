@@ -4,7 +4,7 @@
 
 `[[Wikilinks]]` are not part of the Markdown spec, so a vault that uses them stops making sense outside [Obsidian]. Switch to Markdown links and you hit the next problem: Obsidian writes `[Title](path%20with%20space/note%20with%20space.md)`, which is unreadable, and it writes relative paths without a leading `./`, which other editors resolve differently than Obsidian does — the same link, two meanings.
 
-This plugin makes Obsidian generate the readable, unambiguous form instead: angle brackets around paths with spaces, an explicit `./` on relative links, and tidy `file://` URLs. It can also convert the links you already have, in one note, one folder, or the whole vault.
+This plugin makes Obsidian generate the readable, unambiguous form instead: angle brackets around paths with spaces, an explicit `./` on relative links, and tidy `file://` URLs. It can also convert the links you already have, in one note, one folder, or the whole vault — and decide for itself which style and which path form to write, rather than following Obsidian's own settings.
 
 <!-- markdownlint-disable MD033 -->
 
@@ -44,6 +44,7 @@ A copy of the vault ships with every release. You can access it via any of the f
 - **Convert what you already have** — one note, one folder, or the whole vault; on command, on save, on auto-save, or on every modification, whichever suits how eagerly you want it to work. [03 Convert links](<./demo-vault/03 Convert links.md>)
 - **`file://` normalization** — `[note](file:///C:%5Cnotes%5Cplan.md)` becomes `[note](file:///C:/notes/plan.md)`. Other links are left alone. [03 Convert links](<./demo-vault/03 Convert links.md>)
 - **Force Markdown links** — write `[alias](<path.md>)` even in a vault whose own **Use `[[Wikilinks]]`** setting says otherwise, either permanently via the **Link style** setting or for one run via the **Convert links to Markdown** commands. Replaces **Replace all wikilinks with markdown links** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links). [03 Convert links](<./demo-vault/03 Convert links.md>)
+- **Force a link path style** — write relative, shortest or vault-absolute paths whatever Obsidian's own **New link format** setting says, either permanently via the **Link path style** setting or for one run via the **Convert link paths to relative** commands. Replaces **Convert all link paths to relative** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links). [03 Convert links](<./demo-vault/03 Convert links.md>)
 - **Demote embeds to links** — strip the `!` off every embed in a note, a folder, or the vault, optionally leaving the target's file name behind as a sub-bullet. [04 Demote embeds](<./demo-vault/04 Demote embeds.md>)
 - **Links that do not resolve** — convert an alias-only wikilink by looking the alias up across the vault, and optionally create the note when nothing matches. [03 Convert links](<./demo-vault/03 Convert links.md>)
 

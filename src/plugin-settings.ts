@@ -1,12 +1,49 @@
-import { LinkStyle } from 'obsidian-dev-utils/obsidian/link';
+import {
+  LinkPathStyle,
+  LinkStyle
+} from 'obsidian-dev-utils/obsidian/link';
 import { PathSettings } from 'obsidian-dev-utils/obsidian/path-settings';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
+import { LinkPathStyleMode } from './link-path-style-mode.ts';
 import { LinkStyleMode } from './link-style-mode.ts';
+
+// The two enums mirror each other value for value, so the mapping is a lookup rather than a conversion.
+// Written out rather than cast, so adding a mode without deciding what it writes fails to compile.
+const LINK_PATH_STYLE_BY_MODE: Record<LinkPathStyleMode, LinkPathStyle> = {
+  [LinkPathStyleMode.AbsolutePathInVault]: LinkPathStyle.AbsolutePathInVault,
+  [LinkPathStyleMode.ObsidianSettingsDefault]: LinkPathStyle.ObsidianSettingsDefault,
+  [LinkPathStyleMode.RelativePathToTheSource]: LinkPathStyle.RelativePathToTheSource,
+  [LinkPathStyleMode.ShortestPathWhenPossible]: LinkPathStyle.ShortestPathWhenPossible
+};
+
+/**
+ * The path-related params to hand `obsidian-dev-utils` for one link, built by
+ * {@link PluginSettings.buildLinkPathStyleParams}.
+ */
+export interface LinkPathStyleParams {
+  /**
+   * The path style to write.
+   */
+  readonly linkPathStyle: LinkPathStyle;
+
+  /**
+   * Absent unless the plugin is naming the path style itself. See
+   * {@link PluginSettings.buildLinkPathStyleParams}.
+   */
+  readonly shouldUseLeadingDotForRelativePaths?: boolean;
+
+  /**
+   * Absent unless the plugin is naming the path style itself. See
+   * {@link PluginSettings.buildLinkPathStyleParams}.
+   */
+  readonly shouldUseLeadingSlashForAbsolutePaths?: boolean;
+}
 
 export class PluginSettings {
   public isAdvancedRenameAndDeleteHandlerSuggestionDeclined = false;
   public linkConversionMode: LinkConversionMode = LinkConversionMode.OnSaveCommand;
+  public linkPathStyleMode: LinkPathStyleMode = LinkPathStyleMode.ObsidianSettingsDefault;
   public linkStyleMode: LinkStyleMode = LinkStyleMode.ObsidianSettingsDefault;
 
   // The legacy `shouldAutomaticallyUpdateLinksOnRenameOrMove` value, waiting to be offered to Advanced Rename
@@ -48,6 +85,49 @@ export class PluginSettings {
   }
 
   /**
+   * The path-related params to state for one link whose final path style is `linkPathStyle`.
+   *
+   * Under {@link LinkPathStyleMode.ObsidianSettingsDefault} only the style itself is stated, leaving
+   * `obsidian-dev-utils` to infer the leading dot and slash from the link being replaced
+   * (`hasLeadingDot` / `hasLeadingSlash` over `originalLink`) exactly as it does today.
+   *
+   * Under any other mode both decorations are stated out loud, because the original link's own dot and
+   * slash are evidence about a path style it no longer has: forcing a relative path onto an absolute link
+   * that resolves to a sibling note would otherwise write `[[note.md]]` rather than `[[./note.md]]` —
+   * losing the leading dot precisely where it was asked for.
+   *
+   * @param linkPathStyle - The final path style, from {@link getLinkPathStyle} or forced for one run.
+   * @returns The params to spread into the `obsidian-dev-utils` call.
+   */
+  public buildLinkPathStyleParams(linkPathStyle: LinkPathStyle): LinkPathStyleParams {
+    if (linkPathStyle === LinkPathStyle.ObsidianSettingsDefault) {
+      return { linkPathStyle };
+    }
+
+    return {
+      linkPathStyle,
+      shouldUseLeadingDotForRelativePaths: this.shouldUseLeadingDotForRelativePaths,
+      shouldUseLeadingSlashForAbsolutePaths: this.shouldUseLeadingSlashForAbsolutePaths
+    };
+  }
+
+  /**
+   * The path style to force on a link this plugin GENERATES. `undefined` in the
+   * {@link LinkPathStyleMode.ObsidianSettingsDefault} mode, which is the same answer
+   * `obsidian-dev-utils` reaches for an absent value.
+   *
+   * The reason to return nothing rather than to say `ObsidianSettingsDefault` out loud is NOT the
+   * `originalLink` inference {@link getGeneratedLinkStyle} protects — there is none for the path style.
+   * It is the merge: these params are merged with `Object.assign`, so a key left in place would clobber a
+   * path style another plugin's default-params function had set, instead of standing aside for it.
+   *
+   * @returns The style to force, or `undefined` to leave the default alone.
+   */
+  public getGeneratedLinkPathStyle(): LinkPathStyle | undefined {
+    return this.linkPathStyleMode === LinkPathStyleMode.ObsidianSettingsDefault ? undefined : this.getLinkPathStyle();
+  }
+
+  /**
    * The style to force on a link this plugin GENERATES — a brand new one, or the plain link an embed is
    * demoted to. `undefined` leaves `obsidian-dev-utils`' own inference in place, which resolves an absent
    * style to `PreserveExisting`: for a link with no original that means Obsidian's `Use [[Wikilinks]]`
@@ -61,6 +141,15 @@ export class PluginSettings {
    */
   public getGeneratedLinkStyle(): LinkStyle | undefined {
     return this.linkStyleMode === LinkStyleMode.Markdown ? LinkStyle.Markdown : undefined;
+  }
+
+  /**
+   * The path style to write when an EXISTING link is converted.
+   *
+   * @returns The style.
+   */
+  public getLinkPathStyle(): LinkPathStyle {
+    return LINK_PATH_STYLE_BY_MODE[this.linkPathStyleMode];
   }
 
   /**

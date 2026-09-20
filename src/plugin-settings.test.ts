@@ -1,3 +1,4 @@
+import { LinkPathStyle } from 'obsidian-dev-utils/obsidian/link';
 import {
   describe,
   expect,
@@ -5,6 +6,7 @@ import {
 } from 'vitest';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
+import { LinkPathStyleMode } from './link-path-style-mode.ts';
 import { LinkStyleMode } from './link-style-mode.ts';
 import { PluginSettings } from './plugin-settings.ts';
 
@@ -15,6 +17,7 @@ describe('PluginSettings', () => {
 
       expect(settings.isAdvancedRenameAndDeleteHandlerSuggestionDeclined).toBe(false);
       expect(settings.linkConversionMode).toBe(LinkConversionMode.OnSaveCommand);
+      expect(settings.linkPathStyleMode).toBe(LinkPathStyleMode.ObsidianSettingsDefault);
       expect(settings.linkStyleMode).toBe(LinkStyleMode.ObsidianSettingsDefault);
       expect(settings.shouldAllowEmptyEmbedAlias).toBe(true);
       expect(settings.shouldIncludeAttachmentExtensionToEmbedAlias).toBe(false);
@@ -67,6 +70,67 @@ describe('PluginSettings', () => {
     });
   });
 
+  describe('buildLinkPathStyleParams', () => {
+    // Under the default, `obsidian-dev-utils` reads the leading dot and slash off the link being replaced.
+    // Stating them would rewrite links nobody asked to have rewritten.
+    it('should state the style alone under the Obsidian default', () => {
+      const settings = new PluginSettings();
+
+      expect(settings.buildLinkPathStyleParams(LinkPathStyle.ObsidianSettingsDefault)).toEqual({
+        linkPathStyle: LinkPathStyle.ObsidianSettingsDefault
+      });
+    });
+
+    // The original link's own dot and slash are evidence about a path style it no longer has: forcing
+    // relative on an absolute link to a sibling note would otherwise drop the `./` the plugin exists for.
+    it('should state both decorations under a forced style', () => {
+      const settings = new PluginSettings();
+      settings.shouldUseLeadingDotForRelativePaths = false;
+      settings.shouldUseLeadingSlashForAbsolutePaths = true;
+
+      expect(settings.buildLinkPathStyleParams(LinkPathStyle.RelativePathToTheSource)).toEqual({
+        linkPathStyle: LinkPathStyle.RelativePathToTheSource,
+        shouldUseLeadingDotForRelativePaths: false,
+        shouldUseLeadingSlashForAbsolutePaths: true
+      });
+    });
+
+    it('should state both decorations under every other forced style too', () => {
+      const settings = new PluginSettings();
+
+      for (const linkPathStyle of [LinkPathStyle.AbsolutePathInVault, LinkPathStyle.ShortestPathWhenPossible]) {
+        expect(settings.buildLinkPathStyleParams(linkPathStyle)).toEqual({
+          linkPathStyle,
+          shouldUseLeadingDotForRelativePaths: true,
+          shouldUseLeadingSlashForAbsolutePaths: true
+        });
+      }
+    });
+  });
+
+  describe('getGeneratedLinkPathStyle', () => {
+    it('should force the style in every mode but the Obsidian default', () => {
+      const settings = new PluginSettings();
+
+      settings.linkPathStyleMode = LinkPathStyleMode.RelativePathToTheSource;
+      expect(settings.getGeneratedLinkPathStyle()).toBe('RelativePathToTheSource');
+      settings.linkPathStyleMode = LinkPathStyleMode.ShortestPathWhenPossible;
+      expect(settings.getGeneratedLinkPathStyle()).toBe('ShortestPathWhenPossible');
+      settings.linkPathStyleMode = LinkPathStyleMode.AbsolutePathInVault;
+      expect(settings.getGeneratedLinkPathStyle()).toBe('AbsolutePathInVault');
+    });
+
+    // Not for the `originalLink` inference `getGeneratedLinkStyle` protects — there is none for the path
+    // style — but because these params are merged with `Object.assign`, so a key left in place would
+    // clobber another plugin's default instead of standing aside for it.
+    it('should say nothing under the Obsidian default, so the merge stands aside', () => {
+      const settings = new PluginSettings();
+
+      settings.linkPathStyleMode = LinkPathStyleMode.ObsidianSettingsDefault;
+      expect(settings.getGeneratedLinkPathStyle()).toBeUndefined();
+    });
+  });
+
   describe('getGeneratedLinkStyle', () => {
     it('should force Markdown only in the Markdown mode', () => {
       const settings = new PluginSettings();
@@ -84,6 +148,21 @@ describe('PluginSettings', () => {
       expect(settings.getGeneratedLinkStyle()).toBeUndefined();
       settings.linkStyleMode = LinkStyleMode.ObsidianSettingsDefault;
       expect(settings.getGeneratedLinkStyle()).toBeUndefined();
+    });
+  });
+
+  describe('getLinkPathStyle', () => {
+    it('should map each mode to its link path style', () => {
+      const settings = new PluginSettings();
+
+      settings.linkPathStyleMode = LinkPathStyleMode.AbsolutePathInVault;
+      expect(settings.getLinkPathStyle()).toBe('AbsolutePathInVault');
+      settings.linkPathStyleMode = LinkPathStyleMode.ObsidianSettingsDefault;
+      expect(settings.getLinkPathStyle()).toBe('ObsidianSettingsDefault');
+      settings.linkPathStyleMode = LinkPathStyleMode.RelativePathToTheSource;
+      expect(settings.getLinkPathStyle()).toBe('RelativePathToTheSource');
+      settings.linkPathStyleMode = LinkPathStyleMode.ShortestPathWhenPossible;
+      expect(settings.getLinkPathStyle()).toBe('ShortestPathWhenPossible');
     });
   });
 

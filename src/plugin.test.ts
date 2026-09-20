@@ -281,14 +281,14 @@ describe('Plugin', () => {
     expect(registerCommandHandlersSpy).toHaveBeenCalledTimes(2);
   });
 
-  it('should register the six conversion and three demotion command handlers plus the open demo vault command', async () => {
+  it('should register the nine conversion and three demotion command handlers plus the open demo vault command', async () => {
     const registerCommandHandlersSpy = vi.spyOn(CommandHandlerComponent.prototype, 'registerCommandHandlers');
 
     await createLoadedPlugin();
 
     // Since obsidian-dev-utils 89.0.0 the handlers are built lazily by a factory, so build them here.
     const commandHandlerFactory = registerCommandHandlersSpy.mock.calls[1]?.[0];
-    expect(commandHandlerFactory?.()).toHaveLength(10);
+    expect(commandHandlerFactory?.()).toHaveLength(13);
   });
 
   it('should register the open demo vault command via its command handler', async () => {

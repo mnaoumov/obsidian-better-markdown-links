@@ -4,7 +4,7 @@ Beyond formatting new links, Better Markdown Links can rewrite links that alread
 
 ## On demand
 
-Three style-agnostic commands are available in the Command Palette (three more force the Markdown style - see [Forcing Markdown links](#forcing-markdown-links) below):
+Three style-agnostic commands are available in the Command Palette (three more force the Markdown style - see [Forcing Markdown links](#forcing-markdown-links) below - and three more force relative paths - see [Forcing a link path style](#forcing-a-link-path-style)):
 
 - **Better Markdown Links: Convert links in current file**
   - rewrites links in the active note.
@@ -136,6 +136,74 @@ await require('/demoSetup.ts').changeSettings(app, { linkStyleMode: 'ObsidianSet
 ```
 
 Manual equivalent: pick from the **Link style** dropdown in **Settings -> Community plugins -> Better Markdown Links**.
+
+## Forcing a link path style
+
+The section above decides a link's *style* - wikilink or Markdown. This one decides its *path*: the same note can be named three different ways, and Obsidian's own **New link format** setting picks which.
+
+The **Link path style** setting (`linkPathStyleMode`) overrides that:
+
+- **Obsidian settings default** (the default)
+  - follow the **New link format** Obsidian setting.
+- **Relative path to the source**
+  - always write the path relative to the note the link is in: `[Deep note](<./Targets/Nested folder/Deep note.md>)`.
+- **Shortest path when possible**
+  - always write the shortest path that still resolves to a single note: `[Deep note](<Deep note.md>)`.
+- **Absolute path in vault**
+  - always write the path from the vault root: `[Deep note](</Materials/02 Relative links/Targets/Nested folder/Deep note.md>)`.
+
+Outside the default, the **Should use leading dot for relative paths** and **Should use leading slash for absolute paths** settings from [02 Relative links](<./02 Relative links.md>) are applied as written rather than copied from the link being replaced - which is the whole point, since a link that was absolute has no `./` to copy.
+
+Three commands force the relative style for a single run, leaving the setting alone - the replacement for **Convert all link paths to relative** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links):
+
+- **Better Markdown Links: Convert link paths to relative in current file**
+- **Better Markdown Links: Convert link paths to relative in current folder**
+- **Better Markdown Links: Convert link paths to relative in entire vault**
+
+The button writes a note whose links name their targets by bare file name and by vault-absolute path, and opens it:
+
+```code-button
+---
+caption: Create a note with non-relative link paths
+---
+await require('/demoSetup.ts').openPathStyleNote(app);
+```
+
+Manual equivalent: create a note and write some links that name their target by file name alone.
+
+```code-button
+---
+caption: Convert link paths to relative
+---
+require('/demoSetup.ts').convertLinkPathsToRelativeInCurrentFile(app);
+```
+
+Manual equivalent: run **Better Markdown Links: Convert link paths to relative in current file** from the Command Palette.
+
+The same thing permanently, by setting rather than by command:
+
+```code-button
+---
+caption: Always write relative paths
+---
+await require('/demoSetup.ts').changeSettings(app, { linkPathStyleMode: 'RelativePathToTheSource' });
+```
+
+```code-button
+---
+caption: Always write the shortest path
+---
+await require('/demoSetup.ts').changeSettings(app, { linkPathStyleMode: 'ShortestPathWhenPossible' });
+```
+
+```code-button
+---
+caption: Back to the default link path style
+---
+await require('/demoSetup.ts').changeSettings(app, { linkPathStyleMode: 'ObsidianSettingsDefault' });
+```
+
+Manual equivalent: pick from the **Link path style** dropdown in **Settings -> Community plugins -> Better Markdown Links**.
 
 ## Links that do not resolve
 

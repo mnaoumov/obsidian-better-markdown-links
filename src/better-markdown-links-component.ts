@@ -92,11 +92,13 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
       new GenerateMarkdownLinkDefaultParamsComponent({
         getDefaultParams: (): Partial<GenerateMarkdownLinkParams> => {
           const settings = this.pluginSettingsComponent.settings;
-          // `removeUndefinedProperties`, because outside the force-Markdown mode `linkStyle` is `undefined`
-          // and these params are merged with `Object.assign`: leaving the key in place would clobber a style
-          // another plugin's default-params function had set, instead of standing aside for it.
+          // `removeUndefinedProperties`, because outside the forced modes `linkStyle` and `linkPathStyle`
+          // are `undefined` and these params are merged with `Object.assign`: leaving a key in place would
+          // clobber a style another plugin's default-params function had set, instead of standing aside
+          // for it.
           return removeUndefinedProperties(normalizeOptionalProperties<Partial<GenerateMarkdownLinkParams>>({
             isEmptyEmbedAliasAllowed: settings.shouldAllowEmptyEmbedAlias,
+            linkPathStyle: settings.getGeneratedLinkPathStyle(),
             linkStyle: settings.getGeneratedLinkStyle(),
             shouldIncludeAttachmentExtensionToEmbedAlias: settings.shouldIncludeAttachmentExtensionToEmbedAlias,
             shouldUseAngleBrackets: settings.shouldUseAngleBrackets,
@@ -183,12 +185,18 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
         return;
       }
       const links = getLinks({ cache });
+      const settings = this.pluginSettingsComponent.settings;
+      // The same path params `LinkConverter` writes with. A probe that asked for less would answer "no
+      // change needed" for a link the converter would have rewritten — a forced relative style with the
+      // leading dot on being exactly that case — and the automatic modes would then never fire.
+      const linkPathStyleParams = settings.buildLinkPathStyleParams(settings.getLinkPathStyle());
       const needsInternalConversion = links.some((link) =>
         link.original !== convertLink({
           app: this.app,
           link,
-          linkStyle: this.pluginSettingsComponent.settings.getLinkStyle(),
-          newSourcePathOrFile: file
+          linkStyle: settings.getLinkStyle(),
+          newSourcePathOrFile: file,
+          ...linkPathStyleParams
         })
       );
       const needsFileUrlNormalization = shouldNormalizeFileLinks && this.hasFileUrlLink(cache);

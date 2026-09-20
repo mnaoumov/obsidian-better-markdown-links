@@ -8,8 +8,9 @@
  * - and the invariant that makes the last one safe: the AUTOMATIC conversion paths must never create a
  *   note, however the settings are set, because they fire on every save.
  *
- * It also covers the force-Markdown link style, both as a setting and as its own command,
- * against a vault whose own `Use [[Wikilinks]]` setting is on — the one thing no unit test can prove.
+ * It also covers the force-Markdown link style and the force-relative link PATH style, each both as a
+ * setting and as its own command, against a vault whose own `Use [[Wikilinks]]` and `New link format`
+ * settings say otherwise — the one thing no unit test can prove.
  *
  * Each scenario uses its own source file so a pending async conversion never leaks between tests.
  *
@@ -33,6 +34,7 @@ import {
 import type { PluginSettings } from './plugin-settings.ts';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
+import { LinkPathStyleMode } from './link-path-style-mode.ts';
 import { LinkStyleMode } from './link-style-mode.ts';
 
 /**
@@ -76,10 +78,12 @@ interface ScenarioResult {
  */
 interface ScenarioSettings {
   readonly linkConversionMode?: LinkConversionMode;
+  readonly linkPathStyleMode?: LinkPathStyleMode;
   readonly linkStyleMode?: LinkStyleMode;
   readonly shouldAppendFileNameWhenDemotingEmbeds?: boolean;
   readonly shouldCreateMissingNotes?: boolean;
   readonly shouldResolveLinksViaAliases?: boolean;
+  readonly shouldUseLeadingDotForRelativePaths?: boolean;
 }
 
 /**
@@ -105,6 +109,10 @@ const SAVE_COMMAND_ID = 'editor:save-file';
 const ALIASED_NOTE_PATH = 'Aliased target.md';
 const ALIASED_NOTE_CONTENT = '---\naliases:\n  - The Simple One\n---\n\nbody\n';
 const EMBED_TARGET_PATH = 'Embed target.md';
+// A target one folder down from the root, where the source files live: the only shape in which the
+// shortest, relative and absolute path styles all write something different.
+const NESTED_TARGET_BASENAME = 'Deep target';
+const NESTED_TARGET_PATH = `Sub/${NESTED_TARGET_BASENAME}.md`;
 
 describe('demote embeds and resolve unresolved links (Desktop)', () => {
   describe('demoting embeds', () => {
@@ -250,6 +258,66 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
     });
   });
 
+  // The capability inherited from Consistent Attachments and Links' `Convert all link paths to relative`.
+  // The test vault leaves Obsidian's own `New link format` at its default, so a link that is already in
+  // its shortest form surviving untouched is the baseline these scenarios have to beat.
+  describe('forcing the relative link path style', () => {
+    it('should leave a shortest-form link alone when the path style follows the Obsidian setting', async () => {
+      const result = await runScenario({
+        commandId: CONVERT_COMMAND_ID,
+        companions: { [NESTED_TARGET_PATH]: 'body\n' },
+        content: `[[${NESTED_TARGET_BASENAME}]]`,
+        settings: {},
+        sourceKey: 'path-style-baseline'
+      });
+
+      expect(result.content).toBe(`[[${NESTED_TARGET_BASENAME}]]`);
+    });
+
+    // Also the proof that the leading dot is STATED rather than inferred: the original link carries no
+    // dot, so a conversion that read the decoration off it would write `[[Sub/Deep target]]`.
+    it('should force relative for one run via the convert-link-paths command', async () => {
+      const result = await runScenario({
+        commandId: `${PLUGIN_ID}:convert-link-paths-to-relative-in-current-file`,
+        companions: { [NESTED_TARGET_PATH]: 'body\n' },
+        content: `[[${NESTED_TARGET_BASENAME}]]`,
+        settings: {},
+        settledMarker: './',
+        sourceKey: 'path-style-command'
+      });
+
+      expect(result.content).toBe('[[./Sub/Deep target]]');
+    });
+
+    it('should force relative on the plain convert command when the relative path style is selected', async () => {
+      const result = await runScenario({
+        commandId: CONVERT_COMMAND_ID,
+        companions: { [NESTED_TARGET_PATH]: 'body\n' },
+        content: `[[${NESTED_TARGET_BASENAME}]]`,
+        settings: { linkPathStyleMode: LinkPathStyleMode.RelativePathToTheSource },
+        settledMarker: './',
+        sourceKey: 'path-style-setting'
+      });
+
+      expect(result.content).toBe('[[./Sub/Deep target]]');
+    });
+
+    // The decoration is the setting's, not a constant: turning the leading dot off has to reach a forced
+    // conversion too.
+    it('should honour the leading-dot setting while forcing relative', async () => {
+      const result = await runScenario({
+        commandId: `${PLUGIN_ID}:convert-link-paths-to-relative-in-current-file`,
+        companions: { [NESTED_TARGET_PATH]: 'body\n' },
+        content: `[[${NESTED_TARGET_BASENAME}]]`,
+        settings: { shouldUseLeadingDotForRelativePaths: false },
+        settledMarker: 'Sub/',
+        sourceKey: 'path-style-no-dot'
+      });
+
+      expect(result.content).toBe('[[Sub/Deep target]]');
+    });
+  });
+
   // The reason `shouldCreateMissingNotes` is safe to offer at all: it is wired to the explicit convert
   // commands only. Were it reachable from the automatic paths, every auto-save on a note with a typo'd
   // wikilink would silently add a file to the vault.
@@ -279,7 +347,7 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
  */
 async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
   return evalInObsidian({
-    async callback({ app, commandId, companions, content, explicitCommandMode, obsidianModule, obsidianSettingsDefaultStyle, pluginId, settings, settledAbsentMarker, settledMarker, sourcePath }): Promise<ScenarioResult> {
+    async callback({ app, commandId, companions, content, explicitCommandMode, obsidianModule, obsidianSettingsDefaultPathStyle, obsidianSettingsDefaultStyle, pluginId, settings, settledAbsentMarker, settledMarker, sourcePath }): Promise<ScenarioResult> {
       const EDITOR_WAIT_ATTEMPTS = 50;
       const EDITOR_WAIT_INTERVAL_IN_MILLISECONDS = 50;
       const SETTLE_TIMEOUT_IN_MILLISECONDS = 3000;
@@ -294,7 +362,11 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
         // Pinned so the scenarios assert the conversion, not the ambient link style.
         pluginSettings.linkConversionMode = settings.linkConversionMode ?? explicitCommandMode;
         pluginSettings.linkStyleMode = settings.linkStyleMode ?? obsidianSettingsDefaultStyle;
+        pluginSettings.linkPathStyleMode = settings.linkPathStyleMode ?? obsidianSettingsDefaultPathStyle;
         pluginSettings.shouldUseAngleBrackets = true;
+        // Pinned rather than left at the plugin default, because the forced-relative scenarios assert the
+        // dot it writes.
+        pluginSettings.shouldUseLeadingDotForRelativePaths = settings.shouldUseLeadingDotForRelativePaths ?? true;
         pluginSettings.shouldAppendFileNameWhenDemotingEmbeds = settings.shouldAppendFileNameWhenDemotingEmbeds ?? false;
         pluginSettings.shouldCreateMissingNotes = settings.shouldCreateMissingNotes ?? false;
         pluginSettings.shouldResolveLinksViaAliases = settings.shouldResolveLinksViaAliases ?? false;
@@ -337,6 +409,13 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
         const existing = app.vault.getAbstractFileByPath(path);
         if (existing) {
           await app.fileManager.trashFile(existing);
+        }
+
+        // `vault.create` will not make the folder for a nested companion, and the path-style scenarios
+        // need one: a target beside the source cannot tell the three path styles apart.
+        const folderPath = path.split('/').slice(0, -1).join('/');
+        if (folderPath && !app.vault.getFolderByPath(folderPath)) {
+          await app.vault.createFolder(folderPath);
         }
 
         return await app.vault.create(path, fileContent);
@@ -397,6 +476,7 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
       companions: params.companions ?? {},
       content: params.content,
       explicitCommandMode: LinkConversionMode.OnExplicitCommand,
+      obsidianSettingsDefaultPathStyle: LinkPathStyleMode.ObsidianSettingsDefault,
       obsidianSettingsDefaultStyle: LinkStyleMode.ObsidianSettingsDefault,
       pluginId: PLUGIN_ID,
       settings: params.settings,

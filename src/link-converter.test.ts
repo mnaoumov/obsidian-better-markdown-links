@@ -5,7 +5,10 @@ import type {
 } from 'obsidian';
 import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
 import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
-import type { LinkStyle } from 'obsidian-dev-utils/obsidian/link';
+import type {
+  LinkPathStyle,
+  LinkStyle
+} from 'obsidian-dev-utils/obsidian/link';
 import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource-lock';
 
 import { castTo } from 'obsidian-dev-utils/object-utils';
@@ -30,7 +33,14 @@ vi.mock('obsidian-dev-utils/obsidian/file-system', () => ({
 }));
 
 vi.mock('obsidian-dev-utils/obsidian/link', () => ({
-  // `LinkStyle` is a real value import in the converter now, so the mock has to carry it.
+  // `LinkPathStyle` and `LinkStyle` are real value imports in the converter now, so the mock has to carry
+  // them.
+  LinkPathStyle: {
+    AbsolutePathInVault: 'AbsolutePathInVault',
+    ObsidianSettingsDefault: 'ObsidianSettingsDefault',
+    RelativePathToTheSource: 'RelativePathToTheSource',
+    ShortestPathWhenPossible: 'ShortestPathWhenPossible'
+  },
   LinkStyle: {
     Markdown: 'Markdown',
     ObsidianSettingsDefault: 'ObsidianSettingsDefault',
@@ -73,6 +83,7 @@ import { LinkConverter } from './link-converter.ts';
 import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
 
 const LINK_STYLE = castTo<LinkStyle>('ObsidianSettingsDefault');
+const LINK_PATH_STYLE = castTo<LinkPathStyle>('ObsidianSettingsDefault');
 
 interface CreateConverterOptions {
   readonly shouldCreateMissingNotes?: boolean;
@@ -83,8 +94,10 @@ interface CreateConverterOptions {
 interface CreateConverterResult {
   readonly abortSignal: AbortSignal;
   readonly app: App;
+  readonly buildLinkPathStyleParams: ReturnType<typeof vi.fn>;
   readonly converter: LinkConverter;
   readonly getActiveFile: ReturnType<typeof vi.fn>;
+  readonly getLinkPathStyle: ReturnType<typeof vi.fn>;
   readonly getLinkStyle: ReturnType<typeof vi.fn>;
   readonly isPathIgnored: ReturnType<typeof vi.fn>;
   readonly pluginNoticeComponent: PluginNoticeComponent;
@@ -102,7 +115,14 @@ function createConverter(options: CreateConverterOptions = {}): CreateConverterR
   });
   const isPathIgnored = vi.fn<(path: string) => boolean>().mockReturnValue(false);
   const getLinkStyle = vi.fn<() => LinkStyle>().mockReturnValue(LINK_STYLE);
+  const getLinkPathStyle = vi.fn<() => LinkPathStyle>().mockReturnValue(LINK_PATH_STYLE);
+  // The decoration half of this is `PluginSettings`' own business and is pinned in its own suite. What
+  // matters here is WHICH style the converter hands it, and that whatever comes back is spread into the
+  // call.
+  const buildLinkPathStyleParams = vi.fn((linkPathStyle: LinkPathStyle) => ({ linkPathStyle }));
   const settings = strictProxy<PluginSettings>({
+    buildLinkPathStyleParams,
+    getLinkPathStyle,
     getLinkStyle,
     isPathIgnored,
     shouldCreateMissingNotes: options.shouldCreateMissingNotes ?? false,
@@ -125,8 +145,10 @@ function createConverter(options: CreateConverterOptions = {}): CreateConverterR
   return {
     abortSignal,
     app,
+    buildLinkPathStyleParams,
     converter,
     getActiveFile,
+    getLinkPathStyle,
     getLinkStyle,
     isPathIgnored,
     pluginNoticeComponent,
@@ -167,9 +189,11 @@ describe('LinkConverter', () => {
       await context.converter.convertLinksInFile({ file });
 
       expect(context.getLinkStyle).toHaveBeenCalledOnce();
+      expect(context.getLinkPathStyle).toHaveBeenCalledOnce();
       expect(vi.mocked(updateLinksInFile)).toHaveBeenCalledExactlyOnceWith({
         abortSignal: context.abortSignal,
         app: context.app,
+        linkPathStyle: LINK_PATH_STYLE,
         linkStyle: LINK_STYLE,
         newSourcePathOrFile: file,
         pluginNoticeComponent: context.pluginNoticeComponent,
@@ -187,6 +211,51 @@ describe('LinkConverter', () => {
 
       expect(context.getLinkStyle).not.toHaveBeenCalled();
       expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkStyle).toBe('Markdown');
+    });
+
+    it('should force the relative path style without consulting the setting when asked to', async () => {
+      const context = createConverter();
+
+      await context.converter.convertLinksInFile({
+        file: createFile('note.md'),
+        shouldForceRelativeLinkPathStyle: true
+      });
+
+      expect(context.getLinkPathStyle).not.toHaveBeenCalled();
+      expect(context.buildLinkPathStyleParams).toHaveBeenCalledExactlyOnceWith('RelativePathToTheSource');
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkPathStyle).toBe('RelativePathToTheSource');
+    });
+
+    // The two forced surfaces are independent: forcing the path style must not also force the link style.
+    it('should leave the link style to the setting when only the path style is forced', async () => {
+      const context = createConverter();
+
+      await context.converter.convertLinksInFile({
+        file: createFile('note.md'),
+        shouldForceRelativeLinkPathStyle: true
+      });
+
+      expect(context.getLinkStyle).toHaveBeenCalledOnce();
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkStyle).toBe(LINK_STYLE);
+    });
+
+    // The decorations come from `buildLinkPathStyleParams`, so whatever it returns has to reach the call
+    // rather than being dropped on the way.
+    it('should spread the path params the settings build', async () => {
+      const context = createConverter();
+      context.buildLinkPathStyleParams.mockReturnValue({
+        linkPathStyle: 'RelativePathToTheSource',
+        shouldUseLeadingDotForRelativePaths: true,
+        shouldUseLeadingSlashForAbsolutePaths: false
+      });
+
+      await context.converter.convertLinksInFile({ file: createFile('note.md') });
+
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0]).toMatchObject({
+        linkPathStyle: 'RelativePathToTheSource',
+        shouldUseLeadingDotForRelativePaths: true,
+        shouldUseLeadingSlashForAbsolutePaths: false
+      });
     });
 
     it('should normalize file links after updating links when the setting is enabled', async () => {
@@ -386,6 +455,27 @@ describe('LinkConverter', () => {
       expect(loopParams?.buildNoticeMessage({ item: file, iterationString: '1/1' }))
         .toBe('Converting links to Markdown in note 1/1 - note.md');
       expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkStyle).toBe('Markdown');
+    });
+
+    it('should say what it is doing and force the path style on every file when converting to relative', async () => {
+      const context = createConverter();
+      const folder = strictProxy<TFolder>({ path: '/' });
+      const file = createFile('note.md');
+      vi.mocked(loop).mockImplementation(async (params) => {
+        params.buildNoticeMessage({ item: file, iterationString: '1/1' });
+        await params.processItem(file);
+      });
+
+      await context.converter.convertLinksInFolder({
+        folder,
+        shouldForceRelativeLinkPathStyle: true
+      });
+
+      const loopParams = vi.mocked(loop).mock.calls[0]?.[0];
+      expect(loopParams?.progressBarTitle).toBe('Better Markdown Links: Converting link paths to relative in entire vault...');
+      expect(loopParams?.buildNoticeMessage({ item: file, iterationString: '1/1' }))
+        .toBe('Converting link paths to relative in note 1/1 - note.md');
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkPathStyle).toBe('RelativePathToTheSource');
     });
 
     it('should build a notice message and convert each looped file', async () => {

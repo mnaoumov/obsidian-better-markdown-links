@@ -13,6 +13,9 @@ import {
   ADVANCED_RENAME_AND_DELETE_HANDLER_PLUGIN_NAME
 } from './advanced-rename-and-delete-handler.ts';
 import { BetterMarkdownLinksComponent } from './better-markdown-links-component.ts';
+import { ConvertLinkPathsToRelativeInEntireVaultCommandHandler } from './commands/convert-link-paths-to-relative-in-entire-vault-command-handler.ts';
+import { ConvertLinkPathsToRelativeInFileCommandHandler } from './commands/convert-link-paths-to-relative-in-file-command-handler.ts';
+import { ConvertLinkPathsToRelativeInFolderCommandHandler } from './commands/convert-link-paths-to-relative-in-folder-command-handler.ts';
 import { ConvertLinksInEntireVaultCommandHandler } from './commands/convert-links-in-entire-vault-command-handler.ts';
 import { ConvertLinksInFileCommandHandler } from './commands/convert-links-in-file-command-handler.ts';
 import { ConvertLinksInFolderCommandHandler } from './commands/convert-links-in-folder-command-handler.ts';
@@ -145,6 +148,16 @@ export class Plugin extends PluginBase {
         linkConverter
       }),
       new ConvertLinksToMarkdownInEntireVaultCommandHandler({
+        app: this.app,
+        linkConverter
+      }),
+      new ConvertLinkPathsToRelativeInFileCommandHandler({
+        linkConverter
+      }),
+      new ConvertLinkPathsToRelativeInFolderCommandHandler({
+        linkConverter
+      }),
+      new ConvertLinkPathsToRelativeInEntireVaultCommandHandler({
         app: this.app,
         linkConverter
       }),
