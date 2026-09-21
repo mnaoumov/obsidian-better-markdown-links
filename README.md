@@ -54,15 +54,26 @@ Up to version 4 this plugin updated the links pointing at a note when you rename
 
 This plugin offers to install it, once, and carries your old rename-handling value — along with the include and exclude paths that scoped it — over for you to approve. Declining costs you nothing else: every feature above keeps working, with Obsidian's own link update in charge of renames.
 
-## For plugin developers
-
-This plugin adds an [additional overload](./src/generate-markdown-link-extended.d.ts) to [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink]. To use the extended signature from your own plugin, copy [`generate-markdown-link-extended.d.ts`](./src/generate-markdown-link-extended.d.ts) into your code.
-
 ## Integration with other plugins
 
 Rename and delete handling is not this plugin's any more — see [Renames](#renames) above. Install [`Advanced Rename and Delete Handler`](https://community.obsidian.md/plugins/advanced-rename-and-delete-handler) to keep it.
 
 For better performance on a large vault, consider also installing [Backlink Cache](https://community.obsidian.md/plugins/backlink-cache).
+
+## For plugin developers
+
+While this plugin is enabled, [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] keeps its built-in signature and gains an `extended()` method taking the full set of options this plugin generates links with — for a plugin that wants to write the same readable, unambiguous links without re-implementing them.
+
+The types are in [`api.d.ts`](./api.d.ts) at the root of this repository. Copy that file into your own plugin: it imports from `obsidian` and nothing else, so it costs you no dependency on this one.
+
+```ts
+import type { GenerateMarkdownLinkExtendedWrapper } from './api.d.ts';
+
+const generate = app.fileManager.generateMarkdownLink as Partial<GenerateMarkdownLinkExtendedWrapper>;
+const link = generate.extended?.({ sourcePathOrFile, targetPathOrFile, shouldUseAngleBrackets: true });
+```
+
+This widens a core Obsidian call rather than publishing an API of its own, so there is no handle to fetch and nothing to negotiate: the patch is installed or it is not, and the optional call above is the whole of the check. Versioning is by plugin version alone — every member of the extended signature was added in **3.0.0**, the release that first shipped the overload, and none has been added, renamed or removed since.
 
 ## Installation
 
