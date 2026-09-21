@@ -25,7 +25,7 @@ import {
   it
 } from 'vitest';
 
-import type { GenerateMarkdownLinkExtendedWrapper } from './generate-markdown-link-extended.d.ts';
+import type { GenerateMarkdownLinkExtendedWrapper } from '../api.d.ts';
 import type { PluginSettings } from './plugin-settings.ts';
 
 /**

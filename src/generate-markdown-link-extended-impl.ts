@@ -10,7 +10,7 @@ import {
 import { MonkeyAroundComponent } from 'obsidian-dev-utils/obsidian/components/monkey-around-component';
 import { generateMarkdownLink } from 'obsidian-dev-utils/obsidian/link';
 
-import type { GenerateMarkdownLinkExtendedOptions } from './generate-markdown-link-extended.d.ts';
+import type { GenerateMarkdownLinkExtendedOptions } from '../api.d.ts';
 
 interface GenerateMarkdownLinkPatchComponentConstructorParams {
   readonly app: App;

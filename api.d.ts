@@ -1,3 +1,20 @@
+/**
+ * The extended `app.fileManager.generateMarkdownLink()` overload this plugin installs.
+ *
+ * Copy this file into your own plugin: it imports from `obsidian` and nothing else, so it needs no dependency on this one. The
+ * plugin widens a core Obsidian call rather than publishing an API, so there is no handle to fetch and nothing to negotiate — the
+ * patch is installed or it is not:
+ *
+ * ```ts
+ * const generate = app.fileManager.generateMarkdownLink as Partial<GenerateMarkdownLinkExtendedWrapper>;
+ * const link = generate.extended?.({ sourcePathOrFile, targetPathOrFile, shouldUseAngleBrackets: true });
+ * ```
+ *
+ * Versioning is therefore by plugin version alone. Every member below was added in **3.0.0**, the release that first shipped the
+ * overload, and none has been added, renamed or removed since — so a consumer needs `better-markdown-links` 3.0.0 or later and
+ * nothing finer-grained than that.
+ */
+
 import type { TFile } from 'obsidian';
 
 export enum LinkPathStyle {

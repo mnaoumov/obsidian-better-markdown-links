@@ -18,7 +18,7 @@ import {
 import type {
   GenerateMarkdownLinkExtendedOptions,
   GenerateMarkdownLinkExtendedWrapper
-} from './generate-markdown-link-extended.d.ts';
+} from '../api.d.ts';
 
 type GenerateMarkdownLinkNativeFunction = FileManager['generateMarkdownLink'];
 
