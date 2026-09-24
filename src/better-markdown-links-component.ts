@@ -135,11 +135,7 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
   private async handleModify(file: TAbstractFile): Promise<void> {
     this.abortSignalComponent.abortSignal.throwIfAborted();
 
-    if (!(file instanceof TFile)) {
-      return;
-    }
-
-    if (!this.pluginSettingsComponent.settings.shouldConvertLinksOnModify()) {
+    if (!(file instanceof TFile) || !this.pluginSettingsComponent.settings.shouldConvertLinksOnModify()) {
       return;
     }
 
