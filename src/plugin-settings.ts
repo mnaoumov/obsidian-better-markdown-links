@@ -100,15 +100,13 @@ export class PluginSettings {
    * @returns The params to spread into the `obsidian-dev-utils` call.
    */
   public buildLinkPathStyleParams(linkPathStyle: LinkPathStyle): LinkPathStyleParams {
-    if (linkPathStyle === LinkPathStyle.ObsidianSettingsDefault) {
-      return { linkPathStyle };
-    }
-
-    return {
-      linkPathStyle,
-      shouldUseLeadingDotForRelativePaths: this.shouldUseLeadingDotForRelativePaths,
-      shouldUseLeadingSlashForAbsolutePaths: this.shouldUseLeadingSlashForAbsolutePaths
-    };
+    return linkPathStyle === LinkPathStyle.ObsidianSettingsDefault
+      ? { linkPathStyle }
+      : {
+        linkPathStyle,
+        shouldUseLeadingDotForRelativePaths: this.shouldUseLeadingDotForRelativePaths,
+        shouldUseLeadingSlashForAbsolutePaths: this.shouldUseLeadingSlashForAbsolutePaths
+      };
   }
 
   /**
@@ -162,11 +160,7 @@ export class PluginSettings {
       return LinkStyle.Markdown;
     }
 
-    if (this.linkStyleMode === LinkStyleMode.PreserveExisting) {
-      return LinkStyle.PreserveExisting;
-    }
-
-    return LinkStyle.ObsidianSettingsDefault;
+    return this.linkStyleMode === LinkStyleMode.PreserveExisting ? LinkStyle.PreserveExisting : LinkStyle.ObsidianSettingsDefault;
   }
 
   public isPathIgnored(path: string): boolean {

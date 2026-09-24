@@ -163,6 +163,26 @@ describe('EmbedDemoter', () => {
       expect(editLinksParams?.resourceLockComponent).toBe(context.resourceLockComponent);
     });
 
+    it('should pass no range when none is given, so the whole file is demoted', async () => {
+      const context = createDemoter();
+
+      await context.demoter.demoteEmbedsInFile({ file: createFile('note.md') });
+
+      // `editLinks` gates on `offsetRange !== undefined`, so an explicitly `undefined` range and an absent
+      // one are the same whole-file case. `normalizeOptionalProperties` is a compile-time cast that keeps
+      // `exactOptionalPropertyTypes` happy; it does not strip the key, and does not need to.
+      expect(vi.mocked(editLinks).mock.calls[0]?.[0]?.offsetRange).toBeUndefined();
+    });
+
+    it('should hand the offset range straight to editLinks, which is what confines a demotion to a selection', async () => {
+      const context = createDemoter();
+      const offsetRange = { endOffset: 42, startOffset: 10 };
+
+      await context.demoter.demoteEmbedsInFile({ file: createFile('note.md'), offsetRange });
+
+      expect(vi.mocked(editLinks).mock.calls[0]?.[0]?.offsetRange).toBe(offsetRange);
+    });
+
     it('should skip an ignored file when not prompting', async () => {
       const context = createDemoter();
       context.isPathIgnored.mockReturnValue(true);

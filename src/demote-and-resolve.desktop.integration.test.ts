@@ -3,6 +3,9 @@
  *
  * Integration suite for the two conversions, driving a real Obsidian instance:
  * - demoting embeds to links, with and without the `shouldAppendFileNameWhenDemotingEmbeds` sub-bullet,
+ * - confining a demotion or a conversion to the editor selection, including against an unsaved buffer —
+ *   the one place a wrong offset would corrupt a note rather than merely fail — and across the
+ *   conversion's passes, one of which can change the length of a link inside the selection,
  * - resolving an alias-only wikilink through another note's `aliases` frontmatter,
  * - declining to resolve one when two notes answer to the name, and not creating a note for it either,
  * - creating the note behind a wikilink that resolves to nothing,
@@ -49,6 +52,23 @@ interface RunScenarioParams {
    */
   readonly companions?: Record<string, string>;
   readonly content: string;
+
+  /**
+   * Text to type in front of {@link content} and deliberately NOT save, leaving the editor buffer dirty
+   * and every offset in the note shifted by its length.
+   *
+   * This is how the selection scenarios prove the one hazard a range carries: the range is measured in
+   * the editor while the rewrite happens on disk. Dev-utils saves the dirty view before it reads, so the
+   * two agree — but only because it does. A prefix makes the disagreement fatal if it ever stops.
+   */
+  readonly dirtyPrefix?: string;
+
+  /**
+   * A substring of the editor's content to select before running the command. The scenario asserts the
+   * command's scope by what it did NOT touch outside this.
+   */
+  readonly selectionMarker?: string;
+
   readonly settings: ScenarioSettings;
   /**
    * A substring whose DISAPPEARANCE means the conversion has settled. Preferred over the appearance marker
@@ -104,7 +124,9 @@ interface TestableSettingsTab extends SettingTab {
 
 const PLUGIN_ID = 'better-markdown-links';
 const DEMOTE_COMMAND_ID = `${PLUGIN_ID}:demote-embeds-to-links-in-current-file`;
+const DEMOTE_SELECTION_COMMAND_ID = `${PLUGIN_ID}:demote-embeds-to-links-in-current-selection`;
 const CONVERT_COMMAND_ID = `${PLUGIN_ID}:convert-links-in-current-file`;
+const CONVERT_TO_MARKDOWN_SELECTION_COMMAND_ID = `${PLUGIN_ID}:convert-links-to-markdown-in-current-selection`;
 const SAVE_COMMAND_ID = 'editor:save-file';
 
 const ALIASED_NOTE_PATH = 'Aliased target.md';
@@ -116,6 +138,21 @@ const EMBED_TARGET_PATH = 'Embed target.md';
 // shortest, relative and absolute path styles all write something different.
 const NESTED_TARGET_BASENAME = 'Deep target';
 const NESTED_TARGET_PATH = `Sub/${NESTED_TARGET_BASENAME}.md`;
+const OTHER_TARGET_PATH = 'Other target.md';
+
+// Two embeds, far enough apart that a selection can hold one and miss the other entirely.
+const FIRST_EMBED = `![First](<${EMBED_TARGET_PATH}>)`;
+const SECOND_EMBED = `![Second](<${OTHER_TARGET_PATH}>)`;
+const TWO_EMBED_CONTENT = `${FIRST_EMBED}\n\nsome prose in between\n\n${SECOND_EMBED}`;
+const TWO_EMBED_COMPANIONS = {
+  [EMBED_TARGET_PATH]: 'body\n',
+  [OTHER_TARGET_PATH]: 'body\n'
+};
+
+// The same two targets as wikilinks, for the convert commands' selection scenarios.
+const FIRST_WIKILINK = '[[Embed target]]';
+const SECOND_WIKILINK = '[[Other target]]';
+const TWO_WIKILINK_CONTENT = `${FIRST_WIKILINK}\n\nsome prose in between\n\n${SECOND_WIKILINK}`;
 
 describe('demote embeds and resolve unresolved links (Desktop)', () => {
   describe('demoting embeds', () => {
@@ -171,6 +208,137 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
       });
 
       expect(result.content).toBe(`[](<${EMBED_TARGET_PATH}>)`);
+    });
+  });
+
+  // Selection is a fourth scope beside file, folder and vault, and every command has it.
+  describe('demoting embeds in a selection', () => {
+    it('should demote the selected embed and leave the one outside the selection embedded', async () => {
+      const result = await runScenario({
+        commandId: DEMOTE_SELECTION_COMMAND_ID,
+        companions: TWO_EMBED_COMPANIONS,
+        content: TWO_EMBED_CONTENT,
+        // Selecting the first embed EXACTLY, to its last character. Containment is inclusive at both ends,
+        // so a selection that stops precisely where a link stops must still demote it — the assertion that
+        // fails first if the range ever acquires an off-by-one.
+        selectionMarker: FIRST_EMBED,
+        settings: {},
+        settledAbsentMarker: FIRST_EMBED,
+        sourceKey: 'demote-selection'
+      });
+
+      expect(result.content).toContain(`[First](<${EMBED_TARGET_PATH}>)`);
+      expect(result.content).not.toContain(FIRST_EMBED);
+      expect(result.content).toContain(SECOND_EMBED);
+    });
+
+    it('should demote nothing at all when the selection is empty', async () => {
+      const result = await runScenario({
+        commandId: DEMOTE_SELECTION_COMMAND_ID,
+        companions: TWO_EMBED_COMPANIONS,
+        content: TWO_EMBED_CONTENT,
+        settings: {},
+        sourceKey: 'demote-selection-empty'
+      });
+
+      // An empty selection greys the command out rather than meaning "the whole note".
+      expect(result.content).toContain(FIRST_EMBED);
+      expect(result.content).toContain(SECOND_EMBED);
+    });
+
+    it('should measure the selection against the unsaved buffer, not the stale file on disk', async () => {
+      const result = await runScenario({
+        commandId: DEMOTE_SELECTION_COMMAND_ID,
+        companions: TWO_EMBED_COMPANIONS,
+        content: TWO_EMBED_CONTENT,
+        // Shifts every offset in the note while disk and metadata cache still describe it as it was.
+        // If dev-utils read the file without first saving this view, the range would land on the wrong
+        // bytes and either demote the wrong embed or corrupt one — which is why this is asserted here
+        // rather than assumed.
+        dirtyPrefix: '# A heading typed and not saved\n\n',
+        selectionMarker: FIRST_EMBED,
+        settings: {},
+        settledAbsentMarker: FIRST_EMBED,
+        sourceKey: 'demote-selection-dirty'
+      });
+
+      expect(result.content).toContain('# A heading typed and not saved');
+      expect(result.content).toContain(`[First](<${EMBED_TARGET_PATH}>)`);
+      expect(result.content).toContain(SECOND_EMBED);
+    });
+  });
+
+  describe('converting links in a selection', () => {
+    it('should force markdown on the selected wikilink only, measured against the unsaved buffer', async () => {
+      const result = await runScenario({
+        commandId: CONVERT_TO_MARKDOWN_SELECTION_COMMAND_ID,
+        companions: TWO_EMBED_COMPANIONS,
+        content: TWO_WIKILINK_CONTENT,
+        dirtyPrefix: '# A heading typed and not saved\n\n',
+        selectionMarker: FIRST_WIKILINK,
+        settings: {},
+        settledAbsentMarker: FIRST_WIKILINK,
+        sourceKey: 'markdown-selection-dirty'
+      });
+
+      expect(result.content).toContain('# A heading typed and not saved');
+      expect(result.content).toContain(`](<${EMBED_TARGET_PATH}>)`);
+      expect(result.content).toContain(SECOND_WIKILINK);
+    });
+
+    it('should force relative paths on the selected wikilink only', async () => {
+      const nestedLink = `[[${NESTED_TARGET_BASENAME}]]`;
+      const result = await runScenario({
+        commandId: `${PLUGIN_ID}:convert-link-paths-to-relative-in-current-selection`,
+        companions: { [NESTED_TARGET_PATH]: 'body\n' },
+        content: `${nestedLink}\n\nsome prose in between\n\n${nestedLink}`,
+        // `indexOf` finds the FIRST of the two identical links.
+        selectionMarker: nestedLink,
+        settings: {},
+        settledMarker: './',
+        sourceKey: 'path-style-selection'
+      });
+
+      expect(result.content).toBe(`[[./Sub/Deep target]]\n\nsome prose in between\n\n${nestedLink}`);
+    });
+
+    // The conversion is up to three passes over the note, and the range handed to the first describes the
+    // note before any of them. Here the alias pass LENGTHENS the first link, which pushes the second
+    // selected link past the original end offset: a range reused verbatim would leave it a wikilink, and
+    // one carried too far would convert the unselected third.
+    it('should carry the selection across a pass that changed the length of a link inside it', async () => {
+      const selected = `[[The Simple One]] ${FIRST_WIKILINK}`;
+      const result = await runScenario({
+        commandId: CONVERT_TO_MARKDOWN_SELECTION_COMMAND_ID,
+        companions: {
+          ...TWO_EMBED_COMPANIONS,
+          [ALIASED_NOTE_PATH]: ALIASED_NOTE_CONTENT
+        },
+        content: `${selected}\n\nsome prose in between\n\n${SECOND_WIKILINK}`,
+        selectionMarker: selected,
+        settings: { shouldResolveLinksViaAliases: true },
+        settledMarker: `](<${EMBED_TARGET_PATH}>)`,
+        sourceKey: 'markdown-selection-carry'
+      });
+
+      expect(result.content).toContain(`(<${ALIASED_NOTE_PATH}>)`);
+      expect(result.content).toContain(`](<${EMBED_TARGET_PATH}>)`);
+      expect(result.content).toContain(SECOND_WIKILINK);
+      expect(result.createdNotePaths).toHaveLength(0);
+    });
+
+    it('should create no note for a wikilink outside the selection', async () => {
+      const result = await runScenario({
+        commandId: `${PLUGIN_ID}:convert-links-in-current-selection`,
+        companions: TWO_EMBED_COMPANIONS,
+        content: `${FIRST_WIKILINK}\n\nsome prose in between\n\n[[A note outside the selection]]`,
+        selectionMarker: FIRST_WIKILINK,
+        settings: { shouldCreateMissingNotes: true },
+        sourceKey: 'create-selection'
+      });
+
+      expect(result.createdNotePaths).toHaveLength(0);
+      expect(result.content).toContain('[[A note outside the selection]]');
     });
   });
 
@@ -372,7 +540,7 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
  */
 async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
   return evalInObsidian({
-    async callback({ app, commandId, companions, content, explicitCommandMode, obsidianModule, obsidianSettingsDefaultPathStyle, obsidianSettingsDefaultStyle, pluginId, settings, settledAbsentMarker, settledMarker, sourcePath }): Promise<ScenarioResult> {
+    async callback({ app, commandId, companions, content, dirtyPrefix, explicitCommandMode, obsidianModule, obsidianSettingsDefaultPathStyle, obsidianSettingsDefaultStyle, pluginId, selectionMarker, settings, settledAbsentMarker, settledMarker, sourcePath }): Promise<ScenarioResult> {
       const EDITOR_WAIT_ATTEMPTS = 50;
       const EDITOR_WAIT_INTERVAL_IN_MILLISECONDS = 50;
       const SETTLE_TIMEOUT_IN_MILLISECONDS = 3000;
@@ -418,6 +586,25 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
       await view.save();
       await waitForIndexedReference(sourceFile);
 
+      if (dirtyPrefix) {
+        // Left UNSAVED on purpose. Disk and cache now describe the pre-prefix note while the editor —
+        // and therefore the selection about to be measured — describes the shifted one.
+        view.editor.setValue(dirtyPrefix + content);
+      }
+
+      if (selectionMarker) {
+        const editorContent = view.editor.getValue();
+        const markerStart = editorContent.indexOf(selectionMarker);
+        if (markerStart === -1) {
+          throw new Error(`Selection marker not found in the editor: ${selectionMarker}`);
+        }
+
+        view.editor.setSelection(
+          view.editor.offsetToPos(markerStart),
+          view.editor.offsetToPos(markerStart + selectionMarker.length)
+        );
+      }
+
       app.commands.executeCommandById(commandId);
 
       const settledContent = await waitForSettledContent(sourceFile);
@@ -446,8 +633,9 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
         return await app.vault.create(path, fileContent);
       }
 
-      // Polls until Obsidian's metadata cache reports the link or embed that was just typed. Every
-      // scenario writes exactly one reference, so "at least one" is the whole condition.
+      // Polls until Obsidian's metadata cache reports a link or embed from the content just typed. Every
+      // scenario writes at least one reference, and none needs the cache to be complete before the
+      // command runs — dev-utils re-reads it, after saving the view, from inside the command itself.
       async function waitForIndexedReference(file: TFile): Promise<void> {
         const start = performance.now();
         while (performance.now() - start < SETTLE_TIMEOUT_IN_MILLISECONDS) {
@@ -500,10 +688,12 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
       commandId: params.commandId,
       companions: params.companions ?? {},
       content: params.content,
+      dirtyPrefix: params.dirtyPrefix ?? '',
       explicitCommandMode: LinkConversionMode.OnExplicitCommand,
       obsidianSettingsDefaultPathStyle: LinkPathStyleMode.ObsidianSettingsDefault,
       obsidianSettingsDefaultStyle: LinkStyleMode.ObsidianSettingsDefault,
       pluginId: PLUGIN_ID,
+      selectionMarker: params.selectionMarker ?? '',
       settings: params.settings,
       settledAbsentMarker: params.settledAbsentMarker ?? '',
       settledMarker: params.settledMarker ?? '',

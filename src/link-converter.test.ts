@@ -59,6 +59,10 @@ vi.mock('obsidian-dev-utils/obsidian/modals/confirm', () => ({
   confirm: vi.fn()
 }));
 
+vi.mock('obsidian-dev-utils/obsidian/vault', () => ({
+  readSafe: vi.fn()
+}));
+
 vi.mock('./unresolved-link-resolver.ts', () => ({
   resolveUnresolvedLinksInFile: vi.fn()
 }));
@@ -76,6 +80,8 @@ import {
 import { loop } from 'obsidian-dev-utils/obsidian/loop';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { readSafe } from 'obsidian-dev-utils/obsidian/vault';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { LinkConverter } from './link-converter.ts';
@@ -319,6 +325,88 @@ describe('LinkConverter', () => {
       });
 
       expect(vi.mocked(updateLinksInFile)).toHaveBeenCalledOnce();
+    });
+
+    describe('selection range', () => {
+      const OFFSET_RANGE = { endOffset: 40, startOffset: 10 };
+
+      it('should read nothing and pass no range when none is given', async () => {
+        const context = createConverter({ shouldResolveLinksViaAliases: true });
+
+        await context.converter.convertLinksInFile({ file: createFile('note.md'), shouldResolveUnresolvedLinks: true });
+
+        expect(vi.mocked(readSafe)).not.toHaveBeenCalled();
+        expect(vi.mocked(resolveUnresolvedLinksInFile).mock.calls[0]?.[0].offsetRange).toBeUndefined();
+        expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].offsetRange).toBeUndefined();
+        expect(vi.mocked(updateFileUrlLinksInFile).mock.calls[0]?.[0].offsetRange).toBeUndefined();
+      });
+
+      it('should hand every pass the same range when no pass changes the length', async () => {
+        const context = createConverter({ shouldResolveLinksViaAliases: true });
+        vi.mocked(readSafe).mockResolvedValue('x'.repeat(100));
+
+        await context.converter.convertLinksInFile({
+          file: createFile('note.md'),
+          offsetRange: OFFSET_RANGE,
+          shouldResolveUnresolvedLinks: true
+        });
+
+        expect(vi.mocked(resolveUnresolvedLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
+        expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
+        expect(vi.mocked(updateFileUrlLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
+      });
+
+      // Each pass rewrites only links inside the range, so the text before the start is untouched and the
+      // end moves by exactly the change in length. Reusing the original range would let a lengthened link
+      // fall out of the selection, or a shortened one pull the next, unselected, link in.
+      it('should move the end, and only the end, by what each earlier pass changed the length by', async () => {
+        const context = createConverter({ shouldResolveLinksViaAliases: true });
+        const RESOLVE_GROWTH = 7;
+        const UPDATE_SHRINK = 3;
+        vi.mocked(readSafe)
+          .mockResolvedValueOnce('x'.repeat(100))
+          .mockResolvedValueOnce('x'.repeat(100 + RESOLVE_GROWTH))
+          .mockResolvedValueOnce('x'.repeat(100 + RESOLVE_GROWTH - UPDATE_SHRINK));
+
+        await context.converter.convertLinksInFile({
+          file: createFile('note.md'),
+          offsetRange: OFFSET_RANGE,
+          shouldResolveUnresolvedLinks: true
+        });
+
+        expect(vi.mocked(resolveUnresolvedLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
+        expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual({
+          endOffset: OFFSET_RANGE.endOffset + RESOLVE_GROWTH,
+          startOffset: OFFSET_RANGE.startOffset
+        });
+        expect(vi.mocked(updateFileUrlLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual({
+          endOffset: OFFSET_RANGE.endOffset + RESOLVE_GROWTH - UPDATE_SHRINK,
+          startOffset: OFFSET_RANGE.startOffset
+        });
+      });
+
+      it('should measure the length before the first pass reads the note, so the editor buffer is flushed first', async () => {
+        const context = createConverter({ shouldNormalizeFileLinks: false });
+        vi.mocked(readSafe).mockResolvedValue('x'.repeat(100));
+
+        await context.converter.convertLinksInFile({ file: createFile('note.md'), offsetRange: OFFSET_RANGE });
+
+        expect(vi.mocked(readSafe)).toHaveBeenCalledOnce();
+        expect(vi.mocked(readSafe).mock.invocationCallOrder[0])
+          .toBeLessThan(vi.mocked(updateLinksInFile).mock.invocationCallOrder[0] ?? 0);
+        expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
+      });
+
+      it('should measure a note that vanished between passes as empty', async () => {
+        const context = createConverter();
+        vi.mocked(readSafe).mockResolvedValueOnce('x'.repeat(100)).mockResolvedValueOnce(null);
+
+        await context.converter.convertLinksInFile({ file: createFile('note.md'), offsetRange: OFFSET_RANGE });
+
+        // The end moves by -100 and would fall below the start; dev-utils rejects such a range at its entry
+        // point, which is the loud failure wanted for a note deleted mid-conversion.
+        expect(vi.mocked(updateFileUrlLinksInFile).mock.calls[0]?.[0].offsetRange?.endOffset).toBe(OFFSET_RANGE.endOffset - 100);
+      });
     });
 
     describe('unresolved link resolution', () => {

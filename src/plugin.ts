@@ -16,15 +16,19 @@ import { BetterMarkdownLinksComponent } from './better-markdown-links-component.
 import { ConvertLinkPathsToRelativeInEntireVaultCommandHandler } from './commands/convert-link-paths-to-relative-in-entire-vault-command-handler.ts';
 import { ConvertLinkPathsToRelativeInFileCommandHandler } from './commands/convert-link-paths-to-relative-in-file-command-handler.ts';
 import { ConvertLinkPathsToRelativeInFolderCommandHandler } from './commands/convert-link-paths-to-relative-in-folder-command-handler.ts';
+import { ConvertLinkPathsToRelativeInSelectionCommandHandler } from './commands/convert-link-paths-to-relative-in-selection-command-handler.ts';
 import { ConvertLinksInEntireVaultCommandHandler } from './commands/convert-links-in-entire-vault-command-handler.ts';
 import { ConvertLinksInFileCommandHandler } from './commands/convert-links-in-file-command-handler.ts';
 import { ConvertLinksInFolderCommandHandler } from './commands/convert-links-in-folder-command-handler.ts';
+import { ConvertLinksInSelectionCommandHandler } from './commands/convert-links-in-selection-command-handler.ts';
 import { ConvertLinksToMarkdownInEntireVaultCommandHandler } from './commands/convert-links-to-markdown-in-entire-vault-command-handler.ts';
 import { ConvertLinksToMarkdownInFileCommandHandler } from './commands/convert-links-to-markdown-in-file-command-handler.ts';
 import { ConvertLinksToMarkdownInFolderCommandHandler } from './commands/convert-links-to-markdown-in-folder-command-handler.ts';
+import { ConvertLinksToMarkdownInSelectionCommandHandler } from './commands/convert-links-to-markdown-in-selection-command-handler.ts';
 import { DemoteEmbedsInEntireVaultCommandHandler } from './commands/demote-embeds-in-entire-vault-command-handler.ts';
 import { DemoteEmbedsInFileCommandHandler } from './commands/demote-embeds-in-file-command-handler.ts';
 import { DemoteEmbedsInFolderCommandHandler } from './commands/demote-embeds-in-folder-command-handler.ts';
+import { DemoteEmbedsInSelectionCommandHandler } from './commands/demote-embeds-in-selection-command-handler.ts';
 import { EmbedDemoter } from './embed-demoter.ts';
 import { LinkConverter } from './link-converter.ts';
 import { PluginSettingsComponent } from './plugin-settings-component.ts';
@@ -106,18 +110,17 @@ export class Plugin extends PluginBase {
         app: this.app,
         getProposedSettings: (): MigratableSettings | null => {
           const settings = pluginSettingsComponent.settings;
-          if (settings.proposedShouldHandleRenames === null) {
-            return null;
-          }
 
           // The path settings travel with the toggle: they scoped this plugin's own handler, so they are
           // what the vault-wide handler needs to keep behaving the way this plugin did. They are proposed
           // rather than moved — this plugin keeps its own copies, which still scope link conversion.
-          return {
-            excludePaths: settings.excludePaths,
-            includePaths: settings.includePaths,
-            shouldHandleRenames: settings.proposedShouldHandleRenames
-          };
+          return settings.proposedShouldHandleRenames === null
+            ? null
+            : {
+              excludePaths: settings.excludePaths,
+              includePaths: settings.includePaths,
+              shouldHandleRenames: settings.proposedShouldHandleRenames
+            };
         },
         pluginSettingsComponent,
         providerPluginId: ADVANCED_RENAME_AND_DELETE_HANDLER_PLUGIN_ID,
@@ -141,6 +144,9 @@ export class Plugin extends PluginBase {
         app: this.app,
         linkConverter
       }),
+      new ConvertLinksInSelectionCommandHandler({
+        linkConverter
+      }),
       new ConvertLinksToMarkdownInFileCommandHandler({
         linkConverter
       }),
@@ -149,6 +155,9 @@ export class Plugin extends PluginBase {
       }),
       new ConvertLinksToMarkdownInEntireVaultCommandHandler({
         app: this.app,
+        linkConverter
+      }),
+      new ConvertLinksToMarkdownInSelectionCommandHandler({
         linkConverter
       }),
       new ConvertLinkPathsToRelativeInFileCommandHandler({
@@ -161,6 +170,9 @@ export class Plugin extends PluginBase {
         app: this.app,
         linkConverter
       }),
+      new ConvertLinkPathsToRelativeInSelectionCommandHandler({
+        linkConverter
+      }),
       new DemoteEmbedsInFileCommandHandler({
         embedDemoter
       }),
@@ -169,6 +181,9 @@ export class Plugin extends PluginBase {
       }),
       new DemoteEmbedsInEntireVaultCommandHandler({
         app: this.app,
+        embedDemoter
+      }),
+      new DemoteEmbedsInSelectionCommandHandler({
         embedDemoter
       }),
       new OpenDemoVaultCommandHandler({

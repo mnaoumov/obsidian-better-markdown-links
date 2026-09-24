@@ -3,6 +3,8 @@ import type {
   TFile
 } from 'obsidian';
 import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
+import type { EditLinksParams } from 'obsidian-dev-utils/obsidian/link';
+import type { OffsetRange } from 'obsidian-dev-utils/obsidian/reference';
 import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource-lock';
 
 import {
@@ -10,6 +12,7 @@ import {
   parseFrontMatterAliases,
   Platform
 } from 'obsidian';
+import { normalizeOptionalProperties } from 'obsidian-dev-utils/object-utils';
 import {
   getFileOrNull,
   isMarkdownFile
@@ -35,6 +38,15 @@ export interface ResolveUnresolvedLinksInFileParams {
   readonly abortSignal: AbortSignal;
   readonly app: App;
   readonly file: TFile;
+
+  /**
+   * A character range within the file's content to confine the pass to — the editor selection, for the
+   * `in selection` commands. A wikilink only partly inside it is left alone.
+   *
+   * @default `undefined`, meaning the whole file.
+   */
+  readonly offsetRange?: OffsetRange;
+
   readonly pluginNoticeComponent: null | PluginNoticeComponent;
   readonly resourceLockComponent: null | ResourceLockComponent;
 
@@ -111,6 +123,7 @@ export async function resolveUnresolvedLinksInFile(params: ResolveUnresolvedLink
     abortSignal,
     app,
     file,
+    offsetRange,
     pluginNoticeComponent,
     resourceLockComponent,
     shouldCreateMissingNotes,
@@ -119,7 +132,9 @@ export async function resolveUnresolvedLinksInFile(params: ResolveUnresolvedLink
 
   abortSignal.throwIfAborted();
 
-  await editLinks({
+  // A range is applied BEFORE `linkConverter` runs, so a wikilink outside the selection never reaches
+  // `createNote` either: the selection bounds the side effect, not only the rewrite.
+  await editLinks(normalizeOptionalProperties<EditLinksParams>({
     abortSignal,
     app,
     linkConverter: async (link) => {
@@ -128,11 +143,7 @@ export async function resolveUnresolvedLinksInFile(params: ResolveUnresolvedLink
       }
 
       const linkPath = getLinkpath(link.link);
-      if (!linkPath) {
-        return;
-      }
-
-      if (app.metadataCache.getFirstLinkpathDest(linkPath, file.path)) {
+      if (!linkPath || app.metadataCache.getFirstLinkpathDest(linkPath, file.path)) {
         return;
       }
 
@@ -153,22 +164,21 @@ export async function resolveUnresolvedLinksInFile(params: ResolveUnresolvedLink
         linkedNote = await createNote(app, file, linkPath);
       }
 
-      if (!linkedNote) {
-        return;
-      }
-
-      return generateMarkdownLink({
-        alias: link.displayText ?? '',
-        app,
-        originalLink: link.original,
-        sourcePathOrFile: file,
-        targetPathOrFile: linkedNote
-      });
+      return linkedNote
+        ? generateMarkdownLink({
+          alias: link.displayText ?? '',
+          app,
+          originalLink: link.original,
+          sourcePathOrFile: file,
+          targetPathOrFile: linkedNote
+        })
+        : undefined;
     },
+    offsetRange,
     pathOrFile: file,
     pluginNoticeComponent,
     resourceLockComponent
-  });
+  }));
 }
 
 async function createNote(app: App, sourceFile: TFile, linkPath: string): Promise<null | TFile> {

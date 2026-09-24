@@ -232,6 +232,27 @@ describe('resolveUnresolvedLinksInFile', () => {
     expect(editLinksParams?.pathOrFile).toBe(context.file);
     expect(editLinksParams?.pluginNoticeComponent).toBe(context.pluginNoticeComponent);
     expect(editLinksParams?.resourceLockComponent).toBe(context.resourceLockComponent);
+    expect(editLinksParams?.offsetRange).toBeUndefined();
+  });
+
+  // `editLinks` filters by the range BEFORE calling the converter, so handing it the range is also what
+  // keeps `createNote` from firing for a wikilink outside the selection.
+  it('should hand the offset range straight to editLinks', async () => {
+    const context = createContext();
+    const offsetRange = { endOffset: 42, startOffset: 10 };
+
+    await resolveUnresolvedLinksInFile({
+      abortSignal: context.abortSignal,
+      app: context.app,
+      file: context.file,
+      offsetRange,
+      pluginNoticeComponent: context.pluginNoticeComponent,
+      resourceLockComponent: context.resourceLockComponent,
+      shouldCreateMissingNotes: true,
+      shouldResolveLinksViaAliases: true
+    });
+
+    expect(vi.mocked(editLinks).mock.calls[0]?.[0]?.offsetRange).toBe(offsetRange);
   });
 
   describe('the link converter it hands to editLinks', () => {
@@ -283,7 +304,7 @@ describe('resolveUnresolvedLinksInFile', () => {
       const aliasedFile = createFile('Real Note.md', 'Real Note');
       context.markdownFiles.push(createFile('Other.md', 'Other'), aliasedFile);
       vi.mocked(parseFrontMatterAliases).mockImplementation(() => null);
-      context.getFileCache.mockImplementation((f: TFile) => f === aliasedFile ? { frontmatter: { aliases: ['Some Alias'] } } : { frontmatter: {} });
+      context.getFileCache.mockImplementation((f: TFile) => ({ frontmatter: f === aliasedFile ? { aliases: ['Some Alias'] } : {} }));
       vi.mocked(parseFrontMatterAliases).mockImplementation((frontmatter) => castTo<null | string[]>(castTo<Record<string, unknown>>(frontmatter)['aliases'] ?? null));
       await context.run();
 
@@ -338,7 +359,7 @@ describe('resolveUnresolvedLinksInFile', () => {
       const context = createContext({ shouldResolveLinksViaAliases: true });
       const aliasedFile = createFile('Real Note.md', 'Real Note');
       context.markdownFiles.push(createFile('Some Alias.md', 'Some Alias'), aliasedFile);
-      context.getFileCache.mockImplementation((f: TFile) => f === aliasedFile ? { frontmatter: { aliases: ['Some Alias'] } } : { frontmatter: {} });
+      context.getFileCache.mockImplementation((f: TFile) => ({ frontmatter: f === aliasedFile ? { aliases: ['Some Alias'] } : {} }));
       vi.mocked(parseFrontMatterAliases).mockImplementation((frontmatter) => castTo<null | string[]>(castTo<Record<string, unknown>>(frontmatter)['aliases'] ?? null));
       await context.run();
 

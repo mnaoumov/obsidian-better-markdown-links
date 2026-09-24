@@ -270,15 +270,13 @@ async function generate(params: GenerateParams): Promise<string> {
         throw new TypeError('generateMarkdownLink is not patched by the plugin (missing `.extended`)');
       }
 
-      if (isEmbed) {
-        return generateMarkdownLink.extended({
+      return isEmbed
+        ? generateMarkdownLink.extended({
           isEmbed: true,
           sourcePathOrFile: sourcePath,
           targetPathOrFile: targetFile
-        });
-      }
-
-      return generateMarkdownLink(targetFile, sourcePath);
+        })
+        : generateMarkdownLink(targetFile, sourcePath);
     },
     input: {
       isEmbed: params.isEmbed ?? false,
