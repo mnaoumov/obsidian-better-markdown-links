@@ -5,9 +5,15 @@ import type {
 } from 'obsidian';
 import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
 import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
+import type {
+  UpdateFileUrlLinksInFileParams,
+  UpdateLinksInFileParams
+} from 'obsidian-dev-utils/obsidian/link';
+import type { OffsetRange } from 'obsidian-dev-utils/obsidian/reference';
 import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource-lock';
 
 import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
+import { normalizeOptionalProperties } from 'obsidian-dev-utils/object-utils';
 import { getMarkdownFiles } from 'obsidian-dev-utils/obsidian/file-system';
 import {
   LinkPathStyle,
@@ -17,8 +23,10 @@ import {
 } from 'obsidian-dev-utils/obsidian/link';
 import { loop } from 'obsidian-dev-utils/obsidian/loop';
 import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
+import { readSafe } from 'obsidian-dev-utils/obsidian/vault';
 
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
+import type { ResolveUnresolvedLinksInFileParams } from './unresolved-link-resolver.ts';
 
 import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
 
@@ -38,6 +46,22 @@ interface LinkConverterConstructorParams {
 interface LinkConverterConvertLinksInFileParams {
   readonly abortSignal?: AbortSignal;
   readonly file: TFile;
+
+  /**
+   * A character range within the file's content to confine the conversion to.
+   *
+   * Set by the `in selection` commands, which pass the editor selection. Containment is total: a link only
+   * partly covered by the range is left alone, because rewriting part of a link corrupts it. A range also
+   * excludes every reference with no position in the file's content — frontmatter links and every canvas
+   * reference — so it is only ever meaningful for the body of a note.
+   *
+   * The range describes the content as it is BEFORE the conversion. The conversion runs up to three passes
+   * over the file and each can change the length of the links it rewrites, so the range is carried from one
+   * pass to the next by {@link shiftOffsetRangeEnd} rather than reused verbatim.
+   *
+   * @default `undefined`, meaning the whole file.
+   */
+  readonly offsetRange?: OffsetRange;
 
   /**
    * Whether to write markdown links regardless of the `Link style` setting.
@@ -133,40 +157,62 @@ export class LinkConverter {
       }
     }
 
+    let offsetRange = params.offsetRange;
+    // `readSafe` saves a dirty editor before reading, so this is the length of the content the first pass
+    // is about to read — the same content the editor selection was measured against.
+    let contentLength = offsetRange ? await this.getContentLength(params.file) : 0;
+
+    const carryOffsetRange = async (): Promise<void> => {
+      if (!offsetRange) {
+        return;
+      }
+
+      const newContentLength = await this.getContentLength(params.file);
+      offsetRange = shiftOffsetRangeEnd(offsetRange, newContentLength - contentLength);
+      contentLength = newContentLength;
+    };
+
     if (params.shouldResolveUnresolvedLinks && (settings.shouldResolveLinksViaAliases || settings.shouldCreateMissingNotes)) {
-      await resolveUnresolvedLinksInFile({
+      await resolveUnresolvedLinksInFile(normalizeOptionalProperties<ResolveUnresolvedLinksInFileParams>({
         abortSignal,
         app: this.app,
         file: params.file,
+        offsetRange,
         pluginNoticeComponent: this.pluginNoticeComponent,
         resourceLockComponent: this.resourceLockComponent,
         shouldCreateMissingNotes: settings.shouldCreateMissingNotes,
         shouldResolveLinksViaAliases: settings.shouldResolveLinksViaAliases
-      });
+      }));
+      await carryOffsetRange();
     }
 
-    await updateLinksInFile({
+    await updateLinksInFile(normalizeOptionalProperties<UpdateLinksInFileParams>({
       abortSignal,
       app: this.app,
       linkStyle: params.shouldForceMarkdownLinkStyle ? LinkStyle.Markdown : settings.getLinkStyle(),
       newSourcePathOrFile: params.file,
+      offsetRange,
       pluginNoticeComponent: this.pluginNoticeComponent,
       resourceLockComponent: this.resourceLockComponent,
       ...settings.buildLinkPathStyleParams(
         params.shouldForceRelativeLinkPathStyle ? LinkPathStyle.RelativePathToTheSource : settings.getLinkPathStyle()
       )
-    });
+    }));
 
-    if (settings.shouldNormalizeFileLinks) {
-      await updateFileUrlLinksInFile({
-        abortSignal,
-        app: this.app,
-        pathOrFile: params.file,
-        pluginNoticeComponent: this.pluginNoticeComponent,
-        resourceLockComponent: this.resourceLockComponent,
-        shouldUseAngleBrackets: settings.shouldUseAngleBrackets
-      });
+    if (!settings.shouldNormalizeFileLinks) {
+      return;
     }
+
+    await carryOffsetRange();
+    await updateFileUrlLinksInFile(normalizeOptionalProperties<UpdateFileUrlLinksInFileParams>({
+      abortSignal,
+      app: this.app,
+      offsetRange,
+      pathOrFile: params.file,
+      pluginNoticeComponent: this.pluginNoticeComponent,
+      resourceLockComponent: this.resourceLockComponent,
+      shouldUseAngleBrackets: settings.shouldUseAngleBrackets
+    }));
   }
 
   public async convertLinksInFolder(params: LinkConverterConvertLinksInFolderParams): Promise<void> {
@@ -202,6 +248,11 @@ export class LinkConverter {
       shouldShowProgressBar: true
     });
   }
+
+  private async getContentLength(file: TFile): Promise<number> {
+    const content = await readSafe(this.app, file);
+    return content?.length ?? 0;
+  }
 }
 
 /**
@@ -217,9 +268,25 @@ function getConversionSubject(params: GetConversionSubjectParams): string {
     return 'links to Markdown';
   }
 
-  if (params.shouldForceRelativeLinkPathStyle) {
-    return 'link paths to relative';
-  }
+  return params.shouldForceRelativeLinkPathStyle ? 'link paths to relative' : 'links';
+}
 
-  return 'links';
+/**
+ * Carries a range across one pass that rewrote only references inside it.
+ *
+ * A range pass never touches text outside the range — a reference is rewritten only when the range holds it
+ * whole — so everything before the start and after the end is unchanged afterwards. The start stays put and
+ * the end moves by exactly the change in the content's length. Reusing the original range instead would let
+ * a lengthened link push the selection's last link out of it, and a shortened one pull the next, unselected,
+ * link in.
+ *
+ * @param offsetRange - The range as it was before the pass.
+ * @param lengthDelta - The content's length after the pass minus its length before.
+ * @returns The same stretch of text, measured against the content after the pass.
+ */
+function shiftOffsetRangeEnd(offsetRange: OffsetRange, lengthDelta: number): OffsetRange {
+  return {
+    endOffset: offsetRange.endOffset + lengthDelta,
+    startOffset: offsetRange.startOffset
+  };
 }

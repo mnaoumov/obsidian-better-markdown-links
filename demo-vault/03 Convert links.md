@@ -4,8 +4,10 @@ Beyond formatting new links, Better Markdown Links can rewrite links that alread
 
 ## On demand
 
-Three style-agnostic commands are available in the Command Palette (three more force the Markdown style - see [Forcing Markdown links](#forcing-markdown-links) below - and three more force relative paths - see [Forcing a link path style](#forcing-a-link-path-style)):
+Four style-agnostic commands are available in the Command Palette (four more force the Markdown style - see [Forcing Markdown links](#forcing-markdown-links) below - and four more force relative paths - see [Forcing a link path style](#forcing-a-link-path-style)):
 
+- **Better Markdown Links: Convert links in current selection**
+  - rewrites only the links inside what you have selected (also available by right-clicking inside the editor). The command is greyed out when nothing is selected, so it can never be mistaken for the whole-note one. A link the selection covers only partly is left alone, and links in frontmatter are never in a selection.
 - **Better Markdown Links: Convert links in current file**
   - rewrites links in the active note.
 - **Better Markdown Links: Convert links in current folder**
@@ -86,8 +88,9 @@ The **Link style** setting (`linkStyleMode`) decides which style is written:
 - **Markdown**
   - always write `[alias](<path/to/target.md>)`, whatever that Obsidian setting says. This one also applies to links the plugin generates from scratch and to embeds being demoted, not only to links being converted.
 
-Three commands force the Markdown style for a single run, leaving the setting alone - the replacement for **Replace all wikilinks with markdown links** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links):
+Four commands force the Markdown style for a single run, leaving the setting alone - the replacement for **Replace all wikilinks with markdown links** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links):
 
+- **Better Markdown Links: Convert links to Markdown in current selection**
 - **Better Markdown Links: Convert links to Markdown in current file**
 - **Better Markdown Links: Convert links to Markdown in current folder**
 - **Better Markdown Links: Convert links to Markdown in entire vault**
@@ -154,8 +157,9 @@ The **Link path style** setting (`linkPathStyleMode`) overrides that:
 
 Outside the default, the **Should use leading dot for relative paths** and **Should use leading slash for absolute paths** settings from [02 Relative links](<./02 Relative links.md>) are applied as written rather than copied from the link being replaced - which is the whole point, since a link that was absolute has no `./` to copy.
 
-Three commands force the relative style for a single run, leaving the setting alone - the replacement for **Convert all link paths to relative** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links):
+Four commands force the relative style for a single run, leaving the setting alone - the replacement for **Convert all link paths to relative** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links):
 
+- **Better Markdown Links: Convert link paths to relative in current selection**
 - **Better Markdown Links: Convert link paths to relative in current file**
 - **Better Markdown Links: Convert link paths to relative in current folder**
 - **Better Markdown Links: Convert link paths to relative in entire vault**

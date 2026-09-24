@@ -3,8 +3,9 @@
  *
  * Integration suite for the two conversions, driving a real Obsidian instance:
  * - demoting embeds to links, with and without the `shouldAppendFileNameWhenDemotingEmbeds` sub-bullet,
- * - confining a demotion to the editor selection, including against an unsaved buffer — the one place a
- *   wrong offset would corrupt a note rather than merely fail,
+ * - confining a demotion or a conversion to the editor selection, including against an unsaved buffer —
+ *   the one place a wrong offset would corrupt a note rather than merely fail — and across the
+ *   conversion's passes, one of which can change the length of a link inside the selection,
  * - resolving an alias-only wikilink through another note's `aliases` frontmatter,
  * - declining to resolve one when two notes answer to the name, and not creating a note for it either,
  * - creating the note behind a wikilink that resolves to nothing,
@@ -125,6 +126,7 @@ const PLUGIN_ID = 'better-markdown-links';
 const DEMOTE_COMMAND_ID = `${PLUGIN_ID}:demote-embeds-to-links-in-current-file`;
 const DEMOTE_SELECTION_COMMAND_ID = `${PLUGIN_ID}:demote-embeds-to-links-in-current-selection`;
 const CONVERT_COMMAND_ID = `${PLUGIN_ID}:convert-links-in-current-file`;
+const CONVERT_TO_MARKDOWN_SELECTION_COMMAND_ID = `${PLUGIN_ID}:convert-links-to-markdown-in-current-selection`;
 const SAVE_COMMAND_ID = 'editor:save-file';
 
 const ALIASED_NOTE_PATH = 'Aliased target.md';
@@ -146,6 +148,11 @@ const TWO_EMBED_COMPANIONS = {
   [EMBED_TARGET_PATH]: 'body\n',
   [OTHER_TARGET_PATH]: 'body\n'
 };
+
+// The same two targets as wikilinks, for the convert commands' selection scenarios.
+const FIRST_WIKILINK = '[[Embed target]]';
+const SECOND_WIKILINK = '[[Other target]]';
+const TWO_WIKILINK_CONTENT = `${FIRST_WIKILINK}\n\nsome prose in between\n\n${SECOND_WIKILINK}`;
 
 describe('demote embeds and resolve unresolved links (Desktop)', () => {
   describe('demoting embeds', () => {
@@ -204,9 +211,7 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
     });
   });
 
-  // Selection is a fourth scope beside file, folder and vault. Only the demote command has one so far:
-  // it reaches `editLinks` directly, whose params carry an offset range, while the two convert commands
-  // go through `updateLinksInFile` / `updateFileUrlLinksInFile`, whose params do not.
+  // Selection is a fourth scope beside file, folder and vault, and every command has it.
   describe('demoting embeds in a selection', () => {
     it('should demote the selected embed and leave the one outside the selection embedded', async () => {
       const result = await runScenario({
@@ -260,6 +265,80 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
       expect(result.content).toContain('# A heading typed and not saved');
       expect(result.content).toContain(`[First](<${EMBED_TARGET_PATH}>)`);
       expect(result.content).toContain(SECOND_EMBED);
+    });
+  });
+
+  describe('converting links in a selection', () => {
+    it('should force markdown on the selected wikilink only, measured against the unsaved buffer', async () => {
+      const result = await runScenario({
+        commandId: CONVERT_TO_MARKDOWN_SELECTION_COMMAND_ID,
+        companions: TWO_EMBED_COMPANIONS,
+        content: TWO_WIKILINK_CONTENT,
+        dirtyPrefix: '# A heading typed and not saved\n\n',
+        selectionMarker: FIRST_WIKILINK,
+        settings: {},
+        settledAbsentMarker: FIRST_WIKILINK,
+        sourceKey: 'markdown-selection-dirty'
+      });
+
+      expect(result.content).toContain('# A heading typed and not saved');
+      expect(result.content).toContain(`](<${EMBED_TARGET_PATH}>)`);
+      expect(result.content).toContain(SECOND_WIKILINK);
+    });
+
+    it('should force relative paths on the selected wikilink only', async () => {
+      const nestedLink = `[[${NESTED_TARGET_BASENAME}]]`;
+      const result = await runScenario({
+        commandId: `${PLUGIN_ID}:convert-link-paths-to-relative-in-current-selection`,
+        companions: { [NESTED_TARGET_PATH]: 'body\n' },
+        content: `${nestedLink}\n\nsome prose in between\n\n${nestedLink}`,
+        // `indexOf` finds the FIRST of the two identical links.
+        selectionMarker: nestedLink,
+        settings: {},
+        settledMarker: './',
+        sourceKey: 'path-style-selection'
+      });
+
+      expect(result.content).toBe(`[[./Sub/Deep target]]\n\nsome prose in between\n\n${nestedLink}`);
+    });
+
+    // The conversion is up to three passes over the note, and the range handed to the first describes the
+    // note before any of them. Here the alias pass LENGTHENS the first link, which pushes the second
+    // selected link past the original end offset: a range reused verbatim would leave it a wikilink, and
+    // one carried too far would convert the unselected third.
+    it('should carry the selection across a pass that changed the length of a link inside it', async () => {
+      const selected = `[[The Simple One]] ${FIRST_WIKILINK}`;
+      const result = await runScenario({
+        commandId: CONVERT_TO_MARKDOWN_SELECTION_COMMAND_ID,
+        companions: {
+          ...TWO_EMBED_COMPANIONS,
+          [ALIASED_NOTE_PATH]: ALIASED_NOTE_CONTENT
+        },
+        content: `${selected}\n\nsome prose in between\n\n${SECOND_WIKILINK}`,
+        selectionMarker: selected,
+        settings: { shouldResolveLinksViaAliases: true },
+        settledMarker: `](<${EMBED_TARGET_PATH}>)`,
+        sourceKey: 'markdown-selection-carry'
+      });
+
+      expect(result.content).toContain(`(<${ALIASED_NOTE_PATH}>)`);
+      expect(result.content).toContain(`](<${EMBED_TARGET_PATH}>)`);
+      expect(result.content).toContain(SECOND_WIKILINK);
+      expect(result.createdNotePaths).toHaveLength(0);
+    });
+
+    it('should create no note for a wikilink outside the selection', async () => {
+      const result = await runScenario({
+        commandId: `${PLUGIN_ID}:convert-links-in-current-selection`,
+        companions: TWO_EMBED_COMPANIONS,
+        content: `${FIRST_WIKILINK}\n\nsome prose in between\n\n[[A note outside the selection]]`,
+        selectionMarker: FIRST_WIKILINK,
+        settings: { shouldCreateMissingNotes: true },
+        sourceKey: 'create-selection'
+      });
+
+      expect(result.createdNotePaths).toHaveLength(0);
+      expect(result.content).toContain('[[A note outside the selection]]');
     });
   });
 
