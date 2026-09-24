@@ -11,6 +11,9 @@ const EMBEDDED_NOTE_PATH = `${EMBEDDED_FOLDER_PATH}/Embedded links.md`;
 const UNRESOLVED_FOLDER_PATH = 'Materials/03 Convert links';
 const UNRESOLVED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/Unresolved links.md`;
 const ALIASED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/Aliased note.md`;
+// Two notes answering to ONE alias, which is what makes `[[The Contested One]]` ambiguous.
+const FIRST_CONTESTED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/First contested note.md`;
+const SECOND_CONTESTED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/Second contested note.md`;
 const WIKILINK_NOTE_PATH = `${MESSY_FOLDER_PATH}/Wikilinks.md`;
 const PATH_STYLE_NOTE_PATH = `${MESSY_FOLDER_PATH}/Non-relative paths.md`;
 
@@ -131,17 +134,46 @@ const ALIASED_CONTENT = [
   ''
 ].join('\n');
 
+// The two notes that BOTH answer to `The Contested One`. A name two notes carry has no right answer, so
+// the plugin declines to pick one - the third link in the note below stays exactly as it is.
+const FIRST_CONTESTED_CONTENT = [
+  '---',
+  'aliases:',
+  '  - The Contested One',
+  '---',
+  '',
+  '# First contested note',
+  '',
+  'This note answers to `The Contested One`. So does its sibling, which is the whole point.',
+  ''
+].join('\n');
+
+const SECOND_CONTESTED_CONTENT = [
+  '---',
+  'aliases:',
+  '  - The Contested One',
+  '---',
+  '',
+  '# Second contested note',
+  '',
+  'This note answers to `The Contested One` too, so neither of us can be the answer.',
+  ''
+].join('\n');
+
 // A note whose wikilinks Obsidian cannot resolve: the first names an ALIAS rather than a file name, the
-// second names a note that does not exist at all. Converting with the two resolution settings on turns
-// the first into a link to the aliased note and creates a note for the second.
+// second names a note that does not exist at all, and the third names an alias that TWO notes answer to.
+// Converting with the two resolution settings on turns the first into a link to the aliased note, creates
+// a note for the second, and deliberately leaves the third alone.
 const UNRESOLVED_CONTENT = [
   '# Unresolved links',
   '',
-  'Neither wikilink below resolves as written. Convert this note with **Should resolve links via',
-  'aliases** and **Should create missing notes** enabled and watch both find a real target.',
+  'None of the wikilinks below resolves as written. Convert this note with **Should resolve links via',
+  'aliases** and **Should create missing notes** enabled and watch the first two find a real target -',
+  'and the third stay put, because two notes answer to its name and neither is the right one.',
   '',
   '- Named by its alias, not its file name: [[The Simple One]]',
   '- A note that does not exist yet: [[A brand new note]]',
+  '- Named by an alias TWO notes carry: [[The Contested One]]',
   ''
 ].join('\n');
 
@@ -157,13 +189,16 @@ export async function openEmbeddedNote(app: App): Promise<void> {
 
 /**
  * Creates (or restores) a note whose wikilinks do not resolve, plus the aliased note one of them is
- * meant to find, and opens the unresolved note.
+ * meant to find and the two rival notes that make a third one ambiguous, and opens the unresolved note.
  *
  * Manual equivalent: write `[[Some Alias]]` pointing at a note whose `aliases` frontmatter carries that
- * alias, and `[[A brand new note]]` pointing at nothing.
+ * alias, `[[A brand new note]]` pointing at nothing, and `[[Another Alias]]` pointing at a name TWO
+ * notes carry.
  */
 export async function openUnresolvedNote(app: App): Promise<void> {
   await openDemoNote(app, UNRESOLVED_FOLDER_PATH, ALIASED_NOTE_PATH, ALIASED_CONTENT);
+  await openDemoNote(app, UNRESOLVED_FOLDER_PATH, FIRST_CONTESTED_NOTE_PATH, FIRST_CONTESTED_CONTENT);
+  await openDemoNote(app, UNRESOLVED_FOLDER_PATH, SECOND_CONTESTED_NOTE_PATH, SECOND_CONTESTED_CONTENT);
   await openDemoNote(app, UNRESOLVED_FOLDER_PATH, UNRESOLVED_NOTE_PATH, UNRESOLVED_CONTENT);
   new Notice('Unresolved links note ready. Now convert it.');
 }

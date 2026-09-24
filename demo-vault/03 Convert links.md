@@ -212,12 +212,14 @@ A wikilink can name a note by an **alias** — `[[The Simple One]]`, where `The 
 Two opt-in settings deal with this, applied in order and **only when you run a convert command yourself**. The automatic modes above never trigger them — creating notes on every auto-save would litter the vault.
 
 - **Should resolve links via aliases** (`shouldResolveLinksViaAliases`)
-  - looks an unresolved wikilink up against every note's `aliases` frontmatter and its basename, and points the converted link at whatever it finds.
-  - off by default because the answer can be arbitrary: when several notes carry the same name, the first one in vault order wins, and a link Obsidian was showing you as unresolved is rewritten to point at it.
+  - looks an unresolved wikilink up against every note's `aliases` frontmatter and its basename, and points the converted link at the note when **exactly one** answers to the name.
+  - when several notes carry the name, the link is left exactly as it is. There is no right answer to write, and the unresolved marker Obsidian is showing you is information rather than a gap to be filled.
+  - off by default because the lookup also matches by file name, and a wikilink only reaches it once Obsidian itself has failed to resolve it: a file-name match here is one Obsidian refused, found only through this plugin's laxer casing and spacing rules.
 - **Should create missing notes** (`shouldCreateMissingNotes`)
   - creates the note when the alias lookup finds nothing, in the folder your **Default location for new notes** Obsidian setting names. This writes new files to your vault.
+  - a name several notes already carry is ambiguous, not missing, so nothing is created for it.
 
-The button writes a note with one of each — a wikilink naming an alias, and a wikilink naming nothing at all — plus the aliased note the first one is meant to find:
+The button writes a note with one of each — a wikilink naming an alias, a wikilink naming nothing at all, and a wikilink naming an alias that two notes answer to — plus the aliased note the first one is meant to find and the two rivals that make the third ambiguous:
 
 ```code-button
 ---
@@ -240,7 +242,7 @@ caption: Convert the unresolved links note
 require('/demoSetup.ts').convertLinksInCurrentFile(app);
 ```
 
-The first link now points at `Aliased note.md`; the second has a freshly created note behind it.
+The first link now points at `Aliased note.md`; the second has a freshly created note behind it. The third is untouched, still `[[The Contested One]]` and still showing as unresolved — two notes answer to that name, so there is nothing right to point it at, and nothing was created for it either.
 
 ```code-button
 ---

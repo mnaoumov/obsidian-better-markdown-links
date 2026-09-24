@@ -321,6 +321,58 @@ describe('resolveUnresolvedLinksInFile', () => {
       expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(namedFile);
     });
 
+    it('should leave the link alone when several notes in the vault carry the name', async () => {
+      const context = createContext({ shouldResolveLinksViaAliases: true });
+      context.markdownFiles.push(createFile('Some Alias.md', 'Some Alias'), createFile('Other/Some Alias.md', 'Some Alias'));
+      await context.run();
+
+      const result = await runLinkConverter(createLink('[[Some Alias]]'));
+
+      // The walk used to stop at the first match and rewrite the link to it. It now has to see the
+      // whole vault to know the name is unique, and declines to guess when it is not.
+      expect(result).toBeUndefined();
+      expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
+    });
+
+    it('should count a basename on one note and a frontmatter alias on another as an ambiguity', async () => {
+      const context = createContext({ shouldResolveLinksViaAliases: true });
+      const aliasedFile = createFile('Real Note.md', 'Real Note');
+      context.markdownFiles.push(createFile('Some Alias.md', 'Some Alias'), aliasedFile);
+      context.getFileCache.mockImplementation((f: TFile) => f === aliasedFile ? { frontmatter: { aliases: ['Some Alias'] } } : { frontmatter: {} });
+      vi.mocked(parseFrontMatterAliases).mockImplementation((frontmatter) => castTo<null | string[]>(castTo<Record<string, unknown>>(frontmatter)['aliases'] ?? null));
+      await context.run();
+
+      const result = await runLinkConverter(createLink('[[Some Alias]]'));
+
+      expect(result).toBeUndefined();
+      expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
+    });
+
+    it('should count one note once when both its basename and one of its aliases carry the name', async () => {
+      const context = createContext({ shouldResolveLinksViaAliases: true });
+      const namedFile = createFile('Some Alias.md', 'Some Alias');
+      context.markdownFiles.push(namedFile);
+      context.getFileCache.mockReturnValue({ frontmatter: { aliases: ['Some Alias'] } });
+      vi.mocked(parseFrontMatterAliases).mockReturnValue(['Some Alias']);
+      await context.run();
+
+      await runLinkConverter(createLink('[[Some Alias]]'));
+
+      // One NOTE is what counts, not one match. A note matching twice is not two candidates.
+      expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(namedFile);
+    });
+
+    it('should not create a note for a name several notes in the vault carry', async () => {
+      const context = createContext({ shouldCreateMissingNotes: true, shouldResolveLinksViaAliases: true });
+      context.markdownFiles.push(createFile('Some Alias.md', 'Some Alias'), createFile('Other/Some Alias.md', 'Some Alias'));
+      await context.run();
+
+      const result = await runLinkConverter(createLink('[[Some Alias]]'));
+
+      expect(result).toBeUndefined();
+      expect(context.create).not.toHaveBeenCalled();
+    });
+
     describe('the name index, when the Advanced Metadata Cache plugin has grafted it on', () => {
       it('should resolve through the index rather than by walking the vault', async () => {
         const context = createContext({ isNameIndexInstalled: true, shouldResolveLinksViaAliases: true });
@@ -338,7 +390,7 @@ describe('resolveUnresolvedLinksInFile', () => {
         expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(indexedFile);
       });
 
-      it('should take the first note the index names', async () => {
+      it('should leave the link alone when the index names several notes', async () => {
         const context = createContext({ isNameIndexInstalled: true, shouldResolveLinksViaAliases: true });
         const firstFile = createFile('First.md', 'First');
         const secondFile = createFile('Second.md', 'Second');
@@ -346,11 +398,34 @@ describe('resolveUnresolvedLinksInFile', () => {
         vi.mocked(getFileOrNull).mockImplementation((params) => params.pathOrFile === 'First.md' ? firstFile : secondFile);
         await context.run();
 
-        await runLinkConverter(createLink('[[Some Alias]]'));
+        const result = await runLinkConverter(createLink('[[Some Alias]]'));
 
-        expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(firstFile);
+        expect(result).toBeUndefined();
+        expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
       });
 
+      it('should not create a note for a name the index says several notes carry', async () => {
+        const context = createContext({
+          isNameIndexInstalled: true,
+          shouldCreateMissingNotes: true,
+          shouldResolveLinksViaAliases: true
+        });
+        const firstFile = createFile('First.md', 'First');
+        const secondFile = createFile('Second.md', 'Second');
+        context.getPathsByNameSafe.mockResolvedValue(['First.md', 'Second.md']);
+        vi.mocked(getFileOrNull).mockImplementation((params) => params.pathOrFile === 'First.md' ? firstFile : secondFile);
+        await context.run();
+
+        const result = await runLinkConverter(createLink('[[Some Alias]]'));
+
+        // An ambiguous name is not a missing one. Creating a third note that answers to it would be
+        // strictly worse than the arbitrary pick this behavior replaced.
+        expect(result).toBeUndefined();
+        expect(context.create).not.toHaveBeenCalled();
+      });
+
+      // Also proves the markdown narrowing decides AMBIGUITY and not only resolution: two paths come
+      // back, one of them survives it, and the link resolves rather than being declined as contested.
       it('should skip a non-markdown path the index names', async () => {
         const context = createContext({ isNameIndexInstalled: true, shouldResolveLinksViaAliases: true });
         const note = createFile('Real Note.md', 'Real Note');
@@ -364,6 +439,8 @@ describe('resolveUnresolvedLinksInFile', () => {
         expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].targetPathOrFile).toBe(note);
       });
 
+      // Same point as the case above, from the other side: a path the vault has since lost must not
+      // make a unique name look contested.
       it('should skip a path no file answers to', async () => {
         const context = createContext({ isNameIndexInstalled: true, shouldResolveLinksViaAliases: true });
         const note = createFile('Real Note.md', 'Real Note');
