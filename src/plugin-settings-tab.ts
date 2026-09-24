@@ -285,7 +285,9 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
           appendCodeBlock(f, '[[Some Alias]]');
           f.appendText(' does, so without this an alias-only wikilink converts into a link pointing at a note that does not exist.');
           f.createEl('br');
-          f.appendText('Off by default because the answer can be arbitrary: when several notes carry the same name, the first one in vault order wins, and the link Obsidian was showing you as unresolved is rewritten to point at it.');
+          f.appendText('Only an unambiguous answer is written. When several notes carry the same name the link is left exactly as it is, unresolved, because there is no right answer to pick — and no note is created for it either.');
+          f.createEl('br');
+          f.appendText('Off by default because the lookup also matches by file name, and a wikilink only reaches it once Obsidian itself has failed to resolve it: a file-name match here is one Obsidian refused, found only through this plugin\'s laxer casing and spacing rules.');
           f.createEl('br');
           f.appendText('Applies only to the explicit convert commands, never to automatic conversion.');
         }),
@@ -299,6 +301,8 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
       this.settingEx({
         desc: createFragment((f) => {
           f.appendText('Whether to create the note when a wikilink still does not resolve after the alias lookup.');
+          f.createEl('br');
+          f.appendText('A name several notes already carry is not a missing note, so nothing is created for it.');
           f.createEl('br');
           f.appendText('This writes new files to your vault, in the folder your ');
           appendCodeBlock(f, 'Default location for new notes');

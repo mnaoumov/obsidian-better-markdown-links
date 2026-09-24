@@ -4,6 +4,7 @@
  * Integration suite for the two conversions, driving a real Obsidian instance:
  * - demoting embeds to links, with and without the `shouldAppendFileNameWhenDemotingEmbeds` sub-bullet,
  * - resolving an alias-only wikilink through another note's `aliases` frontmatter,
+ * - declining to resolve one when two notes answer to the name, and not creating a note for it either,
  * - creating the note behind a wikilink that resolves to nothing,
  * - and the invariant that makes the last one safe: the AUTOMATIC conversion paths must never create a
  *   note, however the settings are set, because they fire on every save.
@@ -108,6 +109,8 @@ const SAVE_COMMAND_ID = 'editor:save-file';
 
 const ALIASED_NOTE_PATH = 'Aliased target.md';
 const ALIASED_NOTE_CONTENT = '---\naliases:\n  - The Simple One\n---\n\nbody\n';
+// A SECOND note carrying the same alias, which is the whole of what makes the name ambiguous.
+const RIVAL_ALIASED_NOTE_PATH = 'Rival aliased target.md';
 const EMBED_TARGET_PATH = 'Embed target.md';
 // A target one folder down from the root, where the source files live: the only shape in which the
 // shortest, relative and absolute path styles all write something different.
@@ -183,6 +186,28 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
       });
 
       expect(result.content).toContain('Aliased target');
+      expect(result.createdNotePaths).toHaveLength(0);
+    });
+
+    it('should leave the wikilink alone when two notes answer to the alias', async () => {
+      const result = await runScenario({
+        commandId: CONVERT_COMMAND_ID,
+        companions: {
+          [ALIASED_NOTE_PATH]: ALIASED_NOTE_CONTENT,
+          [RIVAL_ALIASED_NOTE_PATH]: ALIASED_NOTE_CONTENT
+        },
+        content: '[[The Simple One]]',
+        // Creation is ON, which is the half that would be easy to get wrong: an ambiguous name is not
+        // a missing one, so it must not fall through to a third note being created for it.
+        settings: { shouldCreateMissingNotes: true, shouldResolveLinksViaAliases: true },
+        sourceKey: 'resolve-ambiguous'
+      });
+
+      // No settled marker, so the helper waits the full settle timeout and the assertion is made after
+      // the conversion has had every chance to run. Obsidian does not resolve an alias-only wikilink
+      // itself — `getFirstLinkpathDest` answers null and the link sits in `unresolvedLinks` — so
+      // nothing downstream rewrites what this plugin declines to.
+      expect(result.content).toBe('[[The Simple One]]');
       expect(result.createdNotePaths).toHaveLength(0);
     });
 
