@@ -8,6 +8,9 @@
  *   conversion's passes, one of which can change the length of a link inside the selection,
  * - resolving an alias-only wikilink through another note's `aliases` frontmatter,
  * - declining to resolve one when two notes answer to the name, and not creating a note for it either,
+ * - both of those again with the real Advanced Metadata Cache installed, proving the lookup reads that
+ *   plugin's name index rather than walking the vault — and removing it again, so every other case here
+ *   keeps proving the walk,
  * - creating the note behind a wikilink that resolves to nothing,
  * - and the invariant that makes the last one safe: the AUTOMATIC conversion paths must never create a
  *   note, however the settings are set, because they fire on every save.
@@ -27,9 +30,18 @@ import type {
   TFile
 } from 'obsidian';
 
-import { evalInObsidian } from 'obsidian-integration-testing';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import process from 'node:process';
+import {
+  bootstrapDemoVaultPlugins,
+  DEFAULT_CONFIG_DIRECTORY,
+  evalInObsidian
+} from 'obsidian-integration-testing';
 import { getTemporaryVault } from 'obsidian-integration-testing/vitest-global-setup-plugin';
 import {
+  afterAll,
+  beforeAll,
   describe,
   expect,
   it
@@ -40,6 +52,46 @@ import type { PluginSettings } from './plugin-settings.ts';
 import { LinkConversionMode } from './link-conversion-mode.ts';
 import { LinkPathStyleMode } from './link-path-style-mode.ts';
 import { LinkStyleMode } from './link-style-mode.ts';
+
+/**
+ * `app.metadataCache.getLinkSuggestions` as Advanced Metadata Cache's `Names` module leaves it: the
+ * function object the plugin under test duck-types, carrying the reverse lookup it reads.
+ */
+interface GraftedGetLinkSuggestions {
+  getPathsByNameSafe?: (name: string) => Promise<string[]>;
+  safe?: () => Promise<unknown>;
+}
+
+/**
+ * Advanced Metadata Cache's settings, seen through the one the suite switches.
+ */
+interface NamesModuleSettings {
+  isNamesModuleEnabled: boolean;
+}
+
+/**
+ * Advanced Metadata Cache's settings component, seen through the one method the suite needs.
+ */
+interface NamesModuleSettingsComponent {
+  editAndSave: (editor: (settings: NamesModuleSettings) => void) => Promise<void>;
+}
+
+/**
+ * Advanced Metadata Cache, seen through the one member the suite needs to switch its `Names` module on.
+ */
+interface NamesModuleSwitchablePlugin {
+  readonly pluginSettingsComponent: NamesModuleSettingsComponent;
+}
+
+declare global {
+  interface Window {
+    /**
+     * The names the recording wrapper saw Advanced Metadata Cache's index asked for, kept on the renderer's
+     * global so a later `evalInObsidian` call can read them back.
+     */
+    betterMarkdownLinksNameLookups?: string[];
+  }
+}
 
 /**
  * Parameters for {@link runScenario}.
@@ -128,6 +180,24 @@ const DEMOTE_SELECTION_COMMAND_ID = `${PLUGIN_ID}:demote-embeds-to-links-in-curr
 const CONVERT_COMMAND_ID = `${PLUGIN_ID}:convert-links-in-current-file`;
 const CONVERT_TO_MARKDOWN_SELECTION_COMMAND_ID = `${PLUGIN_ID}:convert-links-to-markdown-in-current-selection`;
 const SAVE_COMMAND_ID = 'editor:save-file';
+
+const ADVANCED_METADATA_CACHE_PLUGIN_ID = 'advanced-metadata-cache';
+const ADVANCED_METADATA_CACHE_REPO = 'mnaoumov/obsidian-advanced-metadata-cache';
+// Pinned, so an Advanced Metadata Cache release cannot turn this suite red unannounced: moving it is a
+// deliberate edit here, made when this plugin wants to prove itself against the newer index.
+const ADVANCED_METADATA_CACHE_VERSION = '1.0.0';
+// Somewhere gitignored, keyed by the version, so a warm checkout downloads nothing and a version bump
+// cannot be satisfied by the previous version's files.
+const ADVANCED_METADATA_CACHE_DOWNLOAD_ROOT = join(
+  process.cwd(),
+  'dist',
+  'integration-test-plugins',
+  `${ADVANCED_METADATA_CACHE_PLUGIN_ID}-${ADVANCED_METADATA_CACHE_VERSION}`
+);
+const ADVANCED_METADATA_CACHE_ASSET_NAMES = ['main.js', 'manifest.json'] as const;
+// Downloading the release and building the name index both take longer than a single test's default.
+const ADVANCED_METADATA_CACHE_SETUP_TIMEOUT_IN_MILLISECONDS = 120_000;
+const NAMES_MODULE_GRAFT_TIMEOUT_IN_MILLISECONDS = 20_000;
 
 const ALIASED_NOTE_PATH = 'Aliased target.md';
 const ALIASED_NOTE_CONTENT = '---\naliases:\n  - The Simple One\n---\n\nbody\n';
@@ -379,6 +449,62 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
       expect(result.createdNotePaths).toHaveLength(0);
     });
 
+    // The fast path, against the real plugin rather than a stub of its graft: the unit suite already
+    // covers both branches of the lookup, and what it cannot prove is that the graft the real plugin
+    // installs is the one this plugin duck-types. Nested so its setup and teardown bracket only these
+    // cases — every case outside it must keep running on the vault walk, with the plugin ABSENT.
+    describe('with Advanced Metadata Cache installed', () => {
+      beforeAll(async () => {
+        await installAdvancedMetadataCache();
+      }, ADVANCED_METADATA_CACHE_SETUP_TIMEOUT_IN_MILLISECONDS);
+
+      afterAll(async () => {
+        await uninstallAdvancedMetadataCache();
+        // Asserted rather than assumed: a graft left behind would quietly move every later alias case
+        // onto the index, and the walk would go unproven with the suite still green.
+        expect(await hasNameIndexGraft()).toBe(false);
+      }, ADVANCED_METADATA_CACHE_SETUP_TIMEOUT_IN_MILLISECONDS);
+
+      it('should resolve an alias-only wikilink through the name index', async () => {
+        // The ambiguous walk case above leaves its rival behind, and the index — unlike the walk case it
+        // mirrors, which runs first — would rightly see two notes and decline.
+        await trashNotes([RIVAL_ALIASED_NOTE_PATH]);
+        await resetNameLookups();
+
+        const result = await runScenario({
+          commandId: CONVERT_COMMAND_ID,
+          companions: { [ALIASED_NOTE_PATH]: ALIASED_NOTE_CONTENT },
+          content: '[[The Simple One]]',
+          settings: { shouldResolveLinksViaAliases: true },
+          settledMarker: 'Aliased target',
+          sourceKey: 'resolve-alias-index'
+        });
+
+        expect(result.content).toContain('Aliased target');
+        expect(result.createdNotePaths).toHaveLength(0);
+        expect(await readNameLookups()).toContain('The Simple One');
+      });
+
+      it('should leave the wikilink alone when the index names two notes', async () => {
+        await resetNameLookups();
+
+        const result = await runScenario({
+          commandId: CONVERT_COMMAND_ID,
+          companions: {
+            [ALIASED_NOTE_PATH]: ALIASED_NOTE_CONTENT,
+            [RIVAL_ALIASED_NOTE_PATH]: ALIASED_NOTE_CONTENT
+          },
+          content: '[[The Simple One]]',
+          settings: { shouldCreateMissingNotes: true, shouldResolveLinksViaAliases: true },
+          sourceKey: 'resolve-ambiguous-index'
+        });
+
+        expect(result.content).toBe('[[The Simple One]]');
+        expect(result.createdNotePaths).toHaveLength(0);
+        expect(await readNameLookups()).toContain('The Simple One');
+      });
+    });
+
     it('should create the note behind a wikilink that resolves to nothing', async () => {
       const result = await runScenario({
         commandId: CONVERT_COMMAND_ID,
@@ -529,6 +655,129 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
     expect(result.createdNotePaths).toHaveLength(0);
   });
 });
+
+/**
+ * Checks whether `getLinkSuggestions` carries Advanced Metadata Cache's reverse lookup, which is what
+ * moves the plugin under test off the vault walk.
+ *
+ * @returns Whether the graft is there.
+ */
+async function hasNameIndexGraft(): Promise<boolean> {
+  return await evalInObsidian({
+    callback({ app }): boolean {
+      return (app.metadataCache.getLinkSuggestions as GraftedGetLinkSuggestions).getPathsByNameSafe !== undefined;
+    },
+    vaultPath: getTemporaryVault().path
+  });
+}
+
+/**
+ * Downloads the pinned Advanced Metadata Cache release (once per machine), installs it into the test
+ * vault, enables it, switches its `Names` module on, waits for the index to be built, and wraps its
+ * `getPathsByNameSafe` so the suite can tell afterwards which names the index was asked for.
+ *
+ * The files are written through Obsidian's own adapter into `app.vault.configDir`, so the install lands
+ * wherever this vault actually reads plugins from.
+ */
+async function installAdvancedMetadataCache(): Promise<void> {
+  await bootstrapDemoVaultPlugins({
+    demoVaultPath: ADVANCED_METADATA_CACHE_DOWNLOAD_ROOT,
+    injectPlugins: [{
+      pluginId: ADVANCED_METADATA_CACHE_PLUGIN_ID,
+      repo: ADVANCED_METADATA_CACHE_REPO,
+      version: ADVANCED_METADATA_CACHE_VERSION
+    }]
+  });
+
+  const assets: Record<string, string> = {};
+  for (const assetName of ADVANCED_METADATA_CACHE_ASSET_NAMES) {
+    assets[assetName] = await readFile(
+      // The bootstrap installs into the default config folder of the "demo vault" it is pointed at, which here is only a download cache.
+      join(ADVANCED_METADATA_CACHE_DOWNLOAD_ROOT, DEFAULT_CONFIG_DIRECTORY, 'plugins', ADVANCED_METADATA_CACHE_PLUGIN_ID, assetName),
+      'utf-8'
+    );
+  }
+
+  await evalInObsidian({
+    async callback({ app, assets: assetContents, graftTimeoutInMilliseconds, lib: { waitUntil }, pluginId }): Promise<void> {
+      const pluginFolder = `${app.vault.configDir}/plugins/${pluginId}`;
+      if (!await app.vault.adapter.exists(pluginFolder)) {
+        await app.vault.adapter.mkdir(pluginFolder);
+      }
+
+      for (const [assetName, assetContent] of Object.entries(assetContents)) {
+        await app.vault.adapter.write(`${pluginFolder}/${assetName}`, assetContent);
+      }
+
+      await app.plugins.loadManifests();
+      await app.plugins.enablePlugin(pluginId);
+
+      const plugin = app.plugins.getPlugin(pluginId) as NamesModuleSwitchablePlugin | null;
+      if (!plugin) {
+        throw new Error(`${pluginId} did not load`);
+      }
+
+      await plugin.pluginSettingsComponent.editAndSave((settings) => {
+        settings.isNamesModuleEnabled = true;
+      });
+
+      // The module does not start inside the settings save, so the graft is waited for rather than read.
+      await waitUntil({
+        message: `${pluginId}'s Names module to graft getPathsByNameSafe`,
+        predicate: () => (app.metadataCache.getLinkSuggestions as GraftedGetLinkSuggestions).getPathsByNameSafe !== undefined,
+        timeoutInMilliseconds: graftTimeoutInMilliseconds
+      });
+
+      const getLinkSuggestions = app.metadataCache.getLinkSuggestions as GraftedGetLinkSuggestions;
+      const { getPathsByNameSafe, safe } = getLinkSuggestions;
+      if (!getPathsByNameSafe || !safe) {
+        throw new Error(`${pluginId} is enabled, but its Names module grafted no getPathsByNameSafe`);
+      }
+
+      await safe();
+
+      // The plugin under test reads the member off the function object at every call, so replacing it
+      // here is seen by the very next lookup.
+      window.betterMarkdownLinksNameLookups = [];
+      getLinkSuggestions.getPathsByNameSafe = async (name: string): Promise<string[]> => {
+        window.betterMarkdownLinksNameLookups?.push(name);
+        return await getPathsByNameSafe(name);
+      };
+    },
+    input: {
+      assets,
+      graftTimeoutInMilliseconds: NAMES_MODULE_GRAFT_TIMEOUT_IN_MILLISECONDS,
+      pluginId: ADVANCED_METADATA_CACHE_PLUGIN_ID
+    },
+    vaultPath: getTemporaryVault().path
+  });
+}
+
+/**
+ * Reads the names the index has been asked for since the last {@link resetNameLookups}.
+ *
+ * @returns The names, in the order they were asked.
+ */
+async function readNameLookups(): Promise<string[]> {
+  return await evalInObsidian({
+    callback(): string[] {
+      return [...window.betterMarkdownLinksNameLookups ?? []];
+    },
+    vaultPath: getTemporaryVault().path
+  });
+}
+
+/**
+ * Forgets every name recorded so far, so a case sees only its own lookups.
+ */
+async function resetNameLookups(): Promise<void> {
+  await evalInObsidian({
+    callback(): void {
+      window.betterMarkdownLinksNameLookups = [];
+    },
+    vaultPath: getTemporaryVault().path
+  });
+}
 
 /**
  * Applies the scenario's settings, creates its companion notes, opens a fresh source file with the
@@ -699,6 +948,47 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
       settledMarker: params.settledMarker ?? '',
       sourcePath: `demote-and-resolve-${params.sourceKey}.md`
     },
+    vaultPath: getTemporaryVault().path
+  });
+}
+
+/**
+ * Trashes whichever of the given notes exist, so a scenario starts without them.
+ *
+ * @param paths - The notes to remove.
+ */
+async function trashNotes(paths: readonly string[]): Promise<void> {
+  await evalInObsidian({
+    async callback({ app, notePaths }): Promise<void> {
+      for (const notePath of notePaths) {
+        const file = app.vault.getAbstractFileByPath(notePath);
+        if (file) {
+          await app.fileManager.trashFile(file);
+        }
+      }
+    },
+    input: { notePaths: paths },
+    vaultPath: getTemporaryVault().path
+  });
+}
+
+/**
+ * Disables Advanced Metadata Cache and removes it from the test vault again.
+ */
+async function uninstallAdvancedMetadataCache(): Promise<void> {
+  await evalInObsidian({
+    async callback({ app, pluginId }): Promise<void> {
+      await app.plugins.disablePlugin(pluginId);
+
+      const pluginFolder = `${app.vault.configDir}/plugins/${pluginId}`;
+      if (await app.vault.adapter.exists(pluginFolder)) {
+        await app.vault.adapter.rmdir(pluginFolder, true);
+      }
+
+      await app.plugins.loadManifests();
+      delete window.betterMarkdownLinksNameLookups;
+    },
+    input: { pluginId: ADVANCED_METADATA_CACHE_PLUGIN_ID },
     vaultPath: getTemporaryVault().path
   });
 }
