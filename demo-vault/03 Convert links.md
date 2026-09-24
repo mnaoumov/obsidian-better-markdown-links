@@ -219,6 +219,7 @@ Two opt-in settings deal with this, applied in order and **only when you run a c
   - looks an unresolved wikilink up against every note's `aliases` frontmatter and its basename, and points the converted link at the note when **exactly one** answers to the name.
   - when several notes carry the name, the link is left exactly as it is. There is no right answer to write, and the unresolved marker Obsidian is showing you is information rather than a gap to be filled.
   - off by default because the lookup also matches by file name, and a wikilink only reaches it once Obsidian itself has failed to resolve it: a file-name match here is one Obsidian refused, found only through this plugin's laxer casing and spacing rules.
+  - by default the lookup walks every note in the vault for each unresolved link. With [Advanced Metadata Cache](https://github.com/mnaoumov/obsidian-advanced-metadata-cache) installed and its **Names** module on, it reads that plugin's name index instead. The answers are the same, but a whole-vault conversion no longer costs a vault walk per link.
 - **Should create missing notes** (`shouldCreateMissingNotes`)
   - creates the note when the alias lookup finds nothing, in the folder your **Default location for new notes** Obsidian setting names. This writes new files to your vault.
   - a name several notes already carry is ambiguous, not missing, so nothing is created for it.

@@ -60,6 +60,8 @@ Rename and delete handling is not this plugin's any more — see [Renames](#rena
 
 For better performance on a large vault, consider also installing [Backlink Cache](https://community.obsidian.md/plugins/backlink-cache).
 
+If you turn on **Should resolve links via aliases**, consider installing [Advanced Metadata Cache](https://github.com/mnaoumov/obsidian-advanced-metadata-cache) and switching on its **Names** module. The alias lookup then reads that plugin's name index instead of walking every note in the vault for each unresolved link, which matters most for a whole-vault conversion. You do not need to change anything here: the lookup uses the index whenever it is available, and its answers are the same either way.
+
 ## For plugin developers
 
 While this plugin is enabled, [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] keeps its built-in signature and gains an `extended()` method taking the full set of options this plugin generates links with — for a plugin that wants to write the same readable, unambiguous links without re-implementing them.
