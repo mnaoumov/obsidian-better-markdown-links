@@ -1,6 +1,6 @@
 {
   "name": "better-markdown-links",
-  "version": "5.0.1",
+  "version": "5.1.0",
   "description": "Adds support for angle bracket links and manages relative links properly",
   "keywords": [],
   "homepage": "https://github.com/mnaoumov/obsidian-better-markdown-links#readme",

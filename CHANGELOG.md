@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## 5.1.0
+
+- chore(deps): merge the obsidian-test-mocks 7.0.0 float
+- test(resolve): prove and document the Advanced Metadata Cache alias fast path
+- feat(commands): merge the selection scope for every link command
+- fix(test): merge the headless demo-vault toolkit install
+- fix(deps): restore the lockfile's missing resolved and integrity fields
+- fix: leave an alias-only wikilink alone when several notes answer to the name
+- refactor: publish the extended declaration as the root api.d.ts
+- perf: answer the alias lookup from the name index when one is installed
+- fix: stop the on-save probe flushing the editor, which blanked another plugin's inserted properties
+- feat: add a forced link path style and a convert-paths-to-relative command triad
+- fix(deps): float devalue to 5.9.4, clearing GHSA-9rgm-9g3h-6x36
+- build(markdownlint): forbid hard-wrapped markdown paragraphs
+- chore(deps): drop the dead markdown-it override
+- chore(deps): drop the dead js-yaml override
+- style(comments): stop capitalizing the middle of a wrapped comment
+- docs: replace the private rule-id citations with what they assert
+- docs(changelog): name obsidian-dev-utils by its package name
+- docs: replace the private tracker references with what they pointed at
+- chore(deps): move to obsidian-dev-utils 103
+- test(integration): take the palette frame with the soft keyboard up
+
 ## 5.0.1
 
 - refactor: replace the hand-rolled settings-migration copy with the shared component
