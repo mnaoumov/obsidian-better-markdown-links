@@ -68,6 +68,21 @@ const PLAIN_NOTE_PATH = 'Screenshots/Second chapter.md';
 
 const IMAGES_DIRECTORY = join(process.cwd(), 'images', 'screenshots');
 
+/**
+ * The button that turns down the companion-plugin suggestion — see
+ * {@link declineCompanionPluginSuggestion}.
+ *
+ * The label comes from the shared library's own translations, so it is quoted here rather than
+ * constructed.
+ */
+const SUGGESTION_DECLINE_LABEL = 'Not now';
+
+/**
+ * The `aria-label` on the close button the shared library appends to a notice that requires an explicit
+ * close. The button carries an icon rather than text, so the label is the only thing to match on.
+ */
+const SUGGESTION_CLOSE_ARIA_LABEL = 'Close';
+
 beforeAll(async () => {
   const vault = getTemporaryVault();
 
@@ -120,6 +135,8 @@ beforeAll(async () => {
     input: { subjectNotePath: SUBJECT_NOTE_PATH },
     vaultPath: vaultPath()
   });
+
+  await declineCompanionPluginSuggestion();
 });
 
 describe('desktop store screenshots', () => {
@@ -144,6 +161,33 @@ describe('desktop store screenshots', () => {
     await shoot(3, 'Convert one note, one folder, or the whole vault');
   });
 });
+
+/**
+ * Takes focus off whatever field holds it, so the frame carries no caret.
+ *
+ * The caret blinks, so a frame showing a focused field — the editor in frames 1 and 2, the palette input
+ * in frame 3 — caught it on some captures and not on others, and no re-shoot reproduced the committed
+ * frame. A field without focus draws no caret at all, and nothing else in these frames depends on focus:
+ * the palette keeps its filtered list and its highlighted row. Blurring rather than painting the caret
+ * out, because an injected stylesheet and an inline style are both refused by the shared lint config.
+ *
+ * @returns A {@link Promise} that resolves once nothing is focused.
+ */
+async function blurFocusedField(): Promise<void> {
+  await evalInObsidian({
+    async callback() {
+      const SETTLE_DELAY_IN_MILLISECONDS = 300;
+
+      const focusedEl = activeDocument.activeElement;
+      if (focusedEl?.instanceOf(HTMLElement)) {
+        focusedEl.blur();
+      }
+
+      await sleep(SETTLE_DELAY_IN_MILLISECONDS);
+    },
+    vaultPath: vaultPath()
+  });
+}
 
 /**
  * Builds the staged note.
@@ -201,6 +245,76 @@ async function convertLinksInNote(): Promise<string> {
       return await app.vault.read(file);
     },
     input: { pluginId: PLUGIN_ID, subjectNotePath: SUBJECT_NOTE_PATH },
+    vaultPath: vaultPath()
+  });
+}
+
+/**
+ * Dismisses the companion-plugin suggestion, so it is not in the frames.
+ *
+ * On load the plugin offers to install Advanced Rename and Delete Handler, through a notice carrying
+ * `Install and enable` / `Not now` and a close button. The temp vault holds only this plugin and no
+ * `data.json`, so the offer always fires, and it sat in the top-right corner of every frame. The mobile
+ * suite declines it the same way, through the UI, so the two suites cannot drift into suppressing it
+ * differently.
+ *
+ * **Two clicks, and both are needed.** `Not now` records the decline so the offer does not return, but
+ * it deliberately does not take the notice off screen: the suggestion is shown with
+ * `shouldHideOnClick: false`, so only the close button removes it.
+ *
+ * **Unlike the mobile copy, this one WAITS for the notice before clicking.** The desktop temp vault is
+ * fresh on every run, so the notice is certain to come; the suggestion is decided only once the plugin
+ * has read its settings, and a helper that found nothing yet and returned would let the notice land
+ * afterwards, straight into frame 1.
+ *
+ * @returns A {@link Promise} that resolves once the suggestion is off screen.
+ */
+async function declineCompanionPluginSuggestion(): Promise<void> {
+  await evalInObsidian({
+    async callback({ closeLabel, declineLabel, lib: { clickElement, moveMouse, waitUntil } }) {
+      // Two waits share the transport's ~30s per-closure cap, so each stays well under half of it.
+      const NOTICE_TIMEOUT_IN_MILLISECONDS = 10_000;
+
+      await waitUntil({
+        message: 'the suggestion notice to appear',
+        predicate: () => Boolean(findNoticeButton(declineLabel, null)),
+        timeoutInMilliseconds: NOTICE_TIMEOUT_IN_MILLISECONDS
+      });
+
+      const declineButton = findNoticeButton(declineLabel, null);
+      if (declineButton) {
+        await clickElement({ element: declineButton });
+      }
+
+      const closeButton = findNoticeButton(null, closeLabel);
+      if (closeButton) {
+        await clickElement({ element: closeButton });
+      }
+
+      // Waits for THIS notice to go rather than for the notice area to empty, so an unrelated notice
+      // cannot hold the wait open.
+      await waitUntil({
+        message: 'the suggestion notice to close',
+        predicate: () => !findNoticeButton(declineLabel, null),
+        timeoutInMilliseconds: NOTICE_TIMEOUT_IN_MILLISECONDS
+      });
+
+      // The close button sat right over the view header's `More options` button, and the trusted click left
+      // the pointer there, so frame 1 came out with that button hovered on some captures and not on
+      // others. Parking the pointer over the empty lower half of the editor hovers nothing that paints.
+      const EMPTY_AREA_HEIGHT_FRACTION = 0.75;
+      await moveMouse({ x: Math.round(window.innerWidth / 2), y: Math.round(window.innerHeight * EMPTY_AREA_HEIGHT_FRACTION) });
+
+      function findNoticeButton(text: null | string, ariaLabel: null | string): HTMLElement | null {
+        const button = [...document.querySelectorAll('.notice button')].find((candidate) =>
+          (text === null || candidate.textContent === text)
+          && (ariaLabel === null || candidate.getAttribute('aria-label') === ariaLabel)
+        );
+
+        return button instanceof HTMLElement ? button : null;
+      }
+    },
+    input: { closeLabel: SUGGESTION_CLOSE_ARIA_LABEL, declineLabel: SUGGESTION_DECLINE_LABEL },
     vaultPath: vaultPath()
   });
 }
@@ -292,6 +406,8 @@ async function openNote(): Promise<string> {
  * @param caption - The caption drawn across the bottom of the frame.
  */
 async function shoot(index: number, caption: string): Promise<void> {
+  await blurFocusedField();
+
   const bytes = await captureObsidianScreenshot({
     heightInPixels: HEIGHT_IN_PIXELS,
     vaultPath: vaultPath(),
