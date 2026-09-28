@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 5.2.0
+
+- refactor: merge the switch to obsidian-dev-utils' normalizeLinkName
+- test(screenshots): merge the reproducible desktop capture without the suggestion notice
+- chore(deps): merge the obsidian-dev-utils 107 and obsidian-integration-testing 17 float
+
 ## 5.1.0
 
 - chore(deps): merge the obsidian-test-mocks 7.0.0 float
