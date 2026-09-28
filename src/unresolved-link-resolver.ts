@@ -22,6 +22,7 @@ import {
   generateMarkdownLink,
   hasWikilinkSyntax
 } from 'obsidian-dev-utils/obsidian/link';
+import { normalizeLinkName } from 'obsidian-dev-utils/obsidian/link-name';
 import {
   createFolderSafe,
   getAvailablePath
@@ -86,19 +87,6 @@ interface GetPathsByNameWrapper {
    * and spacing, and answers with the vault-relative paths carrying it, unranked and complete.
    */
   readonly getPathsByNameSafe: (name: string) => Promise<string[]>;
-}
-
-/**
- * Obsidian treats aliases case-insensitively and collapses runs of whitespace, so `[[some  alias]]` and
- * `[[Some Alias]]` name the same note. Comparisons happen in this normalized space.
- *
- * Used only by {@link findNotesByAliasInVault}: the index normalizes its own keys, so the fast path
- * hands it the raw link text. The `Advanced Metadata Cache` plugin adopted these two rules verbatim
- * from here, which makes this a second copy of a definition rather than the only one — the two must
- * agree or the same link resolves differently depending on whether that plugin is installed.
- */
-export function normalizeAlias(alias: string): string {
-  return alias.toLowerCase().replaceAll(/ {2,}/g, ' ');
 }
 
 /**
@@ -249,14 +237,23 @@ function findNotesByAliasInIndex(app: App, paths: readonly string[]): readonly T
   return notes;
 }
 
+/**
+ * Walks the vault for the notes whose basename or `aliases` carry the name.
+ *
+ * Obsidian treats `[[some  alias]]` and `[[Some Alias]]` as naming the same note, so both sides are
+ * compared through `obsidian-dev-utils`' `normalizeLinkName`. The index applies the same two rules to its
+ * own keys, which is what keeps this walk and {@link findNotesByAliasInIndex} answering alike: a
+ * disagreement would make the same link resolve differently depending on whether that plugin is
+ * installed. The fast path therefore hands the index the raw link text.
+ */
 function findNotesByAliasInVault(app: App, linkPath: string): readonly TFile[] {
-  const normalizedLinkPath = normalizeAlias(linkPath);
+  const normalizedLinkPath = normalizeLinkName(linkPath);
   const notes: TFile[] = [];
 
   for (const markdownFile of app.vault.getMarkdownFiles()) {
     const aliases = parseFrontMatterAliases(app.metadataCache.getFileCache(markdownFile)?.frontmatter) ?? [];
     aliases.push(markdownFile.basename);
-    if (aliases.some((alias) => normalizeAlias(alias) === normalizedLinkPath)) {
+    if (aliases.some((alias) => normalizeLinkName(alias) === normalizedLinkPath)) {
       notes.push(markdownFile);
     }
   }
