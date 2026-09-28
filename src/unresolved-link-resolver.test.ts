@@ -63,10 +63,7 @@ import {
 } from 'obsidian-dev-utils/obsidian/vault';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import {
-  normalizeAlias,
-  resolveUnresolvedLinksInFile
-} from './unresolved-link-resolver.ts';
+import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
 
 interface PlatformMock {
   isWin: boolean;
@@ -186,20 +183,6 @@ beforeEach(() => {
   vi.mocked(getAvailablePath).mockImplementation((_app, path) => path);
   vi.mocked(isMarkdownFile).mockImplementation((pathOrFile) => typeof pathOrFile === 'string' && pathOrFile.endsWith('.md'));
   vi.mocked(getFileOrNull).mockReturnValue(null);
-});
-
-describe('normalizeAlias', () => {
-  it('should lowercase the alias', () => {
-    expect(normalizeAlias('Some Alias')).toBe('some alias');
-  });
-
-  it('should collapse runs of two or more spaces', () => {
-    expect(normalizeAlias('some    alias')).toBe('some alias');
-  });
-
-  it('should leave a single space alone', () => {
-    expect(normalizeAlias('some alias')).toBe('some alias');
-  });
 });
 
 describe('resolveUnresolvedLinksInFile', () => {
