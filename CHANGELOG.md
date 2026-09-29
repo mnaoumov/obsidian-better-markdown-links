@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 5.2.1
+
+- test(screenshots): move the desktop capture onto applyObsidianTheme
+
 ## 5.2.0
 
 - refactor: merge the switch to obsidian-dev-utils' normalizeLinkName
