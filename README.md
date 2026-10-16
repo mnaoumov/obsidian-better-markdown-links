@@ -64,18 +64,29 @@ If you turn on **Should resolve links via aliases**, consider installing [Advanc
 
 ## For plugin developers
 
-While this plugin is enabled, [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] keeps its built-in signature and gains an `extended()` method taking the full set of options this plugin generates links with — for a plugin that wants to write the same readable, unambiguous links without re-implementing them.
+This plugin publishes an API through the [`obsidian-dev-utils`](https://github.com/mnaoumov/obsidian-dev-utils) plugin registry, under the plugin id `better-markdown-links` at contract version **1.0.0**. Its one method, `generateMarkdownLinkExtended()`, takes the full set of options this plugin generates links with. It is there for a plugin that wants to write the same readable, unambiguous links without re-implementing them.
 
 The types are in [`api.d.ts`](./api.d.ts) at the root of this repository. Copy that file into your own plugin: it imports from `obsidian` and nothing else, so it costs you no dependency on this one.
 
 ```ts
-import type { GenerateMarkdownLinkExtendedWrapper } from './api.d.ts';
+import type { BetterMarkdownLinksApi } from './api.d.ts';
 
-const generate = app.fileManager.generateMarkdownLink as Partial<GenerateMarkdownLinkExtendedWrapper>;
-const link = generate.extended?.({ sourcePathOrFile, targetPathOrFile, shouldUseAngleBrackets: true });
+const ref = watchPluginApi<BetterMarkdownLinksApi>({
+  apiVersionRange: '^1',
+  app: this.app,
+  component: this,
+  pluginId: 'better-markdown-links'
+});
+
+const link = ref.value?.generateMarkdownLinkExtended({ sourcePathOrFile, targetPathOrFile, shouldUseAngleBrackets: true })
+  ?? this.app.fileManager.generateMarkdownLink(targetFile, sourcePath);
 ```
 
-This widens a core Obsidian call rather than publishing an API of its own, so there is no handle to fetch and nothing to negotiate: the patch is installed or it is not, and the optional call above is the whole of the check. Versioning is by plugin version alone — every member of the extended signature was added in **3.0.0**, the release that first shipped the overload, and none has been added, renamed or removed since.
+`ref.value` is `null` while this plugin is not loaded, so the fallback above keeps working without it. The contract version does not follow the plugin version: ask for `'^1'`, and every plugin release that changes nothing you depend on keeps working.
+
+While this plugin is enabled, [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] itself is still patched, with its built-in signature, to write links the way this plugin does.
+
+**Before 6.0.0** the extended function was a member hung off that call, `app.fileManager.generateMarkdownLink.extended()`. 6.0.0 removed that member. `generateMarkdownLinkExtended()` takes exactly the options `extended()` took, so moving over only changes how you find the function.
 
 ## Installation
 

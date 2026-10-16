@@ -47,18 +47,6 @@ export class GenerateMarkdownLinkPatchComponent extends MonkeyAroundComponent {
           app,
           ...options
         });
-      },
-      postPatchHandler: ({
-        patchedMethod
-      }) => {
-        return Object.assign(patchedMethod, {
-          extended(options: GenerateMarkdownLinkExtendedOptions): string {
-            return generateMarkdownLink({
-              app,
-              ...options
-            });
-          }
-        });
       }
     });
   }

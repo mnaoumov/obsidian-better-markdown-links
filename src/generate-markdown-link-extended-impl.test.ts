@@ -15,11 +15,6 @@ import {
   vi
 } from 'vitest';
 
-import type {
-  GenerateMarkdownLinkExtendedOptions,
-  GenerateMarkdownLinkExtendedWrapper
-} from '../api.d.ts';
-
 type GenerateMarkdownLinkNativeFunction = FileManager['generateMarkdownLink'];
 
 vi.mock('obsidian-dev-utils/obsidian/link', () => ({
@@ -32,7 +27,7 @@ import { generateMarkdownLink } from 'obsidian-dev-utils/obsidian/link';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { GenerateMarkdownLinkPatchComponent } from './generate-markdown-link-extended-impl.ts';
 
-type PatchedGenerateMarkdownLink = GenerateMarkdownLinkExtendedWrapper & GenerateMarkdownLinkNativeFunction;
+type PatchedGenerateMarkdownLink = GenerateMarkdownLinkNativeFunction & Partial<Record<'extended', unknown>>;
 
 function loadPatched(app: AppOriginal): PatchedGenerateMarkdownLink {
   const component = new GenerateMarkdownLinkPatchComponent({
@@ -64,7 +59,8 @@ describe('GenerateMarkdownLinkPatchComponent', () => {
 
     expect(app.fileManager.generateMarkdownLink).not.toBe(original);
     const patched = castTo<PatchedGenerateMarkdownLink>(app.fileManager.generateMarkdownLink);
-    expect(typeof patched.extended).toBe('function');
+    // The plugin offers its extended generator through its plugin API, never as a member grafted onto Obsidian's call.
+    expect(patched.extended).toBeUndefined();
   });
 
   describe('native', () => {
@@ -90,27 +86,6 @@ describe('GenerateMarkdownLinkPatchComponent', () => {
 
       expect(vi.mocked(generateMarkdownLink)).toHaveBeenCalledExactlyOnceWith({
         app,
-        sourcePathOrFile: 'source.md',
-        targetPathOrFile: file
-      });
-    });
-  });
-
-  describe('extended', () => {
-    it('should generate a link forwarding the extended options', () => {
-      const patched = loadPatched(app);
-      const options: GenerateMarkdownLinkExtendedOptions = {
-        isEmbed: true,
-        sourcePathOrFile: 'source.md',
-        targetPathOrFile: file
-      };
-
-      const result = patched.extended(options);
-
-      expect(result).toBe('[generated](link.md)');
-      expect(vi.mocked(generateMarkdownLink)).toHaveBeenCalledExactlyOnceWith({
-        app,
-        isEmbed: true,
         sourcePathOrFile: 'source.md',
         targetPathOrFile: file
       });
