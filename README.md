@@ -68,13 +68,20 @@ This plugin publishes an API through the [`obsidian-dev-utils`](https://github.c
 
 The types are in [`api.d.ts`](./api.d.ts) at the root of this repository. Copy that file into your own plugin: it imports from `obsidian` and nothing else, so it costs you no dependency on this one.
 
+Beside `api.d.ts`, [`api-contract.ts`](./api-contract.ts) holds the API's contract, `BETTER_MARKDOWN_LINKS_API_CONTRACT`: for every method, a schema over its arguments and a schema over what it returns. It is the constant this plugin publishes with the API, so copy it next to `api.d.ts` and pass it as the `contract`, and both sides check the same definition. It imports from `obsidian` and `./api.d.ts` alone, its schemas being hand-written [Standard Schema](https://standardschema.dev) objects. (It is not named `api.ts`: TypeScript would read `api.d.ts` as that file's own declarations.)
+
 ```ts
+import { watchPluginApi } from 'obsidian-dev-utils/obsidian/plugin/plugin-api';
+
 import type { BetterMarkdownLinksApi } from './api.d.ts';
+
+import { BETTER_MARKDOWN_LINKS_API_CONTRACT } from './api-contract.ts';
 
 const ref = watchPluginApi<BetterMarkdownLinksApi>({
   apiVersionRange: '^1',
   app: this.app,
   component: this,
+  contract: BETTER_MARKDOWN_LINKS_API_CONTRACT,
   pluginId: 'better-markdown-links'
 });
 
