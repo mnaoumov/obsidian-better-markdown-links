@@ -13,8 +13,8 @@ import { BETTER_MARKDOWN_LINKS_API_CONTRACT } from '../api-contract.ts';
 
 /**
  * The contract this plugin publishes: the repo-root `api-contract.ts` constant a consumer copies, so the provider and its
- * consumers validate against one definition. Assigning it here is also what checks that the hand-written schemas are Standard
- * Schemas the registry accepts.
+ * consumers validate against one definition. Assigning it here is also what checks that its schemas are Standard Schemas the registry
+ * accepts.
  */
 export const PLUGIN_API_CONTRACT: PluginApiContract = BETTER_MARKDOWN_LINKS_API_CONTRACT;
 
