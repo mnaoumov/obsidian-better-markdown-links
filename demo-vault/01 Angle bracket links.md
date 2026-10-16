@@ -12,7 +12,7 @@ The Markdown spec allows a far more readable form using **angle brackets**, whic
 [Note with spaces](<Materials/01 Angle bracket links/A folder with spaces/Note with spaces.md>)
 ```
 
-With **Should use angle brackets** enabled (the default), Better Markdown Links makes Obsidian generate the angle-bracket form whenever a link is created or converted.
+With **Should use angle brackets** enabled (the default), `Better Markdown Links` makes Obsidian generate the angle-bracket form whenever a link is created or converted.
 
 ## Try it
 

@@ -11,7 +11,7 @@ interface ConvertLinksToMarkdownInEntireVaultCommandHandlerConstructorParams {
 
 /**
  * Converts links in the entire vault, forcing the markdown style for this one run. The direct replacement for
- * `Replace all wikilinks with markdown links` from Consistent Attachments and Links.
+ * `Replace all wikilinks with markdown links` from `Consistent Attachments and Links`.
  */
 export class ConvertLinksToMarkdownInEntireVaultCommandHandler extends GlobalCommandHandler {
   private readonly app: App;

@@ -156,7 +156,7 @@ describe('PluginSettingsComponent', () => {
       expect(component.settings.linkConversionMode).toBe(LinkConversionMode.OnEveryModification);
     });
 
-    // Both rename keys now end up parked for Advanced Rename and Delete Handler, which owns the setting since
+    // Both rename keys now end up parked for `Advanced Rename and Delete Handler`, which owns the setting since
     // 5.0.0. Without the converter the value would be stripped from `data.json` on the first save, before it
     // could ever be offered.
     it('should park automaticallyUpdateLinksOnRenameOrMove as the proposed rename handling', async () => {

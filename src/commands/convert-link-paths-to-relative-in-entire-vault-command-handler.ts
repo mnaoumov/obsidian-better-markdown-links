@@ -11,7 +11,7 @@ interface ConvertLinkPathsToRelativeInEntireVaultCommandHandlerConstructorParams
 
 /**
  * Converts links in the entire vault, forcing the relative path style for this one run. The direct
- * replacement for `Convert all link paths to relative` from Consistent Attachments and Links.
+ * replacement for `Convert all link paths to relative` from `Consistent Attachments and Links`.
  */
 export class ConvertLinkPathsToRelativeInEntireVaultCommandHandler extends GlobalCommandHandler {
   private readonly app: App;

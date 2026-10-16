@@ -243,7 +243,7 @@ async function convertLinksInNote(): Promise<string> {
 /**
  * Dismisses the companion-plugin suggestion, so it is not in the frames.
  *
- * On load the plugin offers to install Advanced Rename and Delete Handler, through a notice carrying
+ * On load the plugin offers to install `Advanced Rename and Delete Handler`, through a notice carrying
  * `Install and enable` / `Not now` and a close button. The temp vault holds only this plugin and no
  * `data.json`, so the offer always fires, and it sat in the top-right corner of every frame. The mobile
  * suite declines it the same way, through the UI, so the two suites cannot drift into suppressing it

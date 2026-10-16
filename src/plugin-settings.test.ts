@@ -27,7 +27,7 @@ describe('PluginSettings', () => {
       expect(settings.shouldUseLeadingSlashForAbsolutePaths).toBe(true);
     });
 
-    // A fresh install has nothing to hand to Advanced Rename and Delete Handler, and must never be told it
+    // A fresh install has nothing to hand to `Advanced Rename and Delete Handler`, and must never be told it
     // has a migration waiting — only a legacy converter puts a value here.
     it('should have no pending rename-handling migration', () => {
       const settings = new PluginSettings();

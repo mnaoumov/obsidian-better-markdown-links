@@ -8,7 +8,7 @@
  *   conversion's passes, one of which can change the length of a link inside the selection,
  * - resolving an alias-only wikilink through another note's `aliases` frontmatter,
  * - declining to resolve one when two notes answer to the name, and not creating a note for it either,
- * - both of those again with the real Advanced Metadata Cache installed, proving the lookup reads that
+ * - both of those again with the real `Advanced Metadata Cache` installed, proving the lookup reads that
  *   plugin's name index rather than walking the vault — and removing it again, so every other case here
  *   keeps proving the walk,
  * - creating the note behind a wikilink that resolves to nothing,
@@ -54,7 +54,7 @@ import { LinkPathStyleMode } from './link-path-style-mode.ts';
 import { LinkStyleMode } from './link-style-mode.ts';
 
 /**
- * `app.metadataCache.getLinkSuggestions` as Advanced Metadata Cache's `Names` module leaves it: the
+ * `app.metadataCache.getLinkSuggestions` as `Advanced Metadata Cache`'s `Names` module leaves it: the
  * function object the plugin under test duck-types, carrying the reverse lookup it reads.
  */
 interface GraftedGetLinkSuggestions {
@@ -63,21 +63,21 @@ interface GraftedGetLinkSuggestions {
 }
 
 /**
- * Advanced Metadata Cache's settings, seen through the one the suite switches.
+ * `Advanced Metadata Cache`'s settings, seen through the one the suite switches.
  */
 interface NamesModuleSettings {
   isNamesModuleEnabled: boolean;
 }
 
 /**
- * Advanced Metadata Cache's settings component, seen through the one method the suite needs.
+ * `Advanced Metadata Cache`'s settings component, seen through the one method the suite needs.
  */
 interface NamesModuleSettingsComponent {
   editAndSave: (editor: (settings: NamesModuleSettings) => void) => Promise<void>;
 }
 
 /**
- * Advanced Metadata Cache, seen through the one member the suite needs to switch its `Names` module on.
+ * `Advanced Metadata Cache`, seen through the one member the suite needs to switch its `Names` module on.
  */
 interface NamesModuleSwitchablePlugin {
   readonly pluginSettingsComponent: NamesModuleSettingsComponent;
@@ -86,7 +86,7 @@ interface NamesModuleSwitchablePlugin {
 declare global {
   interface Window {
     /**
-     * The names the recording wrapper saw Advanced Metadata Cache's index asked for, kept on the renderer's
+     * The names the recording wrapper saw `Advanced Metadata Cache`'s index asked for, kept on the renderer's
      * global so a later `evalInObsidian` call can read them back.
      */
     betterMarkdownLinksNameLookups?: string[];
@@ -183,7 +183,7 @@ const SAVE_COMMAND_ID = 'editor:save-file';
 
 const ADVANCED_METADATA_CACHE_PLUGIN_ID = 'advanced-metadata-cache';
 const ADVANCED_METADATA_CACHE_REPO = 'mnaoumov/obsidian-advanced-metadata-cache';
-// Pinned, so an Advanced Metadata Cache release cannot turn this suite red unannounced: moving it is a
+// Pinned, so an `Advanced Metadata Cache` release cannot turn this suite red unannounced: moving it is a
 // deliberate edit here, made when this plugin wants to prove itself against the newer index.
 const ADVANCED_METADATA_CACHE_VERSION = '1.0.0';
 // Somewhere gitignored, keyed by the version, so a warm checkout downloads nothing and a version bump
@@ -532,7 +532,7 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
     });
   });
 
-  // The capability inherited from Consistent Attachments and Links: writing markdown links even in a vault
+  // The capability inherited from `Consistent Attachments and Links`: writing markdown links even in a vault
   // whose own `Use [[Wikilinks]]` setting says otherwise. The test vault leaves that setting ON, so a
   // wikilink surviving as a wikilink is the baseline these two scenarios have to beat.
   describe('forcing the markdown link style', () => {
@@ -577,7 +577,7 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
     });
   });
 
-  // The capability inherited from Consistent Attachments and Links' `Convert all link paths to relative`.
+  // The capability inherited from `Consistent Attachments and Links`' `Convert all link paths to relative`.
   // The test vault leaves Obsidian's own `New link format` at its default, so a link that is already in
   // its shortest form surviving untouched is the baseline these scenarios have to beat.
   describe('forcing the relative link path style', () => {
@@ -657,7 +657,7 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
 });
 
 /**
- * Checks whether `getLinkSuggestions` carries Advanced Metadata Cache's reverse lookup, which is what
+ * Checks whether `getLinkSuggestions` carries `Advanced Metadata Cache`'s reverse lookup, which is what
  * moves the plugin under test off the vault walk.
  *
  * @returns Whether the graft is there.
@@ -672,7 +672,7 @@ async function hasNameIndexGraft(): Promise<boolean> {
 }
 
 /**
- * Downloads the pinned Advanced Metadata Cache release (once per machine), installs it into the test
+ * Downloads the pinned `Advanced Metadata Cache` release (once per machine), installs it into the test
  * vault, enables it, switches its `Names` module on, waits for the index to be built, and wraps its
  * `getPathsByNameSafe` so the suite can tell afterwards which names the index was asked for.
  *
@@ -973,7 +973,7 @@ async function trashNotes(paths: readonly string[]): Promise<void> {
 }
 
 /**
- * Disables Advanced Metadata Cache and removes it from the test vault again.
+ * Disables `Advanced Metadata Cache` and removes it from the test vault again.
  */
 async function uninstallAdvancedMetadataCache(): Promise<void> {
   await evalInObsidian({
