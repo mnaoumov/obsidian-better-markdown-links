@@ -18,6 +18,8 @@
  * breadth of the conversion in one frame rather than needing four.
  */
 
+import type { WorkspaceSidedock } from 'obsidian';
+
 import {
   mkdirSync,
   writeFileSync
@@ -38,21 +40,6 @@ import {
   expect,
   it
 } from 'vitest';
-
-/**
- * `App`, reduced to the inline-title toggle that `obsidian-typings` does not
- * declare. Setting the config alone changes nothing on screen.
- */
-interface InlineTitleApp {
-  updateInlineTitleDisplay: (this: void) => void;
-}
-
-/**
- * The desktop side dock, reduced to the resize call.
- */
-interface ResizableSideDock {
-  setSize: (this: void, size: number) => void;
-}
 
 const PLUGIN_ID = 'better-markdown-links';
 const WIDTH_IN_PIXELS = 1200;
@@ -121,8 +108,7 @@ beforeAll(async () => {
       // The link text is the subject; the file explorer and an empty right dock
       // would otherwise take a third of a 1200x800 frame.
       app.workspace.leftSplit.collapse();
-      const rightSplit: unknown = app.workspace.rightSplit;
-      (rightSplit as ResizableSideDock).setSize(0);
+      (app.workspace.rightSplit as WorkspaceSidedock).setSize(0);
       app.workspace.rightSplit.collapse();
 
       // The plugin generates links in the style the VAULT is set to. Left at
@@ -133,8 +119,7 @@ beforeAll(async () => {
       app.vault.setConfig('newLinkFormat', 'relative');
 
       app.vault.setConfig('showInlineTitle', false);
-      const inlineTitleApp: unknown = app;
-      (inlineTitleApp as InlineTitleApp).updateInlineTitleDisplay();
+      app.updateInlineTitleDisplay();
 
       await sleep(SETTLE_DELAY_IN_MILLISECONDS);
     },
