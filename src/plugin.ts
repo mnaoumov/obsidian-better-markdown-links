@@ -11,6 +11,7 @@ import { PluginEventSourceImpl } from 'obsidian-dev-utils/obsidian/plugin/plugin
 import type { MigratableSettings } from './advanced-rename-and-delete-handler.ts';
 
 import {
+  ADVANCED_RENAME_AND_DELETE_HANDLER_MIGRATION_API_CONTRACT,
   ADVANCED_RENAME_AND_DELETE_HANDLER_PLUGIN_ID,
   ADVANCED_RENAME_AND_DELETE_HANDLER_PLUGIN_NAME
 } from './advanced-rename-and-delete-handler.ts';
@@ -141,6 +142,7 @@ export class Plugin extends PluginBase {
       new SettingsMigrationComponent<MigratableSettings>({
         apiVersionRange: '^1',
         app: this.app,
+        contract: ADVANCED_RENAME_AND_DELETE_HANDLER_MIGRATION_API_CONTRACT,
         getProposedSettings: (): MigratableSettings | null => {
           const settings = pluginSettingsComponent.settings;
 
