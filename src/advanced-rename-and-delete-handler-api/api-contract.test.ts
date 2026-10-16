@@ -1,3 +1,5 @@
+import type { ApiMethodContract } from '@mnaoumov/typescript-lib/api-contract';
+
 import { castTo } from 'obsidian-dev-utils/object-utils';
 import {
   describe,
@@ -5,10 +7,6 @@ import {
   it
 } from 'vitest';
 
-import type {
-  AdvancedRenameAndDeleteHandlerApiSchema,
-  AdvancedRenameAndDeleteHandlerApiSchemaResult
-} from './api-contract.ts';
 import type {
   AdvancedRenameAndDeleteHandlerApi,
   HandedOverSettings
@@ -27,6 +25,10 @@ interface PayloadCase {
   readonly invalid: readonly unknown[];
   readonly valid: readonly unknown[];
 }
+
+type Schema = NonNullable<ApiMethodContract['input']>;
+
+type SchemaResult = Awaited<ReturnType<Schema['~standard']['validate']>>;
 
 const SETTINGS: HandedOverSettings = {
   emptyFolderBehavior: 'DeleteWithEmptyParents',
@@ -102,38 +104,39 @@ describe('ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT', () => {
     }
   });
 
-  it('should accept every valid payload and refuse every invalid one', () => {
+  it('should accept every valid payload and refuse every invalid one', async () => {
     for (const methodName of castTo<MethodName[]>(Object.keys(CASES))) {
       for (const half of ['input', 'output'] as const) {
-        const schema: AdvancedRenameAndDeleteHandlerApiSchema<unknown> = ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT[methodName][half];
+        const schema: Schema = ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT[methodName][half];
         const { invalid, valid } = CASES[methodName][half];
         for (const [index, value] of valid.entries()) {
-          expect(validate(schema, value), `${methodName} ${half} should accept valid case ${String(index)}`).toEqual({ value });
+          expect(await validate(schema, value), `${methodName} ${half} should accept valid case ${String(index)}`).toEqual({ value });
         }
 
         for (const [index, value] of invalid.entries()) {
-          expect(validate(schema, value).issues, `${methodName} ${half} should refuse invalid case ${String(index)}`).not.toHaveLength(0);
+          const result = await validate(schema, value);
+          expect(result.issues, `${methodName} ${half} should refuse invalid case ${String(index)}`).not.toHaveLength(0);
         }
       }
     }
   });
 
-  it('should name the failing argument and what it expected', () => {
-    expect(validate(ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT.isPathIgnored.input, [1])).toEqual({
+  it('should name the failing argument and what it expected', async () => {
+    expect(await validate(ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT.isPathIgnored.input, [1])).toEqual({
       issues: [{ message: 'Expected a path.', path: [0] }]
     });
-    expect(validate(ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT.isPathIgnored.input, 'a.md')).toEqual({
+    expect(await validate(ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT.isPathIgnored.input, 'a.md')).toEqual({
       issues: [{ message: 'Expected an argument list.' }]
     });
-    expect(validate(ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT.isPathIgnored.input, ['a', 'b'])).toEqual({
+    expect(await validate(ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT.isPathIgnored.input, ['a', 'b'])).toEqual({
       issues: [{ message: 'Expected at most 1 argument(s), got 2.' }]
     });
-    expect(validate(ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT.getSettings.output, null)).toEqual({
+    expect(await validate(ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT.getSettings.output, null)).toEqual({
       issues: [{ message: 'Expected the handed-over settings.' }]
     });
   });
 });
 
-function validate(schema: AdvancedRenameAndDeleteHandlerApiSchema<unknown>, value: unknown): AdvancedRenameAndDeleteHandlerApiSchemaResult<unknown> {
-  return schema['~standard'].validate(value);
+async function validate(schema: Schema, value: unknown): Promise<SchemaResult> {
+  return await schema['~standard'].validate(value);
 }

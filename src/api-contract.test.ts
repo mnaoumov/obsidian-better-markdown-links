@@ -1,3 +1,5 @@
+import type { ApiMethodContract } from '@mnaoumov/typescript-lib/api-contract';
+
 import { castTo } from 'obsidian-dev-utils/object-utils';
 import {
   App,
@@ -9,10 +11,6 @@ import {
   it
 } from 'vitest';
 
-import type {
-  BetterMarkdownLinksApiSchema,
-  BetterMarkdownLinksApiSchemaResult
-} from '../api-contract.ts';
 import type { BetterMarkdownLinksApi } from '../api.d.ts';
 
 import { BETTER_MARKDOWN_LINKS_API_CONTRACT } from '../api-contract.ts';
@@ -28,6 +26,10 @@ interface PayloadCase {
   readonly invalid: readonly unknown[];
   readonly valid: readonly unknown[];
 }
+
+type Schema = NonNullable<ApiMethodContract['input']>;
+
+type SchemaResult = Awaited<ReturnType<Schema['~standard']['validate']>>;
 
 const file = TFile.create__(castTo(App.createConfigured__().vault), 'target.md').asOriginalType2__();
 
@@ -92,38 +94,39 @@ describe('BETTER_MARKDOWN_LINKS_API_CONTRACT', () => {
     }
   });
 
-  it('should accept every valid payload and refuse every invalid one', () => {
+  it('should accept every valid payload and refuse every invalid one', async () => {
     for (const methodName of METHOD_NAMES) {
       for (const half of ['input', 'output'] as const) {
-        const schema: BetterMarkdownLinksApiSchema<unknown> = BETTER_MARKDOWN_LINKS_API_CONTRACT[methodName][half];
+        const schema: Schema = BETTER_MARKDOWN_LINKS_API_CONTRACT[methodName][half];
         const { invalid, valid } = CASES[methodName][half];
         for (const [index, value] of valid.entries()) {
-          expect(validate(schema, value), `${methodName} ${half} should accept valid case ${String(index)}`).toEqual({ value });
+          expect(await validate(schema, value), `${methodName} ${half} should accept valid case ${String(index)}`).toEqual({ value });
         }
 
         for (const [index, value] of invalid.entries()) {
-          expect(validate(schema, value).issues, `${methodName} ${half} should refuse invalid case ${String(index)}`).not.toHaveLength(0);
+          const result = await validate(schema, value);
+          expect(result.issues, `${methodName} ${half} should refuse invalid case ${String(index)}`).not.toHaveLength(0);
         }
       }
     }
   });
 
-  it('should name the failing argument and what it expected', () => {
-    expect(validate(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.input, [{ sourcePathOrFile: 'source.md' }])).toEqual({
+  it('should name the failing argument and what it expected', async () => {
+    expect(await validate(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.input, [{ sourcePathOrFile: 'source.md' }])).toEqual({
       issues: [{ message: 'Expected the options of the link to generate, with a sourcePathOrFile and a targetPathOrFile.', path: [0] }]
     });
-    expect(validate(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.input, MINIMAL_OPTIONS)).toEqual({
+    expect(await validate(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.input, MINIMAL_OPTIONS)).toEqual({
       issues: [{ message: 'Expected an argument list.' }]
     });
-    expect(validate(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.input, [MINIMAL_OPTIONS, MINIMAL_OPTIONS])).toEqual({
+    expect(await validate(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.input, [MINIMAL_OPTIONS, MINIMAL_OPTIONS])).toEqual({
       issues: [{ message: 'Expected at most 1 argument(s), got 2.' }]
     });
-    expect(validate(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.output, null)).toEqual({
+    expect(await validate(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.output, null)).toEqual({
       issues: [{ message: 'Expected the markdown of a link.' }]
     });
   });
 });
 
-function validate(schema: BetterMarkdownLinksApiSchema<unknown>, value: unknown): BetterMarkdownLinksApiSchemaResult<unknown> {
-  return schema['~standard'].validate(value);
+async function validate(schema: Schema, value: unknown): Promise<SchemaResult> {
+  return await schema['~standard'].validate(value);
 }
