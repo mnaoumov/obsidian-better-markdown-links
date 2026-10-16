@@ -1,25 +1,25 @@
+import type { AbortSignalComponent } from '@mnaoumov/obsidian-lib/components/abort-signal-component';
+import type { PluginNoticeComponent } from '@mnaoumov/obsidian-lib/components/plugin-notice-component';
+import type { EditLinksParams } from '@mnaoumov/obsidian-lib/link';
+import type { OffsetRange } from '@mnaoumov/obsidian-lib/reference';
+import type { ResourceLockComponent } from '@mnaoumov/obsidian-lib/resource-lock';
 import type {
   App,
   TFile,
   TFolder
 } from 'obsidian';
-import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
-import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
-import type { EditLinksParams } from 'obsidian-dev-utils/obsidian/link';
-import type { OffsetRange } from 'obsidian-dev-utils/obsidian/reference';
-import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource-lock';
 
-import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
-import { normalizeOptionalProperties } from 'obsidian-dev-utils/object-utils';
-import { getMarkdownFiles } from 'obsidian-dev-utils/obsidian/file-system';
+import { getMarkdownFiles } from '@mnaoumov/obsidian-lib/file-system';
 import {
   editLinks,
   extractLinkFile,
   generateMarkdownLink,
   hasEmbedSyntax
-} from 'obsidian-dev-utils/obsidian/link';
-import { loop } from 'obsidian-dev-utils/obsidian/loop';
-import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
+} from '@mnaoumov/obsidian-lib/link';
+import { loop } from '@mnaoumov/obsidian-lib/loop';
+import { confirm } from '@mnaoumov/obsidian-lib/modals/confirm';
+import { abortSignalAny } from '@mnaoumov/typescript-lib/abort-controller';
+import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-utils';
 
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 

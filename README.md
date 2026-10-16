@@ -64,14 +64,14 @@ If you turn on **Should resolve links via aliases**, consider installing [Advanc
 
 ## For plugin developers
 
-This plugin publishes an API through the [`obsidian-dev-utils`](https://github.com/mnaoumov/obsidian-dev-utils) plugin registry, under the plugin id `better-markdown-links` at contract version **1.0.0**. Its one method, `generateMarkdownLinkExtended()`, takes the full set of options this plugin generates links with. It is there for a plugin that wants to write the same readable, unambiguous links without re-implementing them.
+This plugin publishes an API through the [`@mnaoumov/obsidian-lib`](https://www.npmjs.com/package/@mnaoumov/obsidian-lib) plugin registry, under the plugin id `better-markdown-links` at contract version **1.0.0**. Its one method, `generateMarkdownLinkExtended()`, takes the full set of options this plugin generates links with. It is there for a plugin that wants to write the same readable, unambiguous links without re-implementing them.
 
 The types are in [`api.d.ts`](./api.d.ts) at the root of this repository. Copy that file into your own plugin: it imports from `obsidian` and nothing else, so it costs you no dependency on this one.
 
 Beside `api.d.ts`, [`api-contract.ts`](./api-contract.ts) holds the API's contract, `BETTER_MARKDOWN_LINKS_API_CONTRACT`: for every method, a schema over its arguments and a schema over what it returns. It is the constant this plugin publishes with the API, so copy it next to `api.d.ts` and pass it as the `contract`, and both sides check the same definition. Its schemas are [Standard Schema](https://standardschema.dev) objects built with [`@mnaoumov/typescript-lib/api-contract`](https://www.npmjs.com/package/@mnaoumov/typescript-lib), which carries the generic half (the contract types, the schema builders and the common guards), so copying it means adding that package (`npm install @mnaoumov/typescript-lib`, `1.1.0` or later). Apart from that package, the file imports only `obsidian` and `./api.d.ts`. (It is not named `api.ts`: TypeScript would read `api.d.ts` as that file's own declarations.)
 
 ```ts
-import { watchPluginApi } from 'obsidian-dev-utils/obsidian/plugin/plugin-api';
+import { watchPluginApi } from '@mnaoumov/obsidian-lib/plugin/plugin-api';
 
 import type { BetterMarkdownLinksApi } from './api.d.ts';
 

@@ -1,13 +1,13 @@
+import type { PluginApiDeclaration } from '@mnaoumov/obsidian-lib/plugin/plugin-api';
 import type {
   App as AppOriginal,
   PluginManifest
 } from 'obsidian';
-import type { PluginApiDeclaration } from 'obsidian-dev-utils/obsidian/plugin/plugin-api';
 
+import { CommandHandlerComponent } from '@mnaoumov/obsidian-lib/command-handlers/command-handler-component';
+import { castTo } from '@mnaoumov/typescript-lib/object-utils';
+import { strictProxy } from '@mnaoumov/typescript-test-toolkit/strict-proxy';
 import { Component } from 'obsidian';
-import { castTo } from 'obsidian-dev-utils/object-utils';
-import { CommandHandlerComponent } from 'obsidian-dev-utils/obsidian/command-handlers/command-handler-component';
-import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
 import { App } from 'obsidian-test-mocks/obsidian';
 import {
   beforeEach,
@@ -29,7 +29,7 @@ vi.mock('./plugin-settings-component.ts', () => ({
 
     public editAndSave(settingsEditor: (settings: PluginSettings) => void): Promise<void> {
       settingsEditor(this.settings);
-      // eslint-disable-next-line obsidian-dev-utils/prefer-noop-async -- a vi.mock factory cannot reach a top-level import.
+      // eslint-disable-next-line typescript-dev-toolkit/prefer-noop-async -- a vi.mock factory cannot reach a top-level import.
       return Promise.resolve();
     }
   }
@@ -46,8 +46,8 @@ const { pluginSuggestionStub } = vi.hoisted(() => ({
   pluginSuggestionStub: vi.fn<(params: PluginSuggestionComponentParams) => object>()
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/components/plugin-suggestion-component', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('obsidian-dev-utils/obsidian/components/plugin-suggestion-component')>();
+vi.mock('@mnaoumov/obsidian-lib/components/plugin-suggestion-component', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@mnaoumov/obsidian-lib/components/plugin-suggestion-component')>();
   // eslint-disable-next-line prefer-arrow-callback -- a vi.fn used with `new` must be a non-arrow function returning a fresh real Component.
   pluginSuggestionStub.mockImplementation(function NamedStub(): Component {
     return new Component();
@@ -62,8 +62,8 @@ vi.mock('obsidian-dev-utils/obsidian/components/plugin-suggestion-component', as
 // of closures it hands over — which pending values are offered, and how the retirement is persisted — so
 // they are captured and invoked directly. The offer-and-retire dance around them belongs to dev-utils and is
 // tested there.
-vi.mock('obsidian-dev-utils/obsidian/components/settings-migration-component', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('obsidian-dev-utils/obsidian/components/settings-migration-component')>();
+vi.mock('@mnaoumov/obsidian-lib/components/settings-migration-component', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@mnaoumov/obsidian-lib/components/settings-migration-component')>();
   // eslint-disable-next-line prefer-arrow-callback -- a vi.fn used with `new` must be a non-arrow function returning a fresh real Component.
   settingsMigrationStub.mockImplementation(function NamedStub(): Component {
     return new Component();
@@ -77,7 +77,7 @@ vi.mock('obsidian-dev-utils/obsidian/components/settings-migration-component', a
 // `PluginDataHandler` and `PluginEventSourceImpl` are NOT stubbed: since obsidian-dev-utils 93.2 the base
 // builds its own settings component out of them during `onload`, and that component really calls
 // `pluginEventSource.on`, so a bare `vi.fn()` double makes the base throw before `onloadImpl` runs.
-vi.mock('obsidian-dev-utils/obsidian/components/plugin-settings-tab-component', () => ({
+vi.mock('@mnaoumov/obsidian-lib/components/plugin-settings-tab-component', () => ({
   // Extends the real obsidian-test-mocks Component so the real addChild lifecycle can load it.
   PluginSettingsTabComponent: class extends Component {}
 }));
@@ -195,7 +195,7 @@ describe('Plugin', () => {
   // `Advanced Rename and Delete Handler` owns rename/delete handling since 5.0.0. Two handlers acting on one
   // rename corrupts links, so this plugin must register none — the inverse of what it used to assert.
   it('should not construct a rename/delete handler of its own', async () => {
-    const renameDeleteHandlerModule = await import('obsidian-dev-utils/obsidian/components/rename-delete-handler-component');
+    const renameDeleteHandlerModule = await import('@mnaoumov/obsidian-lib/components/rename-delete-handler-component');
     const renameDeleteHandlerSpy = vi.spyOn(renameDeleteHandlerModule, 'RenameDeleteHandlerComponent');
 
     await createLoadedPlugin();

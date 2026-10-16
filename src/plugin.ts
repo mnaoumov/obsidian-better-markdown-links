@@ -1,12 +1,12 @@
-import type { PluginApiDeclaration } from 'obsidian-dev-utils/obsidian/plugin/plugin-api';
+import type { PluginApiDeclaration } from '@mnaoumov/obsidian-lib/plugin/plugin-api';
 
-import { OpenDemoVaultCommandHandler } from 'obsidian-dev-utils/obsidian/command-handlers/open-demo-vault-command-handler';
-import { PluginSettingsTabComponent } from 'obsidian-dev-utils/obsidian/components/plugin-settings-tab-component';
-import { PluginSuggestionComponent } from 'obsidian-dev-utils/obsidian/components/plugin-suggestion-component';
-import { SettingsMigrationComponent } from 'obsidian-dev-utils/obsidian/components/settings-migration-component';
-import { PluginDataHandler } from 'obsidian-dev-utils/obsidian/data-handler';
-import { PluginBase } from 'obsidian-dev-utils/obsidian/plugin/plugin';
-import { PluginEventSourceImpl } from 'obsidian-dev-utils/obsidian/plugin/plugin-event-source';
+import { OpenDemoVaultCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/open-demo-vault-command-handler';
+import { PluginSettingsTabComponent } from '@mnaoumov/obsidian-lib/components/plugin-settings-tab-component';
+import { PluginSuggestionComponent } from '@mnaoumov/obsidian-lib/components/plugin-suggestion-component';
+import { SettingsMigrationComponent } from '@mnaoumov/obsidian-lib/components/settings-migration-component';
+import { PluginDataHandler } from '@mnaoumov/obsidian-lib/data-handler';
+import { PluginBase } from '@mnaoumov/obsidian-lib/plugin/plugin';
+import { PluginEventSourceImpl } from '@mnaoumov/obsidian-lib/plugin/plugin-event-source';
 
 import type { MigratableSettings } from './advanced-rename-and-delete-handler.ts';
 

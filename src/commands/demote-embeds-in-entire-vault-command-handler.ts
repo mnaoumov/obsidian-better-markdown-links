@@ -1,6 +1,6 @@
 import type { App } from 'obsidian';
 
-import { GlobalCommandHandler } from 'obsidian-dev-utils/obsidian/command-handlers/global-command-handler';
+import { GlobalCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/global-command-handler';
 
 import type { EmbedDemoter } from '../embed-demoter.ts';
 

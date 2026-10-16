@@ -4,11 +4,11 @@
  * This plugin's whole public surface, as a consumer sees it.
  *
  * Hand-written and self-contained on purpose: it imports from `obsidian` and nothing else, so a plugin that has never heard of
- * `obsidian-dev-utils` can copy this file into its own source and depend on this plugin with no build-time dependency on this
+ * `@mnaoumov/obsidian-lib` can copy this file into its own source and depend on this plugin with no build-time dependency on this
  * repository at all.
  *
- * {@link BetterMarkdownLinksApi} is published through the `obsidian-dev-utils` plugin registry under the plugin id
- * `better-markdown-links`, at contract version **1.0.0**. A consumer built on `obsidian-dev-utils` watches it:
+ * {@link BetterMarkdownLinksApi} is published through the `@mnaoumov/obsidian-lib` plugin registry under the plugin id
+ * `better-markdown-links`, at contract version **1.0.0**. A consumer built on `@mnaoumov/obsidian-lib` watches it:
  *
  * ```ts
  * const ref = watchPluginApi<BetterMarkdownLinksApi>({
@@ -36,7 +36,7 @@
 import type { TFile } from 'obsidian';
 
 /**
- * This plugin's API, published through the `obsidian-dev-utils` plugin registry under the plugin id `better-markdown-links`.
+ * This plugin's API, published through the `@mnaoumov/obsidian-lib` plugin registry under the plugin id `better-markdown-links`.
  */
 export interface BetterMarkdownLinksApi {
   /**

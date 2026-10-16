@@ -1,9 +1,9 @@
+import { MonkeyAroundComponent } from '@mnaoumov/obsidian-lib/components/monkey-around-component';
+import { handleSilentError } from '@mnaoumov/typescript-lib/async';
 import {
   App,
   Workspace
 } from 'obsidian';
-import { handleSilentError } from 'obsidian-dev-utils/async';
-import { MonkeyAroundComponent } from 'obsidian-dev-utils/obsidian/components/monkey-around-component';
 
 import type { BetterMarkdownLinksComponent } from '../better-markdown-links-component.ts';
 

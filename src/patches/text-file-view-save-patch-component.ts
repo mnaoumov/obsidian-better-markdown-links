@@ -1,6 +1,6 @@
+import { MonkeyAroundComponent } from '@mnaoumov/obsidian-lib/components/monkey-around-component';
+import { invokeAsyncSafely } from '@mnaoumov/typescript-lib/async';
 import { TextFileView } from 'obsidian';
-import { invokeAsyncSafely } from 'obsidian-dev-utils/async';
-import { MonkeyAroundComponent } from 'obsidian-dev-utils/obsidian/components/monkey-around-component';
 
 import type { BetterMarkdownLinksComponent } from '../better-markdown-links-component.ts';
 

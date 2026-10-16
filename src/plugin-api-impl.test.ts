@@ -3,7 +3,7 @@ import type {
   TFile as TFileOriginal
 } from 'obsidian';
 
-import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
+import { strictProxy } from '@mnaoumov/typescript-test-toolkit/strict-proxy';
 import { App } from 'obsidian-test-mocks/obsidian';
 import {
   beforeEach,
@@ -15,12 +15,13 @@ import {
 
 import type { GenerateMarkdownLinkExtendedOptions } from '../api.d.ts';
 
-vi.mock('obsidian-dev-utils/obsidian/link', () => ({
+vi.mock('@mnaoumov/obsidian-lib/link', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@mnaoumov/obsidian-lib/link')>(),
   generateMarkdownLink: vi.fn().mockReturnValue('[generated](link.md)')
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { generateMarkdownLink } from 'obsidian-dev-utils/obsidian/link';
+import { generateMarkdownLink } from '@mnaoumov/obsidian-lib/link';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { PluginApiImpl } from './plugin-api-impl.ts';

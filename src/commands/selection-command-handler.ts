@@ -1,12 +1,12 @@
+import type { OffsetRange } from '@mnaoumov/obsidian-lib/reference';
 import type {
   Editor,
   MarkdownFileInfo,
   TFile
 } from 'obsidian';
-import type { OffsetRange } from 'obsidian-dev-utils/obsidian/reference';
 
-import { EditorCommandHandler } from 'obsidian-dev-utils/obsidian/command-handlers/editor-command-handler';
-import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/file-system';
+import { EditorCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/editor-command-handler';
+import { isMarkdownFile } from '@mnaoumov/obsidian-lib/file-system';
 
 /**
  * Parameters for {@link SelectionCommandHandler.executeSelection}.

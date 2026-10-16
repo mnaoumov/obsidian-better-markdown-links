@@ -33,7 +33,7 @@ export class DemoteEmbedsInSelectionCommandHandler extends SelectionCommandHandl
     this.embedDemoter = params.embedDemoter;
   }
 
-  // eslint-disable-next-line obsidian-dev-utils/params-options-name-match -- Override must keep the base param type.
+  // eslint-disable-next-line typescript-dev-toolkit/params-options-name-match -- Override must keep the base param type.
   protected override async executeSelection(params: SelectionCommandHandlerExecuteSelectionParams): Promise<void> {
     await this.embedDemoter.demoteEmbedsInFile({
       file: params.file,

@@ -1,4 +1,4 @@
-import { LinkPathStyle } from 'obsidian-dev-utils/obsidian/link';
+import { LinkPathStyle } from '@mnaoumov/obsidian-lib/link';
 import {
   describe,
   expect,
@@ -71,7 +71,7 @@ describe('PluginSettings', () => {
   });
 
   describe('buildLinkPathStyleParams', () => {
-    // Under the default, `obsidian-dev-utils` reads the leading dot and slash off the link being replaced.
+    // Under the default, `@mnaoumov/obsidian-lib` reads the leading dot and slash off the link being replaced.
     // Stating them would rewrite links nobody asked to have rewritten.
     it('should state the style alone under the Obsidian default', () => {
       const settings = new PluginSettings();
@@ -139,7 +139,7 @@ describe('PluginSettings', () => {
       expect(settings.getGeneratedLinkStyle()).toBe('Markdown');
     });
 
-    // The other two modes ARE what obsidian-dev-utils does with no style at all, and saying so out loud
+    // The other two modes ARE what `@mnaoumov/obsidian-lib` does with no style at all, and saying so out loud
     // would beat the `originalLink` inference embed demotion depends on.
     it('should say nothing in the other modes, leaving the inference alone', () => {
       const settings = new PluginSettings();

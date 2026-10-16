@@ -33,7 +33,7 @@ export class ConvertLinksInSelectionCommandHandler extends SelectionCommandHandl
     this.linkConverter = params.linkConverter;
   }
 
-  // eslint-disable-next-line obsidian-dev-utils/params-options-name-match -- Override must keep the base param type.
+  // eslint-disable-next-line typescript-dev-toolkit/params-options-name-match -- Override must keep the base param type.
   protected override async executeSelection(params: SelectionCommandHandlerExecuteSelectionParams): Promise<void> {
     await this.linkConverter.convertLinksInFile({
       file: params.file,

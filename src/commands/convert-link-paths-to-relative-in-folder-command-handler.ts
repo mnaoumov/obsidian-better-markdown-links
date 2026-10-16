@@ -1,6 +1,6 @@
 import type { TFolder } from 'obsidian';
 
-import { FolderCommandHandler } from 'obsidian-dev-utils/obsidian/command-handlers/folder-command-handler';
+import { FolderCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/folder-command-handler';
 
 import type { LinkConverter } from '../link-converter.ts';
 

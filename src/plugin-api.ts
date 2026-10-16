@@ -7,7 +7,7 @@
  * from it so there is exactly one declaration of each and nothing to drift.
  */
 
-import type { PluginApiContract } from 'obsidian-dev-utils/obsidian/plugin/plugin-api';
+import type { ApiContract } from '@mnaoumov/typescript-lib/api-contract';
 
 import { BETTER_MARKDOWN_LINKS_API_CONTRACT } from '../api-contract.ts';
 
@@ -16,7 +16,7 @@ import { BETTER_MARKDOWN_LINKS_API_CONTRACT } from '../api-contract.ts';
  * consumers validate against one definition. Assigning it here is also what checks that its schemas are Standard Schemas the registry
  * accepts.
  */
-export const PLUGIN_API_CONTRACT: PluginApiContract = BETTER_MARKDOWN_LINKS_API_CONTRACT;
+export const PLUGIN_API_CONTRACT: ApiContract = BETTER_MARKDOWN_LINKS_API_CONTRACT;
 
 /**
  * The version of the contract above — independent of the plugin's own version, so a consumer asks for `'^1'` and keeps working
