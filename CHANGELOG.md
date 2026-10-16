@@ -3,6 +3,7 @@
 ## 6.0.0
 
 - feat!: merge the plugin API that replaces generateMarkdownLink.extended
+  - BREAKING: `app.fileManager.generateMarkdownLink.extended()` is removed. Call `generateMarkdownLinkExtended()` on the `better-markdown-links` plugin API (contract `^1`) instead; it takes the same options. See [For plugin developers](./README.md#for-plugin-developers).
 
 ## 5.2.1
 
