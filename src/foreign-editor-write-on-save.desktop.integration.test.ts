@@ -4,7 +4,7 @@
  * Integration suite for issue #40, driving a real Obsidian instance.
  *
  * Another plugin may rewrite the editor immediately after the `editor:save-file` command has run —
- * Linter's `Lint on save` with `Insert YAML attributes` does exactly that, synchronously, right after it
+ * `Linter`'s `Lint on save` with `Insert YAML attributes` does exactly that, synchronously, right after it
  * has called the original save callback. Whatever that write inserts has to stay visible in the editor.
  *
  * This plugin's automatic conversion reacts to the same save, so its work overlaps that write. It broke
@@ -12,9 +12,9 @@
  * `MarkdownView` of the note, so the foreign insert was saved a second time one tick after it landed and
  * Obsidian's properties section in the editor was left rendering the frontmatter from before it —
  * nothing — until the note was closed and reopened. On disk, in the metadata cache and in the File
- * properties view the attributes were all present, which is what made it look like a Linter bug.
+ * properties view the attributes were all present, which is what made it look like a `Linter` bug.
  *
- * The scenarios drive a Linter-shaped stub rather than Linter itself, so the suite needs no third-party
+ * The scenarios drive a `Linter`-shaped stub rather than `Linter` itself, so the suite needs no third-party
  * plugin in the vault: what matters is only the shape — patch the save command, call the original
  * callback, then synchronously dispatch frontmatter into the editor.
  *
@@ -67,7 +67,7 @@ interface TestableSettingsTab extends SettingTab {
 const PLUGIN_ID = 'better-markdown-links';
 
 /**
- * The property key the Linter-shaped stub inserts, and the frontmatter block carrying it.
+ * The property key the `Linter`-shaped stub inserts, and the frontmatter block carrying it.
  */
 const INSERTED_PROPERTY_KEY = 'inserted-by-another-plugin';
 const INSERTED_FRONTMATTER = `---\n${INSERTED_PROPERTY_KEY}: yes\n---\n`;
@@ -103,7 +103,7 @@ describe('a foreign editor write right after the save command (Desktop)', () => 
 });
 
 /**
- * Applies the given link conversion mode, opens a fresh link-free note, installs a Linter-shaped save
+ * Applies the given link conversion mode, opens a fresh link-free note, installs a `Linter`-shaped save
  * hook that rewrites the editor right after the save, runs the save command, and reports what the
  * editor's properties section ended up rendering.
  *
@@ -157,8 +157,8 @@ async function runForeignWriteScenario(mode: LinkConversionMode): Promise<Foreig
         }
 
         originalCheckCallback(isChecking);
-        // The Linter-shaped half: a synchronous CodeMirror dispatch right after the original save
-        // callback returns, bypassing the transaction filter the way Linter does.
+        // The `Linter`-shaped half: a synchronous CodeMirror dispatch right after the original save
+        // callback returns, bypassing the transaction filter the way `Linter` does.
         if (!view.editor.getValue().startsWith('---')) {
           view.editor.cm.dispatch({
             changes: [{

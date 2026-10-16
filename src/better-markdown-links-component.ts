@@ -175,7 +175,7 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
       // correctness requirement rather than a performance choice. `getCacheSafe()` flushes every dirty
       // `MarkdownView` of the file first, and this probe runs on the automatic triggers — the save patch
       // reaches it while `TextFileView.save()` is still in flight. A plugin that rewrites the editor right
-      // after the save (Linter's `Lint on save` inserting YAML attributes is the reported case) then has its
+      // after the save (`Linter`'s `Lint on save` inserting YAML attributes is the reported case) then has its
       // insert saved a second time by us, one tick after it landed, which leaves Obsidian's properties
       // section in the editor rendering the frontmatter the file had BEFORE the insert — empty — until the
       // note is closed and reopened. See issue #40. A probe that only decides whether there is anything to

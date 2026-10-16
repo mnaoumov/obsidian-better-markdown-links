@@ -56,7 +56,7 @@ This plugin offers to install it, once, and carries your old rename-handling val
 
 ## Integration with other plugins
 
-Rename and delete handling is not this plugin's any more — see [Renames](#renames) above. Install [`Advanced Rename and Delete Handler`](https://community.obsidian.md/plugins/advanced-rename-and-delete-handler) to keep it.
+Rename and delete handling is not this plugin's any more — see [Renames](#renames) above. Install [Advanced Rename and Delete Handler](https://community.obsidian.md/plugins/advanced-rename-and-delete-handler) to keep it.
 
 For better performance on a large vault, consider also installing [Backlink Cache](https://community.obsidian.md/plugins/backlink-cache).
 

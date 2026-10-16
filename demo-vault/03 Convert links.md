@@ -1,6 +1,6 @@
 # Convert links
 
-Beyond formatting new links, Better Markdown Links can rewrite links that already exist so they match the configured style (angle brackets, leading dots, normalized `file://` links, and so on).
+Beyond formatting new links, `Better Markdown Links` can rewrite links that already exist so they match the configured style (angle brackets, leading dots, normalized `file://` links, and so on).
 
 ## On demand
 

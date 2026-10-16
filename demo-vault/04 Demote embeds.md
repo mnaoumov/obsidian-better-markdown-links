@@ -86,4 +86,4 @@ The selection reaches only the body of a note. Links in frontmatter carry no pos
 
 ## Scope
 
-Demoting honours the same **Include paths** / **Exclude paths** settings as conversion does, so Excalidraw and tldraw notes are skipped by default. Running the command on a single excluded note asks first, rather than silently doing nothing. See [05 Settings](<./05 Settings.md>).
+Demoting honours the same **Include paths** / **Exclude paths** settings as conversion does, so `Excalidraw` and `tldraw` notes are skipped by default. Running the command on a single excluded note asks first, rather than silently doing nothing. See [05 Settings](<./05 Settings.md>).

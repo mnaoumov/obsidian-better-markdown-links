@@ -4,7 +4,7 @@
  * reads plainly.
  *
  * All four of the library's values are offered. Unlike `LinkStyle.Wikilink`, which
- * {@link LinkStyleMode} leaves out because a plugin named Better Markdown Links producing wikilinks on
+ * {@link LinkStyleMode} leaves out because a plugin named `Better Markdown Links` producing wikilinks on
  * purpose is not a mode worth shipping, none of these contradicts anything the plugin is for - and two of
  * them are what make `shouldUseLeadingDotForRelativePaths` and `shouldUseLeadingSlashForAbsolutePaths`
  * addressable at all, since `obsidian-dev-utils` applies each only under its matching style.

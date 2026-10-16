@@ -222,7 +222,7 @@ async function convertLinksInNote(): Promise<string> {
 /**
  * Dismisses the companion-plugin suggestion, so it is not in the frames.
  *
- * On load the plugin offers to install Advanced Rename and Delete Handler, through a notice carrying
+ * On load the plugin offers to install `Advanced Rename and Delete Handler`, through a notice carrying
  * `Install and enable` / `Not now` and a close button. The temp vault holds only this plugin, so the
  * offer always fires — and the notice sat across the top of every frame, covering the first palette row
  * in the very shot whose subject IS that list.
