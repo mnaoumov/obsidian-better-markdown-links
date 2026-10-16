@@ -2,6 +2,7 @@ import type {
   App as AppOriginal,
   PluginManifest
 } from 'obsidian';
+import type { PluginApiDeclaration } from 'obsidian-dev-utils/obsidian/plugin/plugin-api';
 
 import { Component } from 'obsidian';
 import { castTo } from 'obsidian-dev-utils/object-utils';
@@ -94,12 +95,23 @@ vi.mock('./better-markdown-links-component.ts', () => ({
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { PluginApiImpl } from './plugin-api-impl.ts';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import {
+  PLUGIN_API_CONTRACT,
+  PLUGIN_API_VERSION
+} from './plugin-api.ts';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { PluginSettingsComponent } from './plugin-settings-component.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { Plugin } from './plugin.ts';
 
 interface AppGlobal {
   app: AppOriginal;
+}
+
+interface PluginApisReader {
+  getPluginApis: () => PluginApiDeclaration[];
 }
 
 interface PluginSuggestionComponentParams {
@@ -289,6 +301,22 @@ describe('Plugin', () => {
     // Since obsidian-dev-utils 89.0.0 the handlers are built lazily by a factory, so build them here.
     const commandHandlerFactory = registerCommandHandlersSpy.mock.calls[1]?.[0];
     expect(commandHandlerFactory?.()).toHaveLength(17);
+  });
+
+  it('should declare no api before it has loaded', () => {
+    const plugin = new Plugin(app, manifest);
+
+    expect(castTo<PluginApisReader>(plugin).getPluginApis()).toEqual([]);
+  });
+
+  it('should declare the api for the base to publish once it has loaded', async () => {
+    const plugin = await createLoadedPlugin();
+
+    const declarations = castTo<PluginApisReader>(plugin).getPluginApis();
+    expect(declarations).toHaveLength(1);
+    expect(declarations[0]?.api).toBeInstanceOf(PluginApiImpl);
+    expect(declarations[0]?.apiVersion).toBe(PLUGIN_API_VERSION);
+    expect(declarations[0]?.contract).toBe(PLUGIN_API_CONTRACT);
   });
 
   it('should register the open demo vault command via its command handler', async () => {

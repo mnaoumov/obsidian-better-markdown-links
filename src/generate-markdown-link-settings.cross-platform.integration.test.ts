@@ -2,7 +2,7 @@
  * @file
  *
  * Integration suite that verifies each plugin setting genuinely changes the output of
- * `app.fileManager.generateMarkdownLink()` (and its `.extended()` overload). For every setting the
+ * `app.fileManager.generateMarkdownLink()` (and of the plugin API's `generateMarkdownLinkExtended()`). For every setting the
  * suite toggles it through the REAL settings component (`editAndSave`), regenerates the link, and
  * asserts the exact resulting markdown — proving the setting is actually wired into link generation
  * rather than silently ignored.
@@ -11,10 +11,7 @@
  * collect it and the same flow is verified on each.
  */
 
-import type {
-  App,
-  SettingTab
-} from 'obsidian';
+import type { SettingTab } from 'obsidian';
 
 import { evalInObsidian } from 'obsidian-integration-testing';
 import { getTemporaryVault } from 'obsidian-integration-testing/vitest-global-setup-plugin';
@@ -25,16 +22,8 @@ import {
   it
 } from 'vitest';
 
-import type { GenerateMarkdownLinkExtendedWrapper } from '../api.d.ts';
+import type { BetterMarkdownLinksApi } from '../api.d.ts';
 import type { PluginSettings } from './plugin-settings.ts';
-
-/**
- * The augmented shape of `app.fileManager.generateMarkdownLink` after the plugin patches it.
- * It stays callable as the built-in overload and gains the `.extended(...)` method.
- */
-type PatchedGenerateMarkdownLink =
-  & App['fileManager']['generateMarkdownLink']
-  & GenerateMarkdownLinkExtendedWrapper;
 
 /**
  * The (otherwise protected) settings component exposed for the test, letting it change settings the
@@ -64,7 +53,7 @@ const ATTACHMENT_PATH = 'folder/image.png';
  */
 interface GenerateParams {
   /**
-   * Whether to generate an embed link via the `.extended(...)` overload.
+   * Whether to generate an embed link via the plugin API's `generateMarkdownLinkExtended(...)`.
    *
    * @default `false`
    */
@@ -265,18 +254,46 @@ async function generate(params: GenerateParams): Promise<string> {
         throw new Error(`Target file not found: ${targetPath}`);
       }
 
-      const generateMarkdownLink = app.fileManager.generateMarkdownLink as PatchedGenerateMarkdownLink;
-      if (typeof generateMarkdownLink.extended !== 'function') {
-        throw new TypeError('generateMarkdownLink is not patched by the plugin (missing `.extended`)');
+      if (!isEmbed) {
+        return app.fileManager.generateMarkdownLink(targetFile, sourcePath);
       }
 
-      return isEmbed
-        ? generateMarkdownLink.extended({
-          isEmbed: true,
-          sourcePathOrFile: sourcePath,
-          targetPathOrFile: targetFile
-        })
-        : generateMarkdownLink(targetFile, sourcePath);
+      /*
+       * The registry, read where it lives rather than through `watchPluginApi`: the closure runs in the renderer realm with no
+       * bundle of its own, and the point of this reading is that a STRANGER can find the record.
+       */
+      interface ApiRecord {
+        readonly api: unknown;
+        readonly isRevoked: boolean;
+      }
+
+      interface ObsidianDevUtilsWrapper {
+        readonly __obsidianDevUtils: ObsidianDevUtilsState;
+      }
+
+      interface ObsidianDevUtilsState {
+        readonly pluginApiRegistry?: RegistryWrapper;
+      }
+
+      interface RegistryWrapper {
+        readonly value?: RegistryValue;
+      }
+
+      interface RegistryValue {
+        readonly records?: Record<string, ApiRecord[]>;
+      }
+
+      const api = (window as Partial<ObsidianDevUtilsWrapper>).__obsidianDevUtils?.pluginApiRegistry?.value?.records?.[pluginId]
+        ?.find((candidate) => !candidate.isRevoked)?.api as Partial<BetterMarkdownLinksApi> | undefined;
+      if (typeof api?.generateMarkdownLinkExtended !== 'function') {
+        throw new TypeError(`The plugin API of ${pluginId} is not published (missing generateMarkdownLinkExtended)`);
+      }
+
+      return api.generateMarkdownLinkExtended({
+        isEmbed: true,
+        sourcePathOrFile: sourcePath,
+        targetPathOrFile: targetFile
+      });
     },
     input: {
       isEmbed: params.isEmbed ?? false,

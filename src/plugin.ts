@@ -1,3 +1,5 @@
+import type { PluginApiDeclaration } from 'obsidian-dev-utils/obsidian/plugin/plugin-api';
+
 import { OpenDemoVaultCommandHandler } from 'obsidian-dev-utils/obsidian/command-handlers/open-demo-vault-command-handler';
 import { PluginSettingsTabComponent } from 'obsidian-dev-utils/obsidian/components/plugin-settings-tab-component';
 import { PluginSuggestionComponent } from 'obsidian-dev-utils/obsidian/components/plugin-suggestion-component';
@@ -31,6 +33,11 @@ import { DemoteEmbedsInFolderCommandHandler } from './commands/demote-embeds-in-
 import { DemoteEmbedsInSelectionCommandHandler } from './commands/demote-embeds-in-selection-command-handler.ts';
 import { EmbedDemoter } from './embed-demoter.ts';
 import { LinkConverter } from './link-converter.ts';
+import { PluginApiImpl } from './plugin-api-impl.ts';
+import {
+  PLUGIN_API_CONTRACT,
+  PLUGIN_API_VERSION
+} from './plugin-api.ts';
 import { PluginSettingsComponent } from './plugin-settings-component.ts';
 import { PluginSettingsTab } from './plugin-settings-tab.ts';
 
@@ -39,7 +46,33 @@ const SUGGESTION_REASON = 'Better Markdown Links no longer handles renames itsel
   + ' and it does not write the readable link format this plugin generates.';
 
 export class Plugin extends PluginBase {
+  private pluginApi: null | PluginApiImpl = null;
+
+  /**
+   * Declares this plugin's API for the base to publish.
+   *
+   * Published by the base rather than by hand: the `plugin-loaded` broadcast's `apiVersions` is derived from this method alone,
+   * so a hand `publishPluginApi` call would announce this plugin as publishing no API at all.
+   *
+   * @returns The declaration, or none before the plugin has loaded.
+   */
+  protected override getPluginApis(): PluginApiDeclaration[] {
+    return this.pluginApi
+      ? [
+        {
+          api: this.pluginApi,
+          apiVersion: PLUGIN_API_VERSION,
+          contract: PLUGIN_API_CONTRACT
+        }
+      ]
+      : [];
+  }
+
   protected override async onloadImpl(): Promise<void> {
+    this.pluginApi = new PluginApiImpl({
+      app: this.app
+    });
+
     const pluginSettingsComponent = this.addChild(
       new PluginSettingsComponent({
         dataHandler: new PluginDataHandler(this),

@@ -1,21 +1,55 @@
 /**
- * The extended `app.fileManager.generateMarkdownLink()` overload this plugin installs.
+ * @file
  *
- * Copy this file into your own plugin: it imports from `obsidian` and nothing else, so it needs no dependency on this one. The
- * plugin widens a core Obsidian call rather than publishing an API, so there is no handle to fetch and nothing to negotiate — the
- * patch is installed or it is not:
+ * This plugin's whole public surface, as a consumer sees it.
+ *
+ * Hand-written and self-contained on purpose: it imports from `obsidian` and nothing else, so a plugin that has never heard of
+ * `obsidian-dev-utils` can copy this file into its own source and depend on this plugin with no build-time dependency on this
+ * repository at all.
+ *
+ * {@link BetterMarkdownLinksApi} is published through the `obsidian-dev-utils` plugin registry under the plugin id
+ * `better-markdown-links`, at contract version **1.0.0**. A consumer built on `obsidian-dev-utils` watches it:
  *
  * ```ts
- * const generate = app.fileManager.generateMarkdownLink as Partial<GenerateMarkdownLinkExtendedWrapper>;
- * const link = generate.extended?.({ sourcePathOrFile, targetPathOrFile, shouldUseAngleBrackets: true });
+ * const ref = watchPluginApi<BetterMarkdownLinksApi>({
+ *   apiVersionRange: '^1',
+ *   app: this.app,
+ *   component: this,
+ *   pluginId: 'better-markdown-links'
+ * });
+ *
+ * const link = ref.value?.generateMarkdownLinkExtended({ sourcePathOrFile, targetPathOrFile, shouldUseAngleBrackets: true })
+ *   ?? this.app.fileManager.generateMarkdownLink(targetFile, sourcePath);
  * ```
  *
- * Versioning is therefore by plugin version alone. Every member below was added in **3.0.0**, the release that first shipped the
- * overload, and none has been added, renamed or removed since — so a consumer needs `better-markdown-links` 3.0.0 or later and
- * nothing finer-grained than that.
+ * The contract version is independent of the plugin version: a consumer asks for `'^1'` and keeps working across every plugin
+ * release that changes nothing it depends on.
+ *
+ * ## What it replaced
+ *
+ * Before **6.0.0** the same function was hung off Obsidian's own call, as `app.fileManager.generateMarkdownLink.extended`. That
+ * member is gone. {@link BetterMarkdownLinksApi.generateMarkdownLinkExtended} takes exactly the options it took, so only the lookup
+ * changes. `app.fileManager.generateMarkdownLink()` itself is still patched while this plugin is enabled, and still keeps its
+ * built-in signature.
  */
 
 import type { TFile } from 'obsidian';
+
+/**
+ * This plugin's API, published through the `obsidian-dev-utils` plugin registry under the plugin id `better-markdown-links`.
+ */
+export interface BetterMarkdownLinksApi {
+  /**
+   * Generates a link the way this plugin generates links, with the full set of options it uses.
+   *
+   * An option left out falls back to this plugin's settings, and then to Obsidian's own, exactly as for a link the plugin writes
+   * itself.
+   *
+   * @param options - The link to generate.
+   * @returns The link's markdown.
+   */
+  generateMarkdownLinkExtended(options: GenerateMarkdownLinkExtendedOptions): string;
+}
 
 export enum LinkPathStyle {
   AbsolutePathInVault = 'AbsolutePathInVault',
@@ -36,8 +70,6 @@ export enum LinkStyle {
 
   Wikilink = 'Wikilink'
 }
-
-export type GenerateMarkdownLinkExtendedFunction = (options: GenerateMarkdownLinkExtendedOptions) => string;
 
 export interface GenerateMarkdownLinkExtendedOptions {
   readonly alias?: string;
@@ -71,10 +103,6 @@ export interface GenerateMarkdownLinkExtendedOptions {
   readonly subpath?: string;
 
   readonly targetPathOrFile: PathOrFile;
-}
-
-export interface GenerateMarkdownLinkExtendedWrapper {
-  extended: GenerateMarkdownLinkExtendedFunction;
 }
 
 export type PathOrFile = string | TFile;
