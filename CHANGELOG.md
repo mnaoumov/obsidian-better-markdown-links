@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 6.0.0
+
+- feat!: merge the plugin API that replaces generateMarkdownLink.extended
+
 ## 5.2.1
 
 - test(screenshots): move the desktop capture onto applyObsidianTheme
