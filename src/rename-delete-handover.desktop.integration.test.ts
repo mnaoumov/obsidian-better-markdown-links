@@ -12,7 +12,7 @@
  *    the in-memory state, so an applied migration comes back on the next reload and is offered forever.
  *
  * `Advanced Rename and Delete Handler` is not installed in this vault, so the provider is a stub published
- * into `obsidian-dev-utils`' plugin-API registry under the real plugin id and contract version. That is
+ * into `@mnaoumov/obsidian-lib`' plugin-API registry under the real plugin id and contract version. That is
  * the seam this plugin actually talks to; the provider's own half of it is covered by that plugin's
  * `settings-migration` integration suite.
  *

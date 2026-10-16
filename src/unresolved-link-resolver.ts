@@ -1,36 +1,36 @@
+import type { PluginNoticeComponent } from '@mnaoumov/obsidian-lib/components/plugin-notice-component';
+import type { EditLinksParams } from '@mnaoumov/obsidian-lib/link';
+import type { OffsetRange } from '@mnaoumov/obsidian-lib/reference';
+import type { ResourceLockComponent } from '@mnaoumov/obsidian-lib/resource-lock';
 import type {
   App,
   TFile
 } from 'obsidian';
-import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
-import type { EditLinksParams } from 'obsidian-dev-utils/obsidian/link';
-import type { OffsetRange } from 'obsidian-dev-utils/obsidian/reference';
-import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource-lock';
 
+import {
+  getFileOrNull,
+  isMarkdownFile
+} from '@mnaoumov/obsidian-lib/file-system';
+import {
+  editLinks,
+  generateMarkdownLink,
+  hasWikilinkSyntax
+} from '@mnaoumov/obsidian-lib/link';
+import { normalizeLinkName } from '@mnaoumov/obsidian-lib/link-name';
+import {
+  createFolderSafe,
+  getAvailablePath
+} from '@mnaoumov/obsidian-lib/vault';
+import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-utils';
+import {
+  dirname,
+  join
+} from '@mnaoumov/typescript-lib/path';
 import {
   getLinkpath,
   parseFrontMatterAliases,
   Platform
 } from 'obsidian';
-import { normalizeOptionalProperties } from 'obsidian-dev-utils/object-utils';
-import {
-  getFileOrNull,
-  isMarkdownFile
-} from 'obsidian-dev-utils/obsidian/file-system';
-import {
-  editLinks,
-  generateMarkdownLink,
-  hasWikilinkSyntax
-} from 'obsidian-dev-utils/obsidian/link';
-import { normalizeLinkName } from 'obsidian-dev-utils/obsidian/link-name';
-import {
-  createFolderSafe,
-  getAvailablePath
-} from 'obsidian-dev-utils/obsidian/vault';
-import {
-  dirname,
-  join
-} from 'obsidian-dev-utils/path';
 
 /**
  * Parameters for {@link resolveUnresolvedLinksInFile}.
@@ -72,7 +72,7 @@ export interface ResolveUnresolvedLinksInFileParams {
  * `app.metadataCache.getLinkSuggestions` while it is on.
  *
  * Read off the CORE method rather than asked of the plugin, and duck-typed rather than declared as a
- * dependency — exactly as `obsidian-dev-utils` reads `.safe` off `getBacklinksForFile`
+ * dependency — exactly as `@mnaoumov/obsidian-lib` reads `.safe` off `getBacklinksForFile`
  * (`getBacklinksForFileSafe`). That buys three things a declared dependency would cost: this plugin
  * builds against `obsidian` alone, a user who has never heard of that plugin loses nothing, and the
  * fast path appears the moment one is installed with no release here.
@@ -241,7 +241,7 @@ function findNotesByAliasInIndex(app: App, paths: readonly string[]): readonly T
  * Walks the vault for the notes whose basename or `aliases` carry the name.
  *
  * Obsidian treats `[[some  alias]]` and `[[Some Alias]]` as naming the same note, so both sides are
- * compared through `obsidian-dev-utils`' `normalizeLinkName`. The index applies the same two rules to its
+ * compared through `@mnaoumov/obsidian-lib`' `normalizeLinkName`. The index applies the same two rules to its
  * own keys, which is what keeps this walk and {@link findNotesByAliasInIndex} answering alike: a
  * disagreement would make the same link resolve differently depending on whether that plugin is
  * installed. The fast path therefore hands the index the raw link text.

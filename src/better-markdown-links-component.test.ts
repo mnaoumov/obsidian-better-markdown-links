@@ -1,19 +1,19 @@
+import type { AbortSignalComponent } from '@mnaoumov/obsidian-lib/components/abort-signal-component';
+import type { ConsoleDebugComponent } from '@mnaoumov/obsidian-lib/components/console-debug-component';
+import type {
+  LinkPathStyle,
+  LinkStyle
+} from '@mnaoumov/obsidian-lib/link';
+import type { CachedMetadataEx } from '@mnaoumov/obsidian-lib/metadata-cache';
 import type {
   App,
   Reference,
   TAbstractFile,
   TFile
 } from 'obsidian';
-import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
-import type { ConsoleDebugComponent } from 'obsidian-dev-utils/obsidian/components/console-debug-component';
-import type {
-  LinkPathStyle,
-  LinkStyle
-} from 'obsidian-dev-utils/obsidian/link';
-import type { CachedMetadataEx } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
-import { castTo } from 'obsidian-dev-utils/object-utils';
-import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
+import { castTo } from '@mnaoumov/typescript-lib/object-utils';
+import { strictProxy } from '@mnaoumov/typescript-test-toolkit/strict-proxy';
 import {
   App as AppCls,
   TFile as TFileCls,
@@ -36,44 +36,44 @@ import type { PluginSettings } from './plugin-settings.ts';
 // (allowed thin `vi.fn()` stubs). The dev-utils base classes (LayoutReadyComponent,
 // MonkeyAroundComponent, GenerateMarkdownLinkDefaultParamsComponent) and the plugin's own patch
 // siblings are intentionally NOT mocked, so they run for real against the configured app.
-vi.mock('obsidian-dev-utils/abort-controller', () => ({
+vi.mock('@mnaoumov/typescript-lib/abort-controller', () => ({
   abortSignalAny: vi.fn()
 }));
 
 // Stub only the return value of the pure utility handleSilentError so the silent/non-silent branches
 // of the openLinkText patch handler can be exercised. convertAsyncToSync keeps its real behavior
 // (re-exported via importOriginal) so the real layout-ready/event wiring runs unchanged.
-vi.mock('obsidian-dev-utils/async', async (importOriginal) => ({
-  ...await importOriginal<typeof import('obsidian-dev-utils/async')>(),
+vi.mock('@mnaoumov/typescript-lib/async', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@mnaoumov/typescript-lib/async')>(),
   handleSilentError: vi.fn()
 }));
 
 // Stub only the return value of the pure utility convertLink. getGenerateMarkdownLinkDefaultParamsFns
 // (same module) keeps its real implementation so the real default-params wiring is observable.
-vi.mock('obsidian-dev-utils/obsidian/link', async (importOriginal) => ({
-  ...await importOriginal<typeof import('obsidian-dev-utils/obsidian/link')>(),
+vi.mock('@mnaoumov/obsidian-lib/link', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@mnaoumov/obsidian-lib/link')>(),
   convertLink: vi.fn()
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/metadata-cache', () => ({
+vi.mock('@mnaoumov/obsidian-lib/metadata-cache', () => ({
   getLinks: vi.fn(),
   parseMetadata: vi.fn()
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
-// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { handleSilentError } from 'obsidian-dev-utils/async';
-// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
   convertLink,
   getGenerateMarkdownLinkDefaultParamsFns
-} from 'obsidian-dev-utils/obsidian/link';
+} from '@mnaoumov/obsidian-lib/link';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
   getLinks,
   parseMetadata
-} from 'obsidian-dev-utils/obsidian/metadata-cache';
+} from '@mnaoumov/obsidian-lib/metadata-cache';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { abortSignalAny } from '@mnaoumov/typescript-lib/abort-controller';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { handleSilentError } from '@mnaoumov/typescript-lib/async';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { BetterMarkdownLinksComponent } from './better-markdown-links-component.ts';

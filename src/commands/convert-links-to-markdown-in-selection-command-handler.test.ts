@@ -5,8 +5,8 @@ import type {
   TFile
 } from 'obsidian';
 
-import { castTo } from 'obsidian-dev-utils/object-utils';
-import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
+import { castTo } from '@mnaoumov/typescript-lib/object-utils';
+import { strictProxy } from '@mnaoumov/typescript-test-toolkit/strict-proxy';
 import {
   beforeEach,
   describe,
@@ -17,13 +17,13 @@ import {
 
 import type { LinkConverter } from '../link-converter.ts';
 
-vi.mock('obsidian-dev-utils/obsidian/file-system', async (importOriginal) => ({
-  ...await importOriginal<typeof import('obsidian-dev-utils/obsidian/file-system')>(),
+vi.mock('@mnaoumov/obsidian-lib/file-system', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@mnaoumov/obsidian-lib/file-system')>(),
   isMarkdownFile: vi.fn()
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { isMarkdownFile } from 'obsidian-dev-utils/obsidian/file-system';
+import { isMarkdownFile } from '@mnaoumov/obsidian-lib/file-system';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { ConvertLinksToMarkdownInSelectionCommandHandler } from './convert-links-to-markdown-in-selection-command-handler.ts';

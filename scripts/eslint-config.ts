@@ -1,10 +1,10 @@
 import type { Linter } from 'eslint';
 
+import { defineEslintConfigs } from '@mnaoumov/obsidian-dev-toolkit/linters/eslint-config';
 import {
   defineConfig,
   globalIgnores
 } from 'eslint/config';
-import { defineEslintConfigs } from 'obsidian-dev-utils/script-utils/linters/eslint-config';
 
 export const configs: Linter.Config[] = defineEslintConfigs({
   customConfigs() {

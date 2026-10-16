@@ -1,15 +1,15 @@
+import type { AbortSignalComponent } from '@mnaoumov/obsidian-lib/components/abort-signal-component';
+import type { PluginNoticeComponent } from '@mnaoumov/obsidian-lib/components/plugin-notice-component';
+import type { ResourceLockComponent } from '@mnaoumov/obsidian-lib/resource-lock';
 import type {
   App,
   Reference,
   TFile,
   TFolder
 } from 'obsidian';
-import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
-import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
-import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource-lock';
 
-import { castTo } from 'obsidian-dev-utils/object-utils';
-import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
+import { castTo } from '@mnaoumov/typescript-lib/object-utils';
+import { strictProxy } from '@mnaoumov/typescript-test-toolkit/strict-proxy';
 import {
   beforeEach,
   describe,
@@ -21,44 +21,44 @@ import {
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 import type { PluginSettings } from './plugin-settings.ts';
 
-vi.mock('obsidian-dev-utils/abort-controller', () => ({
+vi.mock('@mnaoumov/typescript-lib/abort-controller', () => ({
   abortSignalAny: vi.fn()
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/file-system', () => ({
+vi.mock('@mnaoumov/obsidian-lib/file-system', () => ({
   getMarkdownFiles: vi.fn()
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/link', () => ({
+vi.mock('@mnaoumov/obsidian-lib/link', () => ({
   editLinks: vi.fn(),
   extractLinkFile: vi.fn(),
   generateMarkdownLink: vi.fn(),
   hasEmbedSyntax: vi.fn()
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/loop', () => ({
+vi.mock('@mnaoumov/obsidian-lib/loop', () => ({
   loop: vi.fn()
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/modals/confirm', () => ({
+vi.mock('@mnaoumov/obsidian-lib/modals/confirm', () => ({
   confirm: vi.fn()
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
-// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { getMarkdownFiles } from 'obsidian-dev-utils/obsidian/file-system';
+import { getMarkdownFiles } from '@mnaoumov/obsidian-lib/file-system';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
   editLinks,
   extractLinkFile,
   generateMarkdownLink,
   hasEmbedSyntax
-} from 'obsidian-dev-utils/obsidian/link';
+} from '@mnaoumov/obsidian-lib/link';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { loop } from 'obsidian-dev-utils/obsidian/loop';
+import { loop } from '@mnaoumov/obsidian-lib/loop';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { confirm } from 'obsidian-dev-utils/obsidian/modals/confirm';
+import { confirm } from '@mnaoumov/obsidian-lib/modals/confirm';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { abortSignalAny } from '@mnaoumov/typescript-lib/abort-controller';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { EmbedDemoter } from './embed-demoter.ts';

@@ -1,8 +1,8 @@
 import {
   LinkPathStyle,
   LinkStyle
-} from 'obsidian-dev-utils/obsidian/link';
-import { PathSettings } from 'obsidian-dev-utils/obsidian/path-settings';
+} from '@mnaoumov/obsidian-lib/link';
+import { PathSettings } from '@mnaoumov/obsidian-lib/path-settings';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
 import { LinkPathStyleMode } from './link-path-style-mode.ts';
@@ -18,7 +18,7 @@ const LINK_PATH_STYLE_BY_MODE: Record<LinkPathStyleMode, LinkPathStyle> = {
 };
 
 /**
- * The path-related params to hand `obsidian-dev-utils` for one link, built by
+ * The path-related params to hand `@mnaoumov/obsidian-lib` for one link, built by
  * {@link PluginSettings.buildLinkPathStyleParams}.
  */
 export interface LinkPathStyleParams {
@@ -88,7 +88,7 @@ export class PluginSettings {
    * The path-related params to state for one link whose final path style is `linkPathStyle`.
    *
    * Under {@link LinkPathStyleMode.ObsidianSettingsDefault} only the style itself is stated, leaving
-   * `obsidian-dev-utils` to infer the leading dot and slash from the link being replaced
+   * `@mnaoumov/obsidian-lib` to infer the leading dot and slash from the link being replaced
    * (`hasLeadingDot` / `hasLeadingSlash` over `originalLink`) exactly as it does today.
    *
    * Under any other mode both decorations are stated out loud, because the original link's own dot and
@@ -97,7 +97,7 @@ export class PluginSettings {
    * losing the leading dot precisely where it was asked for.
    *
    * @param linkPathStyle - The final path style, from {@link getLinkPathStyle} or forced for one run.
-   * @returns The params to spread into the `obsidian-dev-utils` call.
+   * @returns The params to spread into the `@mnaoumov/obsidian-lib` call.
    */
   public buildLinkPathStyleParams(linkPathStyle: LinkPathStyle): LinkPathStyleParams {
     return linkPathStyle === LinkPathStyle.ObsidianSettingsDefault
@@ -112,7 +112,7 @@ export class PluginSettings {
   /**
    * The path style to force on a link this plugin GENERATES. `undefined` in the
    * {@link LinkPathStyleMode.ObsidianSettingsDefault} mode, which is the same answer
-   * `obsidian-dev-utils` reaches for an absent value.
+   * `@mnaoumov/obsidian-lib` reaches for an absent value.
    *
    * The reason to return nothing rather than to say `ObsidianSettingsDefault` out loud is NOT the
    * `originalLink` inference {@link getGeneratedLinkStyle} protects — there is none for the path style.
@@ -127,7 +127,7 @@ export class PluginSettings {
 
   /**
    * The style to force on a link this plugin GENERATES — a brand new one, or the plain link an embed is
-   * demoted to. `undefined` leaves `obsidian-dev-utils`' own inference in place, which resolves an absent
+   * demoted to. `undefined` leaves `@mnaoumov/obsidian-lib`' own inference in place, which resolves an absent
    * style to `PreserveExisting`: for a link with no original that means Obsidian's `Use [[Wikilinks]]`
    * setting, and for a rewritten one it means the style the link already had.
    *

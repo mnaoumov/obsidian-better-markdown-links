@@ -1,27 +1,27 @@
+import type { AbortSignalComponent } from '@mnaoumov/obsidian-lib/components/abort-signal-component';
+import type { ConsoleDebugComponent } from '@mnaoumov/obsidian-lib/components/console-debug-component';
+import type { GenerateMarkdownLinkParams } from '@mnaoumov/obsidian-lib/link';
+import type { CachedMetadataEx } from '@mnaoumov/obsidian-lib/metadata-cache';
 import type { App } from 'obsidian';
-import type { AbortSignalComponent } from 'obsidian-dev-utils/obsidian/components/abort-signal-component';
-import type { ConsoleDebugComponent } from 'obsidian-dev-utils/obsidian/components/console-debug-component';
-import type { GenerateMarkdownLinkParams } from 'obsidian-dev-utils/obsidian/link';
-import type { CachedMetadataEx } from 'obsidian-dev-utils/obsidian/metadata-cache';
 
+import { GenerateMarkdownLinkDefaultParamsComponent } from '@mnaoumov/obsidian-lib/components/generate-markdown-link-default-params-component';
+import { LayoutReadyComponent } from '@mnaoumov/obsidian-lib/components/layout-ready-component';
+import { convertLink } from '@mnaoumov/obsidian-lib/link';
+import {
+  getLinks,
+  parseMetadata
+} from '@mnaoumov/obsidian-lib/metadata-cache';
+import { abortSignalAny } from '@mnaoumov/typescript-lib/abort-controller';
+import { convertAsyncToSync } from '@mnaoumov/typescript-lib/async';
+import { SilentError } from '@mnaoumov/typescript-lib/error';
+import {
+  normalizeOptionalProperties,
+  removeUndefinedProperties
+} from '@mnaoumov/typescript-lib/object-utils';
 import {
   TAbstractFile,
   TFile
 } from 'obsidian';
-import { abortSignalAny } from 'obsidian-dev-utils/abort-controller';
-import { convertAsyncToSync } from 'obsidian-dev-utils/async';
-import { SilentError } from 'obsidian-dev-utils/error';
-import {
-  normalizeOptionalProperties,
-  removeUndefinedProperties
-} from 'obsidian-dev-utils/object-utils';
-import { GenerateMarkdownLinkDefaultParamsComponent } from 'obsidian-dev-utils/obsidian/components/generate-markdown-link-default-params-component';
-import { LayoutReadyComponent } from 'obsidian-dev-utils/obsidian/components/layout-ready-component';
-import { convertLink } from 'obsidian-dev-utils/obsidian/link';
-import {
-  getLinks,
-  parseMetadata
-} from 'obsidian-dev-utils/obsidian/metadata-cache';
 
 import type { LinkConverter } from './link-converter.ts';
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';

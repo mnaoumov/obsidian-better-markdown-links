@@ -1,14 +1,14 @@
+import type { PluginNoticeComponent } from '@mnaoumov/obsidian-lib/components/plugin-notice-component';
+import type { ResourceLockComponent } from '@mnaoumov/obsidian-lib/resource-lock';
 import type {
   App,
   Reference,
   TFile,
   TFolder
 } from 'obsidian';
-import type { PluginNoticeComponent } from 'obsidian-dev-utils/obsidian/components/plugin-notice-component';
-import type { ResourceLockComponent } from 'obsidian-dev-utils/obsidian/resource-lock';
 
-import { castTo } from 'obsidian-dev-utils/object-utils';
-import { strictProxy } from 'obsidian-dev-utils/strict-proxy';
+import { castTo } from '@mnaoumov/typescript-lib/object-utils';
+import { strictProxy } from '@mnaoumov/typescript-test-toolkit/strict-proxy';
 import {
   beforeEach,
   describe,
@@ -23,44 +23,44 @@ vi.mock('obsidian', () => ({
   Platform: { isWin: true }
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/file-system', () => ({
+vi.mock('@mnaoumov/obsidian-lib/file-system', () => ({
   getFileOrNull: vi.fn(),
   isMarkdownFile: vi.fn()
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/link', () => ({
+vi.mock('@mnaoumov/obsidian-lib/link', () => ({
   editLinks: vi.fn(),
   generateMarkdownLink: vi.fn(),
   hasWikilinkSyntax: vi.fn()
 }));
 
-vi.mock('obsidian-dev-utils/obsidian/vault', () => ({
+vi.mock('@mnaoumov/obsidian-lib/vault', () => ({
   createFolderSafe: vi.fn(),
   getAvailablePath: vi.fn()
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
-  getLinkpath,
-  parseFrontMatterAliases,
-  Platform
-} from 'obsidian';
-// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import {
   getFileOrNull,
   isMarkdownFile
-} from 'obsidian-dev-utils/obsidian/file-system';
+} from '@mnaoumov/obsidian-lib/file-system';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
   editLinks,
   generateMarkdownLink,
   hasWikilinkSyntax
-} from 'obsidian-dev-utils/obsidian/link';
+} from '@mnaoumov/obsidian-lib/link';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
   createFolderSafe,
   getAvailablePath
-} from 'obsidian-dev-utils/obsidian/vault';
+} from '@mnaoumov/obsidian-lib/vault';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import {
+  getLinkpath,
+  parseFrontMatterAliases,
+  Platform
+} from 'obsidian';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';

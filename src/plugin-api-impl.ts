@@ -8,12 +8,14 @@
 
 import type { App } from 'obsidian';
 
-import { generateMarkdownLink } from 'obsidian-dev-utils/obsidian/link';
+import { generateMarkdownLink } from '@mnaoumov/obsidian-lib/link';
 
 import type {
   BetterMarkdownLinksApi,
   GenerateMarkdownLinkExtendedOptions
 } from '../api.d.ts';
+
+import { toGenerateMarkdownLinkParams } from './generate-markdown-link-params.ts';
 
 /**
  * Parameters for the {@link PluginApiImpl} constructor.
@@ -53,9 +55,6 @@ export class PluginApiImpl implements BetterMarkdownLinksApi {
    * @returns The link's markdown.
    */
   public generateMarkdownLinkExtended(params: PluginApiImplGenerateMarkdownLinkExtendedParams): string {
-    return generateMarkdownLink({
-      app: this.app,
-      ...params
-    });
+    return generateMarkdownLink(toGenerateMarkdownLinkParams(this.app, params));
   }
 }

@@ -3,14 +3,16 @@ import type {
   FileManager
 } from 'obsidian';
 
+import { MonkeyAroundComponent } from '@mnaoumov/obsidian-lib/components/monkey-around-component';
+import { generateMarkdownLink } from '@mnaoumov/obsidian-lib/link';
 import {
   normalizeOptionalProperties,
   removeUndefinedProperties
-} from 'obsidian-dev-utils/object-utils';
-import { MonkeyAroundComponent } from 'obsidian-dev-utils/obsidian/components/monkey-around-component';
-import { generateMarkdownLink } from 'obsidian-dev-utils/obsidian/link';
+} from '@mnaoumov/typescript-lib/object-utils';
 
 import type { GenerateMarkdownLinkExtendedOptions } from '../api.d.ts';
+
+import { toGenerateMarkdownLinkParams } from './generate-markdown-link-params.ts';
 
 interface GenerateMarkdownLinkPatchComponentConstructorParams {
   readonly app: App;
@@ -43,10 +45,7 @@ export class GenerateMarkdownLinkPatchComponent extends MonkeyAroundComponent {
           targetPathOrFile: file
         }));
 
-        return generateMarkdownLink({
-          app,
-          ...options
-        });
+        return generateMarkdownLink(toGenerateMarkdownLinkParams(app, options));
       }
     });
   }
