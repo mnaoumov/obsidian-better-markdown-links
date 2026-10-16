@@ -156,7 +156,12 @@ async function runHandover(isApplied: boolean): Promise<HandoverProbeResult> {
           }
         },
         apiVersion: '1.0.0',
-        contract: { migrateSettings: {} },
+        contract: {
+          migrateSettings: {
+            input: createSchema('migrate settings params', isMigrateSettingsArguments),
+            output: createSchema('a migrate settings result', isMigrateSettingsResult)
+          }
+        },
         isRevoked: false,
         pluginId: providerPluginId
       }];
@@ -189,6 +194,38 @@ async function runHandover(isApplied: boolean): Promise<HandoverProbeResult> {
         sourcePluginId: acceptedOffer?.sourcePluginId ?? null,
         wasOffered: acceptedOffer !== null
       };
+
+      /*
+       * The stand-in's contract carries an `input` and an `output` schema like the provider's own
+       * (`src/advanced-rename-and-delete-handler-api/api-contract.ts`), checking the same shapes. It is restated
+       * here because this closure is serialized into Obsidian and cannot import that module, and passing the
+       * provider's constant through the callback's arguments would serialize each `validate` without the helpers it
+       * closes over. The plugin passes its own copy as the consumer contract, which wins over this one.
+       */
+      function createSchema(expected: string, isValid: (value: unknown) => boolean): object {
+        return {
+          '~standard': {
+            validate: (value: unknown): object => isValid(value) ? { value } : { issues: [{ message: `Expected ${expected}.` }] },
+            vendor: providerPluginId,
+            version: 1
+          }
+        };
+      }
+
+      function isMigrateSettingsArguments(value: unknown): boolean {
+        if (!Array.isArray(value) || value.length !== 1) {
+          return false;
+        }
+
+        const params: unknown = value[0];
+        return typeof params === 'object' && params !== null
+          && typeof Reflect.get(params, 'sourcePluginId') === 'string'
+          && typeof Reflect.get(params, 'proposedSettings') === 'object' && Reflect.get(params, 'proposedSettings') !== null;
+      }
+
+      function isMigrateSettingsResult(value: unknown): boolean {
+        return typeof value === 'object' && value !== null && typeof Reflect.get(value, 'isApplied') === 'boolean';
+      }
 
       // Puts the shared instance back the way it was found: the stub provider out of the registry, and the
       // plugin reloaded off its original `data.json`.

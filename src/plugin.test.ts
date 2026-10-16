@@ -19,6 +19,7 @@ import {
 
 import type { MigratableSettings } from './advanced-rename-and-delete-handler.ts';
 
+import { ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT } from './advanced-rename-and-delete-handler-api/api-contract.ts';
 import { PluginSettings } from './plugin-settings.ts';
 
 vi.mock('./plugin-settings-component.ts', () => ({
@@ -122,6 +123,7 @@ interface PluginSuggestionComponentParams {
 
 interface SettingsMigrationComponentParams {
   readonly apiVersionRange: string;
+  readonly contract: Readonly<Record<string, unknown>>;
   readonly getProposedSettings: (this: void) => MigratableSettings | null;
   readonly providerPluginId: string;
   readonly retireProposedSettings: (this: void) => Promise<void>;
@@ -232,6 +234,10 @@ describe('Plugin', () => {
     expect(migrationParams().providerPluginId).toBe('advanced-rename-and-delete-handler');
     expect(migrationParams().sourcePluginId).toBe(manifest.id);
     expect(migrationParams().apiVersionRange).toBe('^1');
+    // Narrow, and the provider's own entry: both schemas, no `{}` restatement.
+    expect(migrationParams().contract).toEqual({
+      migrateSettings: ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT.migrateSettings
+    });
   });
 
   it('should offer nothing while no legacy value is pending', async () => {
