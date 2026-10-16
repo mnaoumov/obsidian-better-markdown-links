@@ -28,6 +28,7 @@ import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-uti
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 import type { ResolveUnresolvedLinksInFileParams } from './unresolved-link-resolver.ts';
 
+import { buildProgressBarTitle } from './progress-bar-title.ts';
 import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
 
 interface GetConversionSubjectParams {
@@ -241,9 +242,11 @@ export class LinkConverter {
           shouldResolveUnresolvedLinks: params.shouldResolveUnresolvedLinks ?? false
         });
       },
-      progressBarTitle: params.folder.path === '/'
-        ? `Better Markdown Links: Converting ${what} in entire vault...`
-        : `Better Markdown Links: Converting ${what} in folder "${params.folder.path}" ...`,
+      progressBarTitle: buildProgressBarTitle(
+        params.folder.path === '/'
+          ? `Converting ${what} in entire vault...`
+          : `Converting ${what} in folder "${params.folder.path}" ...`
+      ),
       shouldContinueOnError: true,
       shouldShowProgressBar: true
     });

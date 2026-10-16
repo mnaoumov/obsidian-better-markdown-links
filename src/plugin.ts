@@ -5,6 +5,7 @@ import { PluginSettingsTabComponent } from '@mnaoumov/obsidian-lib/components/pl
 import { PluginSuggestionComponent } from '@mnaoumov/obsidian-lib/components/plugin-suggestion-component';
 import { SettingsMigrationComponent } from '@mnaoumov/obsidian-lib/components/settings-migration-component';
 import { PluginDataHandler } from '@mnaoumov/obsidian-lib/data-handler';
+import { appendCodeBlock } from '@mnaoumov/obsidian-lib/html-element';
 import { PluginBase } from '@mnaoumov/obsidian-lib/plugin/plugin';
 import { PluginEventSourceImpl } from '@mnaoumov/obsidian-lib/plugin/plugin-event-source';
 
@@ -41,10 +42,6 @@ import {
 } from './plugin-api.ts';
 import { PluginSettingsComponent } from './plugin-settings-component.ts';
 import { PluginSettingsTab } from './plugin-settings-tab.ts';
-
-const SUGGESTION_REASON = 'Better Markdown Links no longer handles renames itself.'
-  + ' Without Advanced Rename and Delete Handler, Obsidian\'s own link update runs instead,'
-  + ' and it does not write the readable link format this plugin generates.';
 
 export class Plugin extends PluginBase {
   private pluginApi: null | PluginApiImpl = null;
@@ -88,7 +85,7 @@ export class Plugin extends PluginBase {
         isSuggestionDeclined: (): boolean => pluginSettingsComponent.settings.isAdvancedRenameAndDeleteHandlerSuggestionDeclined,
         pluginNoticeComponent: this.pluginNoticeComponent,
         pluginSettingsComponent,
-        reason: SUGGESTION_REASON,
+        reason: buildSuggestionReason(this.manifest.name),
         // `editAndSave`, not `setProperty`: a decline has to outlive a reload, and `setProperty` only edits
         // the in-memory state.
         setSuggestionDeclined: async (isDeclined): Promise<void> => {
@@ -229,4 +226,13 @@ export class Plugin extends PluginBase {
       })
     ]);
   }
+}
+
+function buildSuggestionReason(pluginName: string): DocumentFragment {
+  return createFragment((f) => {
+    appendCodeBlock(f, pluginName);
+    f.appendText(' no longer handles renames itself. Without ');
+    appendCodeBlock(f, ADVANCED_RENAME_AND_DELETE_HANDLER_PLUGIN_NAME);
+    f.appendText(', Obsidian\'s own link update runs instead, and it does not write the readable link format this plugin generates.');
+  });
 }
