@@ -116,6 +116,17 @@ function createFile(path: string, name = path): TFile {
 function createLink(original: string, displayText?: string): Reference {
   return castTo<Reference>({ displayText, link: 'Materials/Diagram.png', original });
 }
+/**
+ * The action half of a progress bar title, after checking the plugin-name prefix is rendered as code.
+ */
+function progressBarTitleText(title: DocumentFragment | string | undefined): string {
+  if (!(title instanceof DocumentFragment)) {
+    throw new TypeError('The progress bar title is not a fragment.');
+  }
+
+  expect(title.querySelector('code')?.textContent).toBe('Better Markdown Links');
+  return title.textContent.replace(/^Better Markdown Links: /, '');
+}
 
 /**
  * Runs the converter callback the demoter handed to `editLinks` against one link, the way `editLinks`
@@ -293,7 +304,7 @@ describe('EmbedDemoter', () => {
       await context.demoter.demoteEmbedsInFolder({ folder });
 
       const loopParams = vi.mocked(loop).mock.calls[0]?.[0];
-      expect(loopParams?.progressBarTitle).toBe('Better Markdown Links: Demoting embeds to links in entire vault...');
+      expect(progressBarTitleText(loopParams?.progressBarTitle)).toBe('Demoting embeds to links in entire vault...');
       expect(vi.mocked(getMarkdownFiles)).toHaveBeenCalledWith({
         app: context.app,
         isRecursive: true,
@@ -308,7 +319,7 @@ describe('EmbedDemoter', () => {
       await context.demoter.demoteEmbedsInFolder({ folder });
 
       const loopParams = vi.mocked(loop).mock.calls[0]?.[0];
-      expect(loopParams?.progressBarTitle).toBe('Better Markdown Links: Demoting embeds to links in folder "sub/folder" ...');
+      expect(progressBarTitleText(loopParams?.progressBarTitle)).toBe('Demoting embeds to links in folder "sub/folder" ...');
     });
 
     it('should build a notice message and demote each looped file', async () => {

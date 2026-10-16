@@ -117,6 +117,7 @@ interface PluginApisReader {
 
 interface PluginSuggestionComponentParams {
   readonly isSuggestionDeclined: (this: void) => boolean;
+  readonly reason: DocumentFragment | string;
   readonly setSuggestionDeclined: (this: void, isDeclined: boolean) => Promise<void>;
   readonly suggestedPluginId: string;
 }
@@ -208,6 +209,24 @@ describe('Plugin', () => {
 
     expect(pluginSuggestionStub).toHaveBeenCalledOnce();
     expect(suggestionParams().suggestedPluginId).toBe('advanced-rename-and-delete-handler');
+  });
+
+  it('should name both plugins in the suggestion reason as code', async () => {
+    await createLoadedPlugin();
+
+    const { reason } = suggestionParams();
+    if (!(reason instanceof DocumentFragment)) {
+      throw new TypeError('The suggestion reason is not a fragment.');
+    }
+
+    expect(Array.from(reason.querySelectorAll('code'), (code) => code.textContent)).toEqual([
+      'Better Markdown Links',
+      'Advanced Rename and Delete Handler'
+    ]);
+    expect(reason.textContent).toBe(
+      'Better Markdown Links no longer handles renames itself. Without Advanced Rename and Delete Handler,'
+        + ' Obsidian\'s own link update runs instead, and it does not write the readable link format this plugin generates.'
+    );
   });
 
   it('should report the suggestion as not declined until the user says otherwise', async () => {
