@@ -12,6 +12,8 @@ Open **Settings -> Community plugins -> Better Markdown Links** to configure the
   - prepend `/` to vault-absolute links.
 - `linkStyleMode`
   - which link style to write: `PreserveExisting` keeps each link's existing wikilink-vs-markdown style, `ObsidianSettingsDefault` follows Obsidian's **Use `[[Wikilinks]]`** setting, and `Markdown` always writes markdown links whatever that setting says (see [03 Convert links](<./03 Convert links.md>)).
+- `shouldConvertFrontmatterWikilinksToMarkdown`
+  - convert a wikilink in a note's properties to a markdown link too. Off by default, because Obsidian treats a property as a link only when it is a wikilink; turn it on only where another plugin makes markdown links work there (see [03 Convert links](<./03 Convert links.md#wikilinks-in-properties>)).
 - `linkPathStyleMode`
   - which link path style to write: `ObsidianSettingsDefault` follows Obsidian's **New link format** setting, while `RelativePathToTheSource`, `ShortestPathWhenPossible` and `AbsolutePathInVault` each override it. Outside the default, the two settings above are applied as written rather than copied from the link being replaced (see [03 Convert links](<./03 Convert links.md>)).
 - `shouldNormalizeFileLinks`

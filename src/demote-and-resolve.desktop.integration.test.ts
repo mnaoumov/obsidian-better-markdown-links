@@ -154,6 +154,7 @@ interface ScenarioSettings {
   readonly linkPathStyleMode?: LinkPathStyleMode;
   readonly linkStyleMode?: LinkStyleMode;
   readonly shouldAppendFileNameWhenDemotingEmbeds?: boolean;
+  readonly shouldConvertFrontmatterWikilinksToMarkdown?: boolean;
   readonly shouldCreateMissingNotes?: boolean;
   readonly shouldResolveLinksViaAliases?: boolean;
   readonly shouldUseLeadingDotForRelativePaths?: boolean;
@@ -209,6 +210,8 @@ const EMBED_TARGET_PATH = 'Embed target.md';
 const NESTED_TARGET_BASENAME = 'Deep target';
 const NESTED_TARGET_PATH = `Sub/${NESTED_TARGET_BASENAME}.md`;
 const OTHER_TARGET_PATH = 'Other target.md';
+// A property wikilink, the shape a Bases item carries, beside a body link that proves the run converted.
+const FRONTMATTER_WIKILINK_CONTENT = '---\nbase: "[[Embed target]]"\n---\n\n[[Embed target]]';
 
 // Two embeds, far enough apart that a selection can hold one and miss the other entirely.
 const FIRST_EMBED = `![First](<${EMBED_TARGET_PATH}>)`;
@@ -575,6 +578,53 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
       expect(result.content).toContain(`](<${EMBED_TARGET_PATH}>)`);
       expect(result.content).not.toContain('[[');
     });
+
+    // Obsidian reads a link in a property only when it is a wikilink, so a markdown link written there is a
+    // plain string: a Bases item whose `base` property was converted drops out of its table. The body link
+    // beside it is the proof that the run did convert.
+    it('should leave a frontmatter wikilink alone when forcing markdown', async () => {
+      const result = await runScenario({
+        commandId: `${PLUGIN_ID}:convert-links-to-markdown-in-current-file`,
+        companions: { [EMBED_TARGET_PATH]: 'body\n' },
+        content: FRONTMATTER_WIKILINK_CONTENT,
+        settings: {},
+        settledMarker: '](',
+        sourceKey: 'frontmatter-wikilink-kept'
+      });
+
+      expect(result.content).toContain('base: "[[Embed target]]"');
+      expect(result.content).toContain(`](<${EMBED_TARGET_PATH}>)`);
+    });
+
+    // The automatic triggers rewrite every save, so a frontmatter wikilink converted there would be converted
+    // again on every edit of the note.
+    it('should leave a frontmatter wikilink alone on the automatic save path in the Markdown link style', async () => {
+      const result = await runScenario({
+        commandId: SAVE_COMMAND_ID,
+        companions: { [EMBED_TARGET_PATH]: 'body\n' },
+        content: FRONTMATTER_WIKILINK_CONTENT,
+        settings: { linkConversionMode: LinkConversionMode.OnAutoSave, linkStyleMode: LinkStyleMode.Markdown },
+        settledMarker: '](',
+        sourceKey: 'frontmatter-wikilink-kept-on-save'
+      });
+
+      expect(result.content).toContain('base: "[[Embed target]]"');
+      expect(result.content).toContain(`](<${EMBED_TARGET_PATH}>)`);
+    });
+
+    it('should convert a frontmatter wikilink when the setting asks for it', async () => {
+      const result = await runScenario({
+        commandId: `${PLUGIN_ID}:convert-links-to-markdown-in-current-file`,
+        companions: { [EMBED_TARGET_PATH]: 'body\n' },
+        content: FRONTMATTER_WIKILINK_CONTENT,
+        settings: { shouldConvertFrontmatterWikilinksToMarkdown: true },
+        settledAbsentMarker: '[[',
+        sourceKey: 'frontmatter-wikilink-converted'
+      });
+
+      expect(result.content).not.toContain('[[');
+      expect(result.content).toContain(`[Embed target](<${EMBED_TARGET_PATH}>)`);
+    });
   });
 
   // The capability inherited from `Consistent Attachments and Links`' `Convert all link paths to relative`.
@@ -810,6 +860,7 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
         // dot it writes.
         pluginSettings.shouldUseLeadingDotForRelativePaths = settings.shouldUseLeadingDotForRelativePaths ?? true;
         pluginSettings.shouldAppendFileNameWhenDemotingEmbeds = settings.shouldAppendFileNameWhenDemotingEmbeds ?? false;
+        pluginSettings.shouldConvertFrontmatterWikilinksToMarkdown = settings.shouldConvertFrontmatterWikilinksToMarkdown ?? false;
         pluginSettings.shouldCreateMissingNotes = settings.shouldCreateMissingNotes ?? false;
         pluginSettings.shouldResolveLinksViaAliases = settings.shouldResolveLinksViaAliases ?? false;
       });

@@ -1,9 +1,6 @@
 import type { AbortSignalComponent } from '@mnaoumov/obsidian-lib/components/abort-signal-component';
 import type { PluginNoticeComponent } from '@mnaoumov/obsidian-lib/components/plugin-notice-component';
-import type {
-  UpdateFileUrlLinksInFileParams,
-  UpdateLinksInFileParams
-} from '@mnaoumov/obsidian-lib/link';
+import type { UpdateFileUrlLinksInFileParams } from '@mnaoumov/obsidian-lib/link';
 import type { OffsetRange } from '@mnaoumov/obsidian-lib/reference';
 import type { ResourceLockComponent } from '@mnaoumov/obsidian-lib/resource-lock';
 import type {
@@ -16,8 +13,7 @@ import { getMarkdownFiles } from '@mnaoumov/obsidian-lib/file-system';
 import {
   LinkPathStyle,
   LinkStyle,
-  updateFileUrlLinksInFile,
-  updateLinksInFile
+  updateFileUrlLinksInFile
 } from '@mnaoumov/obsidian-lib/link';
 import { loop } from '@mnaoumov/obsidian-lib/loop';
 import { confirm } from '@mnaoumov/obsidian-lib/modals/confirm';
@@ -25,9 +21,11 @@ import { readSafe } from '@mnaoumov/obsidian-lib/vault';
 import { abortSignalAny } from '@mnaoumov/typescript-lib/abort-controller';
 import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-utils';
 
+import type { UpdateLinksInFileKeepingFrontmatterWikilinksParams } from './frontmatter-wikilink-style.ts';
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 import type { ResolveUnresolvedLinksInFileParams } from './unresolved-link-resolver.ts';
 
+import { updateLinksInFileKeepingFrontmatterWikilinks } from './frontmatter-wikilink-style.ts';
 import { buildProgressBarTitle } from './progress-bar-title.ts';
 import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
 
@@ -187,7 +185,7 @@ export class LinkConverter {
       await carryOffsetRange();
     }
 
-    await updateLinksInFile(normalizeOptionalProperties<UpdateLinksInFileParams>({
+    await updateLinksInFileKeepingFrontmatterWikilinks(normalizeOptionalProperties<UpdateLinksInFileKeepingFrontmatterWikilinksParams>({
       abortSignal,
       app: this.app,
       linkStyle: params.shouldForceMarkdownLinkStyle ? LinkStyle.Markdown : settings.getLinkStyle(),
@@ -195,6 +193,7 @@ export class LinkConverter {
       offsetRange,
       pluginNoticeComponent: this.pluginNoticeComponent,
       resourceLockComponent: this.resourceLockComponent,
+      shouldConvertFrontmatterWikilinksToMarkdown: settings.shouldConvertFrontmatterWikilinksToMarkdown,
       ...settings.buildLinkPathStyleParams(
         params.shouldForceRelativeLinkPathStyle ? LinkPathStyle.RelativePathToTheSource : settings.getLinkPathStyle()
       )

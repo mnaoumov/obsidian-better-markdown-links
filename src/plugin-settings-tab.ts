@@ -216,6 +216,25 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
       }),
       this.settingEx({
         desc: createFragment((f) => {
+          f.appendText('Whether a wikilink in a note\'s properties, such as ');
+          appendCodeBlock(f, 'base: "[[table.base]]"');
+          f.appendText(', is converted to a markdown link like the links in the note\'s body.');
+          f.createEl('br');
+          f.appendText('Obsidian treats a property value as a link only when it is a wikilink, so a markdown link there is plain text: the property stops linking, and a Bases item whose property was converted drops out of its table.');
+          f.createEl('br');
+          f.appendText('Enable it only if another plugin makes markdown links work in properties, such as ');
+          appendCodeBlock(f, 'Frontmatter Markdown Links');
+          f.appendText('. Either way, a property wikilink\'s path style is still converted.');
+        }),
+        name: 'Should convert frontmatter wikilinks to markdown',
+        render: (setting) => {
+          setting.addToggle((toggle) => {
+            this.bind({ propertyName: 'shouldConvertFrontmatterWikilinksToMarkdown', valueComponent: toggle });
+          });
+        }
+      }),
+      this.settingEx({
+        desc: createFragment((f) => {
           f.appendText('Which link path style to write.');
           f.createEl('br');
           appendCodeBlock(f, 'Obsidian settings default');
