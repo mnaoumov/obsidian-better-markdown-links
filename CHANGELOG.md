@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## 6.1.0
+
+- docs(api-contract): refresh the copied Advanced Rename and Delete Handler debug-switch line
+- docs(api-contract): merge saying the payload check follows obsidian-lib's validation debug switch
+- refactor(link-converter): merge deciding the frontmatter link style through obsidian-lib's linkStyleProvider
+- refactor(api-contract): build the options guard with objectTypeGuard's exactOptionalKeys
+- refactor(api): merge refreshing the copied Advanced Rename and Delete Handler contract
+- docs(demo-vault): merge the fresh-link buttons for the angle-bracket and relative-links notes
+- chore(github): merge linking Discussions from the new-issue page
+- refactor(api-contract): merge building the contract guards from typescript-lib and obsidian-lib
+- fix(links): merge keeping wikilinks in properties when converting to markdown
+- ci: merge attesting release assets through the toolkit's reusable workflow
+- feat(ui): merge rendering plugin names in the suggestion reason and progress bar titles as code
+- refactor(deps): merge moving off obsidian-dev-utils onto the @mnaoumov packages
+- refactor(api): merge building the API contract on @mnaoumov/typescript-lib/api-contract
+- feat(api): merge taking Advanced Rename and Delete Handler's own migration contract
+- feat(api): merge the copyable api-contract.ts with full schemas
+- docs: merge marking plugin names as code in markdown and comments
+- test: merge the capture suites' switch to obsidian-typings' declarations
+- docs(changelog): name the API method that replaces generateMarkdownLink.extended
+
 ## 6.0.0
 
 - feat!: merge the plugin API that replaces generateMarkdownLink.extended
