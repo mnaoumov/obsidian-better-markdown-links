@@ -20,6 +20,7 @@ describe('PluginSettings', () => {
       expect(settings.linkPathStyleMode).toBe(LinkPathStyleMode.ObsidianSettingsDefault);
       expect(settings.linkStyleMode).toBe(LinkStyleMode.ObsidianSettingsDefault);
       expect(settings.shouldAllowEmptyEmbedAlias).toBe(true);
+      expect(settings.shouldConvertFrontmatterWikilinksToMarkdown).toBe(false);
       expect(settings.shouldIncludeAttachmentExtensionToEmbedAlias).toBe(false);
       expect(settings.shouldNormalizeFileLinks).toBe(true);
       expect(settings.shouldUseAngleBrackets).toBe(true);

@@ -1,6 +1,9 @@
 import type { AbortSignalComponent } from '@mnaoumov/obsidian-lib/components/abort-signal-component';
 import type { PluginNoticeComponent } from '@mnaoumov/obsidian-lib/components/plugin-notice-component';
-import type { EditLinksParams } from '@mnaoumov/obsidian-lib/link';
+import type {
+  EditLinksParams,
+  GenerateMarkdownLinkParams
+} from '@mnaoumov/obsidian-lib/link';
 import type { OffsetRange } from '@mnaoumov/obsidian-lib/reference';
 import type { ResourceLockComponent } from '@mnaoumov/obsidian-lib/resource-lock';
 import type {
@@ -23,6 +26,7 @@ import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-uti
 
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 
+import { getLinkStyleForReference } from './frontmatter-wikilink-style.ts';
 import { buildProgressBarTitle } from './progress-bar-title.ts';
 
 interface EmbedDemoterConstructorParams {
@@ -70,6 +74,8 @@ interface EmbedDemoterDemoteEmbedsInFolderParams {
  * The one exception is the force-Markdown link style, which `BetterMarkdownLinksComponent` registers as a
  * default param for every generated link and which beats that inference: in that mode a wiki embed demotes
  * to a markdown link. That is the mode's point — a vault that has asked for markdown links everywhere.
+ * Everywhere but the frontmatter: a wiki embed there stays a wikilink, per
+ * {@link getLinkStyleForReference}.
  */
 export class EmbedDemoter {
   private readonly abortSignalComponent: AbortSignalComponent;
@@ -124,14 +130,20 @@ export class EmbedDemoter {
           return;
         }
 
-        const linkMarkdown = generateMarkdownLink({
+        const linkMarkdown = generateMarkdownLink(normalizeOptionalProperties<GenerateMarkdownLinkParams>({
           alias: link.displayText ?? '',
           app: this.app,
           isEmbed: false,
+          // `undefined` for every body reference, which leaves the style to the inference described above.
+          linkStyle: getLinkStyleForReference({
+            linkStyle: undefined,
+            reference: link,
+            shouldConvertFrontmatterWikilinksToMarkdown: settings.shouldConvertFrontmatterWikilinksToMarkdown
+          }),
           originalLink: link.original,
           sourcePathOrFile: file,
           targetPathOrFile: linkFile
-        });
+        }));
 
         return settings.shouldAppendFileNameWhenDemotingEmbeds ? `${linkMarkdown}\n  - ${linkFile.name}` : linkMarkdown;
       },

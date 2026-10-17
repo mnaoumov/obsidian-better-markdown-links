@@ -1,6 +1,9 @@
 import type { AbortSignalComponent } from '@mnaoumov/obsidian-lib/components/abort-signal-component';
 import type { ConsoleDebugComponent } from '@mnaoumov/obsidian-lib/components/console-debug-component';
-import type { GenerateMarkdownLinkParams } from '@mnaoumov/obsidian-lib/link';
+import type {
+  ConvertLinkParams,
+  GenerateMarkdownLinkParams
+} from '@mnaoumov/obsidian-lib/link';
 import type { CachedMetadataEx } from '@mnaoumov/obsidian-lib/metadata-cache';
 import type { App } from 'obsidian';
 
@@ -26,6 +29,7 @@ import {
 import type { LinkConverter } from './link-converter.ts';
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 
+import { getLinkStyleForReference } from './frontmatter-wikilink-style.ts';
 import { GenerateMarkdownLinkPatchComponent } from './generate-markdown-link-extended-impl.ts';
 import { EditorSaveFileCommandPatchComponent } from './patches/editor-save-file-command-patch-component.ts';
 import { TextFileViewSavePatchComponent } from './patches/text-file-view-save-patch-component.ts';
@@ -201,13 +205,17 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
       // leading dot on being exactly that case — and the automatic modes would then never fire.
       const linkPathStyleParams = settings.buildLinkPathStyleParams(settings.getLinkPathStyle());
       const needsInternalConversion = links.some((link) =>
-        link.original !== convertLink({
+        link.original !== convertLink(normalizeOptionalProperties<ConvertLinkParams>({
           app: this.app,
           link,
-          linkStyle: settings.getLinkStyle(),
+          linkStyle: getLinkStyleForReference({
+            linkStyle: settings.getLinkStyle(),
+            reference: link,
+            shouldConvertFrontmatterWikilinksToMarkdown: settings.shouldConvertFrontmatterWikilinksToMarkdown
+          }),
           newSourcePathOrFile: file,
           ...linkPathStyleParams
-        })
+        }))
       );
       const needsFileUrlNormalization = shouldNormalizeFileLinks && this.hasFileUrlLink(cache);
       if (needsInternalConversion || needsFileUrlNormalization) {

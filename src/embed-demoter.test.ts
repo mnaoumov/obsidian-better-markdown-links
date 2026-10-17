@@ -85,7 +85,8 @@ function createDemoter(options: CreateDemoterOptions = {}): CreateDemoterResult 
   const isPathIgnored = vi.fn<(path: string) => boolean>().mockReturnValue(false);
   const settings = strictProxy<PluginSettings>({
     isPathIgnored,
-    shouldAppendFileNameWhenDemotingEmbeds: options.shouldAppendFileNameWhenDemotingEmbeds ?? false
+    shouldAppendFileNameWhenDemotingEmbeds: options.shouldAppendFileNameWhenDemotingEmbeds ?? false,
+    shouldConvertFrontmatterWikilinksToMarkdown: false
   });
   const pluginSettingsComponent = strictProxy<PluginSettingsComponent>({ settings });
   const pluginNoticeComponent = strictProxy<PluginNoticeComponent>({});

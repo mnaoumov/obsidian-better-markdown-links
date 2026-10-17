@@ -43,6 +43,7 @@ const EXPECTED_BOUND_PROPERTIES = [
   'shouldAllowEmptyEmbedAlias',
   'shouldIncludeAttachmentExtensionToEmbedAlias',
   'linkStyleMode',
+  'shouldConvertFrontmatterWikilinksToMarkdown',
   'linkPathStyleMode',
   'shouldAppendFileNameWhenDemotingEmbeds',
   'shouldResolveLinksViaAliases',

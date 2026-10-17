@@ -182,6 +182,7 @@ function createContext(files: ConfiguredFiles = {}, options: CreateContextOption
     getLinkStyle: vi.fn().mockReturnValue('ObsidianSettingsDefault'),
     isPathIgnored,
     shouldAllowEmptyEmbedAlias: false,
+    shouldConvertFrontmatterWikilinksToMarkdown: false,
     shouldConvertLinksOnModify,
     shouldConvertLinksOnNavigation,
     shouldConvertLinksOnSave,

@@ -140,6 +140,28 @@ await require('/demoSetup.ts').changeSettings(app, { linkStyleMode: 'ObsidianSet
 
 Manual equivalent: pick from the **Link style** dropdown in **Settings -> Community plugins -> Better Markdown Links**.
 
+### Wikilinks in properties
+
+Obsidian treats a property value as a link only when it is a wikilink: `related: "[[Simple note]]"` links, `related: "[Simple note](<Simple note.md>)"` is plain text. A Bases item is the sharpest case - its `base` property is what puts it in the table, so converting it drops the item out.
+
+So neither the Markdown style nor the convert-to-Markdown commands touch a wikilink in a note's properties: its path style is still converted, but it stays a wikilink. The wikilinks note above has a `related` property to show it. The **Should convert frontmatter wikilinks to markdown** setting (`shouldConvertFrontmatterWikilinksToMarkdown`) lifts that, for a vault where another plugin, such as [`Frontmatter Markdown Links`](https://github.com/mnaoumov/obsidian-frontmatter-markdown-links), makes markdown links work in properties.
+
+```code-button
+---
+caption: Convert property wikilinks too
+---
+await require('/demoSetup.ts').changeSettings(app, { shouldConvertFrontmatterWikilinksToMarkdown: true });
+```
+
+```code-button
+---
+caption: Leave property wikilinks alone (the default)
+---
+await require('/demoSetup.ts').changeSettings(app, { shouldConvertFrontmatterWikilinksToMarkdown: false });
+```
+
+Manual equivalent: toggle **Should convert frontmatter wikilinks to markdown** in **Settings -> Community plugins -> Better Markdown Links**.
+
 ## Forcing a link path style
 
 The section above decides a link's *style* - wikilink or Markdown. This one decides its *path*: the same note can be named three different ways, and Obsidian's own **New link format** setting picks which.
