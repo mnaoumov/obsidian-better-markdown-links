@@ -47,11 +47,12 @@ vi.mock('@mnaoumov/obsidian-lib/link', () => ({
     PreserveExisting: 'PreserveExisting',
     Wikilink: 'Wikilink'
   },
-  updateFileUrlLinksInFile: vi.fn()
+  updateFileUrlLinksInFile: vi.fn(),
+  updateLinksInFile: vi.fn()
 }));
 
 vi.mock('./frontmatter-wikilink-style.ts', () => ({
-  updateLinksInFileKeepingFrontmatterWikilinks: vi.fn()
+  getLinkStyleForReference: vi.fn()
 }));
 
 vi.mock('@mnaoumov/obsidian-lib/loop', () => ({
@@ -73,7 +74,10 @@ vi.mock('./unresolved-link-resolver.ts', () => ({
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { getMarkdownFiles } from '@mnaoumov/obsidian-lib/file-system';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { updateFileUrlLinksInFile } from '@mnaoumov/obsidian-lib/link';
+import {
+  updateFileUrlLinksInFile,
+  updateLinksInFile
+} from '@mnaoumov/obsidian-lib/link';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { loop } from '@mnaoumov/obsidian-lib/loop';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
@@ -84,7 +88,7 @@ import { readSafe } from '@mnaoumov/obsidian-lib/vault';
 import { abortSignalAny } from '@mnaoumov/typescript-lib/abort-controller';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { updateLinksInFileKeepingFrontmatterWikilinks } from './frontmatter-wikilink-style.ts';
+import { getLinkStyleForReference } from './frontmatter-wikilink-style.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { LinkConverter } from './link-converter.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
@@ -183,7 +187,7 @@ function progressBarTitleText(title: DocumentFragment | string | undefined): str
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(abortSignalAny).mockImplementation((...signals) => signals[0] ?? new AbortController().signal);
-  vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mockResolvedValue(undefined);
+  vi.mocked(updateLinksInFile).mockResolvedValue(undefined);
   vi.mocked(updateFileUrlLinksInFile).mockResolvedValue(undefined);
   vi.mocked(loop).mockResolvedValue(undefined);
   vi.mocked(getMarkdownFiles).mockReturnValue([]);
@@ -199,7 +203,7 @@ describe('LinkConverter', () => {
       vi.mocked(abortSignalAny).mockReturnValue(controller.signal);
 
       await expect(context.converter.convertLinksInFile({ file: createFile('note.md') })).rejects.toThrow();
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks)).not.toHaveBeenCalled();
+      expect(vi.mocked(updateLinksInFile)).not.toHaveBeenCalled();
     });
 
     it('should update links for a non-ignored file', async () => {
@@ -210,14 +214,35 @@ describe('LinkConverter', () => {
 
       expect(context.getLinkStyle).toHaveBeenCalledOnce();
       expect(context.getLinkPathStyle).toHaveBeenCalledOnce();
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks)).toHaveBeenCalledExactlyOnceWith({
+      expect(vi.mocked(updateLinksInFile)).toHaveBeenCalledExactlyOnceWith({
         abortSignal: context.abortSignal,
         app: context.app,
         linkPathStyle: LINK_PATH_STYLE,
         linkStyle: LINK_STYLE,
+        linkStyleProvider: expect.any(Function) as unknown,
         newSourcePathOrFile: file,
         pluginNoticeComponent: context.pluginNoticeComponent,
-        resourceLockComponent: context.resourceLockComponent,
+        resourceLockComponent: context.resourceLockComponent
+      });
+    });
+
+    // The per-reference decision is `getLinkStyleForReference`'s, pinned in its own suite. What matters here
+    // is that the provider hands it the run's style and the setting, and returns what it answers.
+    it('should decide the style per reference through getLinkStyleForReference', async () => {
+      const context = createConverter();
+      vi.mocked(getLinkStyleForReference).mockReturnValue(castTo<LinkStyle>('Wikilink'));
+      const reference = { link: 'table.base', original: '[[table.base]]' };
+
+      await context.converter.convertLinksInFile({
+        file: createFile('note.md'),
+        shouldForceMarkdownLinkStyle: true
+      });
+
+      const linkStyleProvider = vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkStyleProvider;
+      expect(linkStyleProvider?.(reference)).toBe('Wikilink');
+      expect(vi.mocked(getLinkStyleForReference)).toHaveBeenCalledExactlyOnceWith({
+        linkStyle: 'Markdown',
+        reference,
         shouldConvertFrontmatterWikilinksToMarkdown: false
       });
     });
@@ -231,7 +256,7 @@ describe('LinkConverter', () => {
       });
 
       expect(context.getLinkStyle).not.toHaveBeenCalled();
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.calls[0]?.[0].linkStyle).toBe('Markdown');
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkStyle).toBe('Markdown');
     });
 
     it('should force the relative path style without consulting the setting when asked to', async () => {
@@ -244,7 +269,7 @@ describe('LinkConverter', () => {
 
       expect(context.getLinkPathStyle).not.toHaveBeenCalled();
       expect(context.buildLinkPathStyleParams).toHaveBeenCalledExactlyOnceWith('RelativePathToTheSource');
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.calls[0]?.[0].linkPathStyle).toBe('RelativePathToTheSource');
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkPathStyle).toBe('RelativePathToTheSource');
     });
 
     // The two forced surfaces are independent: forcing the path style must not also force the link style.
@@ -257,7 +282,7 @@ describe('LinkConverter', () => {
       });
 
       expect(context.getLinkStyle).toHaveBeenCalledOnce();
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.calls[0]?.[0].linkStyle).toBe(LINK_STYLE);
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkStyle).toBe(LINK_STYLE);
     });
 
     // The decorations come from `buildLinkPathStyleParams`, so whatever it returns has to reach the call
@@ -272,7 +297,7 @@ describe('LinkConverter', () => {
 
       await context.converter.convertLinksInFile({ file: createFile('note.md') });
 
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.calls[0]?.[0]).toMatchObject({
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0]).toMatchObject({
         linkPathStyle: 'RelativePathToTheSource',
         shouldUseLeadingDotForRelativePaths: true,
         shouldUseLeadingSlashForAbsolutePaths: false
@@ -300,7 +325,7 @@ describe('LinkConverter', () => {
 
       await context.converter.convertLinksInFile({ file: createFile('note.md') });
 
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks)).toHaveBeenCalledOnce();
+      expect(vi.mocked(updateLinksInFile)).toHaveBeenCalledOnce();
       expect(vi.mocked(updateFileUrlLinksInFile)).not.toHaveBeenCalled();
     });
 
@@ -311,7 +336,7 @@ describe('LinkConverter', () => {
       await context.converter.convertLinksInFile({ file: createFile('ignored.md') });
 
       expect(vi.mocked(confirm)).not.toHaveBeenCalled();
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks)).not.toHaveBeenCalled();
+      expect(vi.mocked(updateLinksInFile)).not.toHaveBeenCalled();
     });
 
     it('should skip an ignored file when prompting and the user declines', async () => {
@@ -325,7 +350,7 @@ describe('LinkConverter', () => {
       });
 
       expect(vi.mocked(confirm)).toHaveBeenCalledOnce();
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks)).not.toHaveBeenCalled();
+      expect(vi.mocked(updateLinksInFile)).not.toHaveBeenCalled();
     });
 
     it('should convert an ignored file when prompting and the user confirms', async () => {
@@ -339,7 +364,7 @@ describe('LinkConverter', () => {
         shouldPromptForExcludedFile: true
       });
 
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks)).toHaveBeenCalledOnce();
+      expect(vi.mocked(updateLinksInFile)).toHaveBeenCalledOnce();
     });
 
     describe('selection range', () => {
@@ -352,7 +377,7 @@ describe('LinkConverter', () => {
 
         expect(vi.mocked(readSafe)).not.toHaveBeenCalled();
         expect(vi.mocked(resolveUnresolvedLinksInFile).mock.calls[0]?.[0].offsetRange).toBeUndefined();
-        expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.calls[0]?.[0].offsetRange).toBeUndefined();
+        expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].offsetRange).toBeUndefined();
         expect(vi.mocked(updateFileUrlLinksInFile).mock.calls[0]?.[0].offsetRange).toBeUndefined();
       });
 
@@ -367,7 +392,7 @@ describe('LinkConverter', () => {
         });
 
         expect(vi.mocked(resolveUnresolvedLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
-        expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
+        expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
         expect(vi.mocked(updateFileUrlLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
       });
 
@@ -390,7 +415,7 @@ describe('LinkConverter', () => {
         });
 
         expect(vi.mocked(resolveUnresolvedLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
-        expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.calls[0]?.[0].offsetRange).toEqual({
+        expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual({
           endOffset: OFFSET_RANGE.endOffset + RESOLVE_GROWTH,
           startOffset: OFFSET_RANGE.startOffset
         });
@@ -408,8 +433,8 @@ describe('LinkConverter', () => {
 
         expect(vi.mocked(readSafe)).toHaveBeenCalledOnce();
         expect(vi.mocked(readSafe).mock.invocationCallOrder[0])
-          .toBeLessThan(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.invocationCallOrder[0] ?? 0);
-        expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
+          .toBeLessThan(vi.mocked(updateLinksInFile).mock.invocationCallOrder[0] ?? 0);
+        expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].offsetRange).toEqual(OFFSET_RANGE);
       });
 
       it('should measure a note that vanished between passes as empty', async () => {
@@ -463,7 +488,7 @@ describe('LinkConverter', () => {
           shouldResolveLinksViaAliases: true
         });
         expect(vi.mocked(resolveUnresolvedLinksInFile).mock.invocationCallOrder[0])
-          .toBeLessThan(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.invocationCallOrder[0] ?? 0);
+          .toBeLessThan(vi.mocked(updateLinksInFile).mock.invocationCallOrder[0] ?? 0);
       });
 
       it('should resolve unresolved links when only the create setting is enabled', async () => {
@@ -557,7 +582,7 @@ describe('LinkConverter', () => {
       expect(progressBarTitleText(loopParams?.progressBarTitle)).toBe('Converting links to Markdown in entire vault...');
       expect(loopParams?.buildNoticeMessage({ item: file, iterationString: '1/1' }))
         .toBe('Converting links to Markdown in note 1/1 - note.md');
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.calls[0]?.[0].linkStyle).toBe('Markdown');
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkStyle).toBe('Markdown');
     });
 
     it('should say what it is doing and force the path style on every file when converting to relative', async () => {
@@ -578,7 +603,7 @@ describe('LinkConverter', () => {
       expect(progressBarTitleText(loopParams?.progressBarTitle)).toBe('Converting link paths to relative in entire vault...');
       expect(loopParams?.buildNoticeMessage({ item: file, iterationString: '1/1' }))
         .toBe('Converting link paths to relative in note 1/1 - note.md');
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.calls[0]?.[0].linkPathStyle).toBe('RelativePathToTheSource');
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkPathStyle).toBe('RelativePathToTheSource');
     });
 
     it('should build a notice message and convert each looped file', async () => {
@@ -592,8 +617,8 @@ describe('LinkConverter', () => {
 
       await context.converter.convertLinksInFolder({ folder });
 
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks)).toHaveBeenCalledOnce();
-      expect(vi.mocked(updateLinksInFileKeepingFrontmatterWikilinks).mock.calls[0]?.[0].newSourcePathOrFile).toBe(file);
+      expect(vi.mocked(updateLinksInFile)).toHaveBeenCalledOnce();
+      expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].newSourcePathOrFile).toBe(file);
     });
   });
 });

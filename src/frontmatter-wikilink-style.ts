@@ -1,24 +1,11 @@
-import type {
-  ConvertLinkParams,
-  EditLinksParams,
-  UpdateLinksInFileParams
-} from '@mnaoumov/obsidian-lib/link';
 import type { Reference } from 'obsidian';
 
-import { isCanvasFile } from '@mnaoumov/obsidian-lib/file-system';
 import {
-  convertLink,
-  editLinks,
-  hasEmbedSyntax,
   hasWikilinkSyntax,
   LinkStyle
 } from '@mnaoumov/obsidian-lib/link';
 import { isCanvasReference } from '@mnaoumov/obsidian-lib/reference';
-import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-utils';
-import {
-  InternalPluginName,
-  isFrontmatterLinkCache
-} from '@obsidian-typings/obsidian-public-latest/implementations';
+import { isFrontmatterLinkCache } from '@obsidian-typings/obsidian-public-latest/implementations';
 
 /**
  * Params for {@link getLinkStyleForReference}.
@@ -34,16 +21,6 @@ export interface GetLinkStyleForReferenceParams {
    */
   readonly reference: Reference;
 
-  /**
-   * The `shouldConvertFrontmatterWikilinksToMarkdown` setting.
-   */
-  readonly shouldConvertFrontmatterWikilinksToMarkdown: boolean;
-}
-
-/**
- * Params for {@link updateLinksInFileKeepingFrontmatterWikilinks}.
- */
-export interface UpdateLinksInFileKeepingFrontmatterWikilinksParams extends UpdateLinksInFileParams {
   /**
    * The `shouldConvertFrontmatterWikilinksToMarkdown` setting.
    */
@@ -72,63 +49,4 @@ export function getLinkStyleForReference(params: GetLinkStyleForReferenceParams)
   }
 
   return hasWikilinkSyntax(reference.original) ? LinkStyle.Wikilink : linkStyle;
-}
-
-/**
- * `@mnaoumov/obsidian-lib`' `updateLinksInFile`, with the style decided per reference by
- * {@link getLinkStyleForReference} instead of once for the whole file.
- *
- * It is that function's own body over `editLinks` and `convertLink`, canvas guard and embed-only filter
- * included, because the library offers no per-reference style.
- *
- * @param params - See {@link UpdateLinksInFileKeepingFrontmatterWikilinksParams}.
- */
-export async function updateLinksInFileKeepingFrontmatterWikilinks(params: UpdateLinksInFileKeepingFrontmatterWikilinksParams): Promise<void> {
-  const {
-    isEmptyEmbedAliasAllowed,
-    linkPathStyle,
-    linkStyle,
-    newSourcePathOrFile,
-    offsetRange,
-    oldSourcePathOrFile,
-    shouldConvertFrontmatterWikilinksToMarkdown,
-    shouldEscapeAlias,
-    shouldIncludeAttachmentExtensionToEmbedAlias,
-    shouldUpdateEmbedOnlyLinks,
-    shouldUpdateFileNameAlias,
-    shouldUseAngleBrackets,
-    shouldUseLeadingDotForRelativePaths,
-    shouldUseLeadingSlashForAbsolutePaths,
-    ...options
-  } = params;
-  const { app } = options;
-
-  if (isCanvasFile(newSourcePathOrFile) && !app.internalPlugins.getEnabledPluginById(InternalPluginName.Canvas)) {
-    return;
-  }
-
-  await editLinks(normalizeOptionalProperties<EditLinksParams>({
-    ...options,
-    linkConverter: (link) =>
-      shouldUpdateEmbedOnlyLinks !== undefined && shouldUpdateEmbedOnlyLinks !== hasEmbedSyntax(link.original)
-        ? undefined
-        : convertLink(normalizeOptionalProperties<ConvertLinkParams>({
-          app,
-          isEmptyEmbedAliasAllowed,
-          link,
-          linkPathStyle,
-          linkStyle: getLinkStyleForReference({ linkStyle, reference: link, shouldConvertFrontmatterWikilinksToMarkdown }),
-          newSourcePathOrFile,
-          oldSourcePathOrFile,
-          shouldEscapeAlias,
-          shouldIncludeAttachmentExtensionToEmbedAlias,
-          shouldUpdateFileNameAlias,
-          shouldUseAngleBrackets,
-          shouldUseLeadingDotForRelativePaths,
-          shouldUseLeadingSlashForAbsolutePaths
-        })),
-    // Named beside the spread, as the library does, so a later refactor cannot drop it silently.
-    offsetRange,
-    pathOrFile: newSourcePathOrFile
-  }));
 }
