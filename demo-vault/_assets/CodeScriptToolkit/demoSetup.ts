@@ -291,3 +291,150 @@ export async function openPathStyleNote(app: App): Promise<void> {
 export function convertLinkPathsToRelativeInCurrentFile(app: App): void {
   app.commands.executeCommandById(`${PLUGIN_ID}:convert-link-paths-to-relative-in-current-file`);
 }
+
+const ANGLE_BRACKET_FOLDER_PATH = 'Materials/01 Angle bracket links';
+const ANGLE_BRACKET_NOTE_PATH = `${ANGLE_BRACKET_FOLDER_PATH}/Fresh links.md`;
+const RELATIVE_FOLDER_PATH = 'Materials/02 Relative links';
+const RELATIVE_NOTE_PATH = `${RELATIVE_FOLDER_PATH}/Fresh links.md`;
+const NOTE_WITH_SPACES_PATH = 'Materials/01 Angle bracket links/A folder with spaces/Note with spaces.md';
+const SIMPLE_NOTE_PATH = 'Materials/02 Relative links/Targets/Simple note.md';
+const DEEP_NOTE_PATH = 'Materials/02 Relative links/Targets/Nested folder/Deep note.md';
+
+interface GeneratedLink {
+  readonly destination: string;
+  readonly isAngleBracketed: boolean;
+  readonly markdown: string;
+}
+
+/**
+ * Writes a note of links to the angle-bracket demo's targets, each generated the way Obsidian generates a
+ * link you type, and opens it. Fails loudly when a link is not in the form the setting promises, or does
+ * not lead back to its target.
+ *
+ * The demo vault follows Obsidian's own `Use [[Wikilinks]]` setting, which is on by default, and a fresh
+ * wikilink has no angle brackets to show. So this switches **Link style** to Markdown first.
+ *
+ * Manual equivalent: set **Link style** to **Markdown** and toggle **Should use angle brackets** in
+ * **Settings -> Community plugins -> Better Markdown Links**, then type a link with `[[` in any note.
+ */
+export async function writeAngleBracketLinks(app: App, shouldUseAngleBrackets: boolean): Promise<void> {
+  await configureCommunityPlugin({ app, pluginId: PLUGIN_ID, settings: { linkStyleMode: 'Markdown', shouldUseAngleBrackets } });
+  const links = await writeGeneratedLinksNote(app, ANGLE_BRACKET_FOLDER_PATH, ANGLE_BRACKET_NOTE_PATH, '# Fresh links', [
+    NOTE_WITH_SPACES_PATH,
+    SIMPLE_NOTE_PATH
+  ]);
+
+  for (const link of links) {
+    if (shouldUseAngleBrackets && (!link.isAngleBracketed || !link.destination.includes(' '))) {
+      throw new Error(`Expected an angle-bracket link with its spaces kept, got ${link.markdown}`);
+    }
+
+    if (!shouldUseAngleBrackets && (link.isAngleBracketed || !link.destination.includes('%20'))) {
+      throw new Error(`Expected a percent-encoded link, got ${link.markdown}`);
+    }
+  }
+
+  new Notice(shouldUseAngleBrackets ? 'Fresh links written with angle brackets.' : 'Fresh links written percent-encoded.');
+}
+
+interface LinkPathStylePatch {
+  linkPathStyleMode: 'AbsolutePathInVault' | 'RelativePathToTheSource';
+  shouldUseLeadingDotForRelativePaths?: boolean;
+  shouldUseLeadingSlashForAbsolutePaths?: boolean;
+}
+
+/**
+ * Writes a note of links to the relative-links demo's targets under a forced link path style, each
+ * generated the way Obsidian generates a link you type, and opens it. Fails loudly when the leading `./`
+ * or `/` is there when its setting says it should not be, or missing when it should, or when a link
+ * does not lead back to its target.
+ *
+ * Switches **Link style** to Markdown as well, for the same reason as
+ * {@link writeAngleBracketLinks}.
+ *
+ * Manual equivalent: set **Link style** to **Markdown**, pick the **Link path style**, and toggle
+ * **Should use leading dot for relative paths** or **Should use leading slash for absolute paths** in
+ * **Settings -> Community plugins -> Better Markdown Links**, then type a link with `[[` in any note.
+ */
+export async function writeLinksWithPathStyle(app: App, patch: LinkPathStylePatch): Promise<void> {
+  await configureCommunityPlugin({ app, pluginId: PLUGIN_ID, settings: { ...patch, linkStyleMode: 'Markdown' } });
+  const links = await writeGeneratedLinksNote(app, RELATIVE_FOLDER_PATH, RELATIVE_NOTE_PATH, '# Fresh links', [
+    DEEP_NOTE_PATH,
+    SIMPLE_NOTE_PATH,
+    NOTE_WITH_SPACES_PATH
+  ]);
+
+  const isRelative = patch.linkPathStyleMode === 'RelativePathToTheSource';
+  const expectedPrefix = isRelative ? './' : '/';
+  const shouldHavePrefix = isRelative ? patch.shouldUseLeadingDotForRelativePaths ?? true : patch.shouldUseLeadingSlashForAbsolutePaths ?? true;
+
+  for (const link of links) {
+    // A relative path that climbs out of the note's folder already says it is relative, so it never takes
+    // the dot: `../x.md`, not `./../x.md`.
+    if (isRelative && link.destination.startsWith('../')) {
+      continue;
+    }
+
+    if (link.destination.startsWith(expectedPrefix) !== shouldHavePrefix) {
+      throw new Error(`Expected ${link.markdown} ${shouldHavePrefix ? 'to start' : 'not to start'} with ${expectedPrefix}`);
+    }
+  }
+
+  new Notice('Fresh links written. Compare their paths with the ones above.');
+}
+
+/**
+ * Writes one note holding a freshly generated link to each target, and opens it. Every link is checked to
+ * lead back to its own target, read the way a Markdown editor reads it: a leading `/` from the vault root,
+ * anything else from the note's own folder, and Obsidian's shortest form by name as a last resort.
+ */
+async function writeGeneratedLinksNote(
+  app: App,
+  folderPath: string,
+  notePath: string,
+  heading: string,
+  targetPaths: readonly string[]
+): Promise<GeneratedLink[]> {
+  await openDemoNote(app, folderPath, notePath, `${heading}\n`);
+
+  const links: GeneratedLink[] = [];
+  for (const targetPath of targetPaths) {
+    const target = app.vault.getFileByPath(targetPath);
+    if (!target) {
+      throw new Error(`The demo target ${targetPath} is missing`);
+    }
+
+    const markdown = app.fileManager.generateMarkdownLink(target, notePath);
+    const match = /\]\((?<destination><[^>]*>|[^)]*)\)$/.exec(markdown);
+    if (!match?.groups) {
+      throw new Error(`Expected a Markdown link, got ${markdown}`);
+    }
+
+    const rawDestination = match.groups['destination'] ?? '';
+    const isAngleBracketed = rawDestination.startsWith('<');
+    const destination = isAngleBracketed ? rawDestination.slice(1, -1) : rawDestination;
+    const decodedPath = decodeURI(destination);
+    const resolvedPath = decodedPath.startsWith('/') ? decodedPath.slice(1) : joinVaultPath(folderPath, decodedPath);
+    if (resolvedPath !== targetPath && app.metadataCache.getFirstLinkpathDest(decodedPath, notePath)?.path !== targetPath) {
+      throw new Error(`${markdown} does not lead back to ${targetPath}`);
+    }
+
+    links.push({ destination, isAngleBracketed, markdown });
+  }
+
+  await openDemoNote(app, folderPath, notePath, [heading, '', ...links.map((link) => `- ${link.markdown}`), ''].join('\n'));
+  return links;
+}
+
+function joinVaultPath(folderPath: string, relativePath: string): string {
+  const parts = folderPath.split('/');
+  for (const part of relativePath.split('/')) {
+    if (part === '..') {
+      parts.pop();
+    } else if (part !== '.') {
+      parts.push(part);
+    }
+  }
+
+  return parts.join('/');
+}

@@ -18,3 +18,39 @@ These links are written exactly as the plugin generates them - relative, dot-pre
 - [Note with spaces](<./Materials/01 Angle bracket links/A folder with spaces/Note with spaces.md>) - a relative, dot-prefixed, angle-bracket link all at once.
 
 Run a convert command from [03 Convert links](<./03 Convert links.md>) over an older note to see existing links rewritten into this form.
+
+To see the plugin write such links itself, each button below forces a **Link path style** and the two leading-character settings, sets **Link style** to **Markdown** (this vault otherwise follows Obsidian's **Use `[[Wikilinks]]`**, which is on by default), and writes a note holding a fresh link to each target above, generated exactly the way Obsidian generates the link you type:
+
+```code-button
+---
+caption: Write relative links with a leading dot
+---
+await require('/demoSetup.ts').writeLinksWithPathStyle(app, { linkPathStyleMode: 'RelativePathToTheSource', shouldUseLeadingDotForRelativePaths: true });
+```
+
+```code-button
+---
+caption: Write relative links without the leading dot
+---
+await require('/demoSetup.ts').writeLinksWithPathStyle(app, { linkPathStyleMode: 'RelativePathToTheSource', shouldUseLeadingDotForRelativePaths: false });
+```
+
+```code-button
+---
+caption: Write vault-absolute links with a leading slash
+---
+await require('/demoSetup.ts').writeLinksWithPathStyle(app, { linkPathStyleMode: 'AbsolutePathInVault', shouldUseLeadingSlashForAbsolutePaths: true });
+```
+
+Without the leading dot, `Targets/Simple note.md` could mean a folder beside this note or one at the vault root - the ambiguity the dot removes.
+
+Manual equivalent: set **Link style** to **Markdown**, pick the **Link path style**, and toggle **Should use leading dot for relative paths** or **Should use leading slash for absolute paths** in **Settings -> Community plugins -> Better Markdown Links**, then type a link with `[[` in any note.
+
+```code-button
+---
+caption: Back to the defaults
+---
+await require('/demoSetup.ts').changeSettings(app, { linkPathStyleMode: 'ObsidianSettingsDefault', linkStyleMode: 'ObsidianSettingsDefault', shouldUseLeadingDotForRelativePaths: true, shouldUseLeadingSlashForAbsolutePaths: true });
+```
+
+Manual equivalent: set **Link style** and **Link path style** back to **Obsidian settings default**, and turn both leading-character settings back on.
