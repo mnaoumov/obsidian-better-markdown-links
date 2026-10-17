@@ -20,10 +20,7 @@
  */
 
 import type { TypedApiContract } from '@mnaoumov/typescript-lib/api-contract';
-import type {
-  PropertyTypeGuards,
-  TypeGuard
-} from '@mnaoumov/typescript-lib/type-guards';
+import type { PropertyTypeGuards } from '@mnaoumov/typescript-lib/type-guards';
 
 import { isPathOrFile } from '@mnaoumov/obsidian-lib/file-system';
 import {
@@ -34,9 +31,9 @@ import {
 } from '@mnaoumov/typescript-lib/api-contract';
 import {
   isBoolean,
-  isObject,
   isString,
-  literalTypeGuard
+  literalTypeGuard,
+  objectTypeGuard
 } from '@mnaoumov/typescript-lib/type-guards';
 
 import type {
@@ -78,7 +75,7 @@ const isLinkStyle = literalTypeGuard<LinkStyle>({
 /**
  * One guard per key of {@link GenerateMarkdownLinkExtendedOptions}, so a new option refuses to compile until it
  * has one. A present key must match its declared type: `undefined` is not accepted for an optional key, which is
- * why these guards are not widened with `optionalTypeGuard` and are not handed to `objectTypeGuard`.
+ * why these guards are not widened with `optionalTypeGuard`.
  */
 const OPTION_GUARDS: PropertyTypeGuards<GenerateMarkdownLinkExtendedOptions> = {
   alias: isString,
@@ -99,7 +96,29 @@ const OPTION_GUARDS: PropertyTypeGuards<GenerateMarkdownLinkExtendedOptions> = {
   targetPathOrFile: isPathOrFile
 };
 
-const REQUIRED_OPTION_KEYS: ReadonlySet<string> = new Set<keyof GenerateMarkdownLinkExtendedOptions>(['sourcePathOrFile', 'targetPathOrFile']);
+/**
+ * Reads only OWN keys and holds every optional key to exact optional properties: an absent optional key is
+ * accepted, one present as `undefined` is refused, and an inherited key counts as absent. Every optional key is
+ * listed, so an option added to {@link GenerateMarkdownLinkExtendedOptions} refuses to compile until it is.
+ */
+const isGenerateMarkdownLinkExtendedOptions = objectTypeGuard<GenerateMarkdownLinkExtendedOptions>(OPTION_GUARDS, {
+  exactOptionalKeys: {
+    alias: true,
+    isEmbed: true,
+    isEmptyEmbedAliasAllowed: true,
+    isNonExistingFileAllowed: true,
+    isSingleSubpathAllowed: true,
+    linkPathStyle: true,
+    linkStyle: true,
+    originalLink: true,
+    shouldEscapeAlias: true,
+    shouldIncludeAttachmentExtensionToEmbedAlias: true,
+    shouldUseAngleBrackets: true,
+    shouldUseLeadingDotForRelativePaths: true,
+    shouldUseLeadingSlashForAbsolutePaths: true,
+    subpath: true
+  }
+});
 
 /**
  * The contract this plugin publishes with {@link BetterMarkdownLinksApi}, for a consumer to pass as the
@@ -113,26 +132,3 @@ export const BETTER_MARKDOWN_LINKS_API_CONTRACT: BetterMarkdownLinksApiContract 
     output: createTypeGuardSchema({ ...STRING_GUARD, expected: 'the markdown of a link' })
   }
 });
-
-/**
- * Kept local rather than built with `objectTypeGuard`, which reads every key with `Reflect.get`: that cannot tell
- * an absent optional key (accepted) from one present as `undefined` (refused), and it would let an inherited key
- * through. This guard reads only OWN keys, and refuses an array.
- *
- * @param value - The value to check.
- * @returns Whether the value is the options of a link to generate.
- */
-function isGenerateMarkdownLinkExtendedOptions(value: unknown): value is GenerateMarkdownLinkExtendedOptions {
-  if (!isObject(value) || Array.isArray(value)) {
-    return false;
-  }
-
-  const optionGuards: Readonly<Record<string, TypeGuard<unknown>>> = OPTION_GUARDS;
-  for (const [key, isOptionValue] of Object.entries(optionGuards)) {
-    if (Object.hasOwn(value, key) ? !isOptionValue(Reflect.get(value, key)) : REQUIRED_OPTION_KEYS.has(key)) {
-      return false;
-    }
-  }
-
-  return true;
-}
