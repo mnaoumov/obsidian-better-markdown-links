@@ -2,14 +2,14 @@
  * The API this plugin publishes for other plugins to call.
  *
  * Copy this file into your own plugin: it imports nothing at all, so it costs you no dependency on this plugin and none
- * on `obsidian-dev-utils`. That is why {@link EmptyFolderBehavior} — which the plugin itself takes from that library as
+ * on `@mnaoumov/obsidian-lib`. That is why {@link EmptyFolderBehavior} — which the plugin itself takes from that library as
  * an enum — is inlined below as a plain string-literal union. It carries the same runtime values the plugin uses.
  *
- * The API is reached through the `obsidian-dev-utils` cross-plugin API registry, keyed by the plugin id
+ * The API is reached through the `@mnaoumov/obsidian-lib` cross-plugin API registry, keyed by the plugin id
  * `advanced-rename-and-delete-handler` and version-negotiated against its CONTRACT version, which moves independently of
- * the plugin's own `manifest.version`. `1.1.0` added the three read-back members to `1.0.0`'s `migrateSettings`, purely
- * additively, so ask for `^1`. The README's `For plugin developers` section shows both routes: `watchPluginApi` for a
- * consumer that already has `obsidian-dev-utils`, and the library-free registry read for one that does not.
+ * the plugin's own `manifest.version`. `1.1.0` added the three read-back members to `1.0.0`'s `migrateSettings`, and
+ * `1.2.0` added {@link HandedOverSettings.shouldDeleteEmptyNoteFolders}, both purely additively, so ask for `^1`. The README's `For plugin developers` section shows both routes: `watchPluginApi` for a
+ * consumer that already has `@mnaoumov/obsidian-lib`, and the library-free registry read for one that does not.
  */
 
 /**
@@ -43,7 +43,7 @@ export interface AdvancedRenameAndDeleteHandlerApi {
    *
    * Handed over as a predicate rather than left to the caller to recompute from
    * {@link HandedOverSettings.excludePaths} / {@link HandedOverSettings.includePaths}: every plugin bundles
-   * its own `obsidian-dev-utils`, so two copies of the matching code are two copies that can drift apart.
+   * its own `@mnaoumov/obsidian-lib`, so two copies of the matching code are two copies that can drift apart.
    *
    * @param path - The path to test, from the vault root.
    * @returns `true` when the path is ignored.
@@ -112,6 +112,12 @@ export interface HandedOverSettings {
    * Whether an attachment that collides with an existing file at the destination replaces it.
    */
   readonly shouldDeleteConflictingAttachments: boolean;
+
+  /**
+   * Whether {@link HandedOverSettings.emptyFolderBehavior} also applies to the folder a deleted note leaves empty,
+   * not only to the attachment folders it leaves empty. Added in contract `1.2.0`.
+   */
+  readonly shouldDeleteEmptyNoteFolders: boolean;
 
   /**
    * Whether deleting a note also deletes the attachments only that note referenced.

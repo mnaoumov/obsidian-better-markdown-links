@@ -9,28 +9,37 @@
  * passes it as the `contract` when it looks the API up, so both ends validate against ONE definition. The
  * plugin registry checks the payloads against it only while its debugger is on.
  *
- * Copyable: it imports from `./api.d.ts` and from `@mnaoumov/typescript-lib`, which carries the generic half —
- * the contract types, the {@link https://standardschema.dev | Standard Schema} builders and the common guards. So
- * a consumer copying it needs that package; what is left here is this API's own constant and the guards for its
- * own shapes. The constant is typed as `TypedApiContract<AdvancedRenameAndDeleteHandlerApi>`, which checks every
- * entry against its method's signature and requires both schemas on each.
+ * Copying it takes one dependency beside `api.d.ts`: `@mnaoumov/typescript-lib` (`1.3.0` or later), which
+ * carries the contract types, the {@link https://standardschema.dev | Standard Schema} builders and the guard
+ * builders, in its `api-contract`, `type-guards` and `object-utils` entry points. What is left here is this API's
+ * own constant and the guards for its own shapes. The constant is typed as
+ * `TypedApiContract<AdvancedRenameAndDeleteHandlerApi>`, which checks every entry against its method's signature
+ * and requires both schemas on each.
  *
  * It is not named `api.ts`: TypeScript would read `api.d.ts` as that file's own declarations.
  */
 
 import type { TypedApiContract } from '@mnaoumov/typescript-lib/api-contract';
+import type {
+  PropertyTypeGuards,
+  TypeGuard
+} from '@mnaoumov/typescript-lib/type-guards';
 
 import {
   BOOLEAN_GUARD,
-  createArgumentsSchema,
-  createTypeGuardSchema,
+  createApiContractSchemaBuilders,
+  createExpectedTypeGuard,
   defineApiContract,
   STRING_GUARD
 } from '@mnaoumov/typescript-lib/api-contract';
+import { castTo } from '@mnaoumov/typescript-lib/object-utils';
 import {
   isBoolean,
   isString,
-  isStringArray
+  isStringArray,
+  literalTypeGuard,
+  objectTypeGuard,
+  optionalTypeGuard
 } from '@mnaoumov/typescript-lib/type-guards';
 
 import type {
@@ -49,28 +58,25 @@ import type {
  */
 export type AdvancedRenameAndDeleteHandlerApiContract = TypedApiContract<AdvancedRenameAndDeleteHandlerApi>;
 
-type SettingValidators = {
-  readonly [TPropertyName in keyof HandedOverSettings]-?: (value: unknown) => value is HandedOverSettings[TPropertyName];
-};
-
-const VENDOR = 'advanced-rename-and-delete-handler';
+const { createArgumentsSchema, createTypeGuardSchema } = createApiContractSchemaBuilders('advanced-rename-and-delete-handler');
 
 /**
- * Every value {@link EmptyFolderBehavior} can take. Typed as a record over the union so a member added to it in
- * `api.d.ts` fails to compile here until it is listed.
+ * Accepts every value {@link EmptyFolderBehavior} can take. Typed as a record over the union so a member added to
+ * it in `api.d.ts` fails to compile here until it is listed.
  */
-const EMPTY_FOLDER_BEHAVIORS: Readonly<Record<EmptyFolderBehavior, true>> = {
+const isEmptyFolderBehavior = literalTypeGuard<EmptyFolderBehavior>({
   Delete: true,
   DeleteWithEmptyParents: true,
   Keep: true
-};
+});
 
-const SETTING_VALIDATORS: SettingValidators = {
+const SETTING_VALIDATORS: PropertyTypeGuards<HandedOverSettings> = {
   emptyFolderBehavior: isEmptyFolderBehavior,
   excludePaths: isStringArray,
   includePaths: isStringArray,
   notePriorities: isStringArray,
   shouldDeleteConflictingAttachments: isBoolean,
+  shouldDeleteEmptyNoteFolders: isBoolean,
   shouldHandleDeletions: isBoolean,
   shouldHandleRenames: isBoolean,
   shouldRenameAttachmentFiles: isBoolean,
@@ -80,7 +86,27 @@ const SETTING_VALIDATORS: SettingValidators = {
   treatAsAttachmentExtensions: isStringArray
 };
 
-const SCHEMA_OPTIONS = { vendor: VENDOR };
+const isHandedOverSettings = objectTypeGuard<HandedOverSettings>(SETTING_VALIDATORS);
+
+/**
+ * Mirrors how the plugin reads a proposal: a member that is absent or `undefined` is not proposed, and a key that
+ * names no setting is ignored rather than refused. Derived from {@link SETTING_VALIDATORS} so a setting cannot be
+ * validated one way when handed over and another when proposed.
+ */
+const isMigratableSettings = objectTypeGuard<MigratableSettings>(castTo<PropertyTypeGuards<MigratableSettings>>(
+  Object.fromEntries(
+    Object.entries(SETTING_VALIDATORS).map(([propertyName, typeGuard]) => [propertyName, optionalTypeGuard(castTo<TypeGuard<unknown>>(typeGuard))])
+  )
+));
+
+const isMigrateSettingsParams = objectTypeGuard<MigrateSettingsParams>({
+  proposedSettings: isMigratableSettings,
+  sourcePluginId: isString
+});
+
+const isMigrateSettingsResult = objectTypeGuard<MigrateSettingsResult>({
+  isApplied: isBoolean
+});
 
 const PATH_GUARD = { ...STRING_GUARD, expected: 'a path' };
 
@@ -92,60 +118,19 @@ export const ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT: AdvancedRenameAndD
   AdvancedRenameAndDeleteHandlerApi
 >({
   getSettings: {
-    input: createArgumentsSchema([], SCHEMA_OPTIONS),
-    output: createTypeGuardSchema({ ...SCHEMA_OPTIONS, expected: 'the handed-over settings', typeGuard: isHandedOverSettings })
+    input: createArgumentsSchema([]),
+    output: createTypeGuardSchema(createExpectedTypeGuard('the handed-over settings', isHandedOverSettings))
   },
   isPathIgnored: {
-    input: createArgumentsSchema([PATH_GUARD], SCHEMA_OPTIONS),
-    output: createTypeGuardSchema({ ...SCHEMA_OPTIONS, ...BOOLEAN_GUARD })
+    input: createArgumentsSchema([PATH_GUARD]),
+    output: createTypeGuardSchema(BOOLEAN_GUARD)
   },
   isTreatedAsAttachment: {
-    input: createArgumentsSchema([PATH_GUARD], SCHEMA_OPTIONS),
-    output: createTypeGuardSchema({ ...SCHEMA_OPTIONS, ...BOOLEAN_GUARD })
+    input: createArgumentsSchema([PATH_GUARD]),
+    output: createTypeGuardSchema(BOOLEAN_GUARD)
   },
   migrateSettings: {
-    input: createArgumentsSchema([{ expected: 'migrate settings params', typeGuard: isMigrateSettingsParams }], SCHEMA_OPTIONS),
-    output: createTypeGuardSchema({ ...SCHEMA_OPTIONS, expected: 'a migrate settings result', typeGuard: isMigrateSettingsResult })
+    input: createArgumentsSchema([createExpectedTypeGuard('migrate settings params', isMigrateSettingsParams)]),
+    output: createTypeGuardSchema(createExpectedTypeGuard('a migrate settings result', isMigrateSettingsResult))
   }
 });
-
-function getSettingPropertyNames(): (keyof HandedOverSettings)[] {
-  // Every key of `SETTING_VALIDATORS` is a key of `HandedOverSettings`, by its mapped type.
-  return Object.keys(SETTING_VALIDATORS) as (keyof HandedOverSettings)[];
-}
-
-function isEmptyFolderBehavior(value: unknown): value is EmptyFolderBehavior {
-  return isString(value) && Object.hasOwn(EMPTY_FOLDER_BEHAVIORS, value);
-}
-
-function isHandedOverSettings(value: unknown): value is HandedOverSettings {
-  return isObject(value) && getSettingPropertyNames().every((propertyName) => SETTING_VALIDATORS[propertyName](Reflect.get(value, propertyName)));
-}
-
-/**
- * Mirrors how the plugin reads a proposal: a member that is absent or `undefined` is not proposed, and a key that
- * names no setting is ignored rather than refused.
- *
- * @param value - The value to check.
- * @returns Whether the value is a proposal.
- */
-function isMigratableSettings(value: unknown): value is MigratableSettings {
-  return isObject(value) && getSettingPropertyNames().every((propertyName) => {
-    const settingValue: unknown = Reflect.get(value, propertyName);
-    return settingValue === undefined || SETTING_VALIDATORS[propertyName](settingValue);
-  });
-}
-
-function isMigrateSettingsParams(value: unknown): value is MigrateSettingsParams {
-  return isObject(value)
-    && isString(Reflect.get(value, 'sourcePluginId'))
-    && isMigratableSettings(Reflect.get(value, 'proposedSettings'));
-}
-
-function isMigrateSettingsResult(value: unknown): value is MigrateSettingsResult {
-  return isObject(value) && isBoolean(Reflect.get(value, 'isApplied'));
-}
-
-function isObject(value: unknown): value is object {
-  return typeof value === 'object' && value !== null;
-}
