@@ -5,6 +5,8 @@ import type {
 } from 'obsidian';
 
 import { CommandHandlerComponent } from '@mnaoumov/obsidian-lib/command-handlers/command-handler-component';
+import { ObsidianLibrary } from '@mnaoumov/obsidian-lib/library';
+import { Library } from '@mnaoumov/typescript-lib/library';
 import { castTo } from '@mnaoumov/typescript-lib/object-utils';
 import { strictProxy } from '@mnaoumov/typescript-test-toolkit/strict-proxy';
 import { Component } from 'obsidian';
@@ -174,6 +176,10 @@ function seedOnRawTarget(strictProxiedObject: object, key: string, value: unknow
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Each test loads a fresh plugin and never unloads it, and the library's contexts initialize only once
+  // per load, so they are reset here the way the plugin context's own unload would reset them.
+  Library.resetToDefault();
+  ObsidianLibrary.resetToDefault();
 
   const appMock = App.createConfigured__();
   appMock.workspace.onLayoutReady = vi.fn((callback: () => void) => {
