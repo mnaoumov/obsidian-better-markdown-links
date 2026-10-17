@@ -70,9 +70,17 @@ const OPTIONS: PayloadCase = {
     [{ ...MINIMAL_OPTIONS, linkPathStyle: 'Relative' }],
     [{ ...MINIMAL_OPTIONS, linkStyle: 'markdown' }],
     [MINIMAL_OPTIONS, 'extra'],
-    MINIMAL_OPTIONS
+    MINIMAL_OPTIONS,
+    // Only own keys count: required keys reached through the prototype are still missing.
+    [Object.create(MINIMAL_OPTIONS)]
   ],
-  valid: [[MINIMAL_OPTIONS], [FULL_OPTIONS], [{ ...MINIMAL_OPTIONS, unknownOption: 1 }]]
+  valid: [
+    [MINIMAL_OPTIONS],
+    [FULL_OPTIONS],
+    [{ ...MINIMAL_OPTIONS, unknownOption: 1 }],
+    // An inherited optional key is not read, so its wrong type does not refuse the options.
+    [Object.assign(Object.create({ alias: 1 }), MINIMAL_OPTIONS)]
+  ]
 };
 
 const LINK: PayloadCase = { invalid: [null, undefined, 1, ['[[target]]']], valid: ['', '[target](<target.md>)'] };
