@@ -200,6 +200,29 @@ describe('PluginSettings', () => {
 
       expect(settings.isPathIgnored('notes/regular.md')).toBe(false);
     });
+
+    it('should match the default exclude patterns case-insensitively', () => {
+      const settings = new PluginSettings();
+
+      expect(settings.isPathIgnored('drawings/Test.Excalidraw.md')).toBe(true);
+    });
+
+    it('should ignore paths matching exclude glob patterns', () => {
+      const settings = new PluginSettings();
+      settings.excludePaths = ['*.canvas.md', 'Archive/**/*.md'];
+
+      expect(settings.isPathIgnored('a/b/board.canvas.md')).toBe(true);
+      expect(settings.isPathIgnored('archive/2020/old.md')).toBe(true);
+      expect(settings.isPathIgnored('notes/regular.md')).toBe(false);
+    });
+
+    it('should ignore paths outside include glob patterns', () => {
+      const settings = new PluginSettings();
+      settings.includePaths = ['Notes/*.md'];
+
+      expect(settings.isPathIgnored('notes/a.md')).toBe(false);
+      expect(settings.isPathIgnored('notes/sub/a.md')).toBe(true);
+    });
   });
 
   describe('shouldConvertLinksOnModify', () => {
