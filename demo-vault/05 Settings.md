@@ -56,3 +56,11 @@ Two keys are left behind to make the handover work. Neither is a toggle you set 
   - only convert links in files matching these paths (empty means all files).
 - `excludePaths`
   - never convert links in files matching these paths; defaults to skipping `Excalidraw` and `tldraw` notes.
+
+Each entry of either list takes one of three forms, and every form matches case-insensitively:
+
+- a path, such as `Notes/Daily`, which matches that path and everything inside it;
+- a glob, such as `*.pdf`, `Notes/**/*.md` or `tmp*/`: `*` matches within one folder level, `**` across levels, `?` one character and `[abc]` / `[!abc]` a character class. A glob without `/` matches a name at any depth, and a trailing `/` matches folders only;
+- a regular expression, written `/pattern/flags`.
+
+A path that contains a literal `*`, `?` or `[` escapes it with `\`, as in `Notes \[old\]`, or it is read as a glob.

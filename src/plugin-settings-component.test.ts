@@ -76,7 +76,7 @@ describe('PluginSettingsComponent', () => {
 
       const result = await component.validate(settings);
 
-      expect(result.includePaths).toBe('Invalid regular expression /[invalid/');
+      expect(result.includePaths).toMatch(/^Invalid regular expression: \/\[invalid\/ \(.+\)$/);
     });
 
     it('should reject invalid regex paths in excludePaths', async () => {
@@ -86,13 +86,33 @@ describe('PluginSettingsComponent', () => {
 
       const result = await component.validate(settings);
 
-      expect(result.excludePaths).toBe('Invalid regular expression /[invalid/');
+      expect(result.excludePaths).toMatch(/^Invalid regular expression: \/\[invalid\/ \(.+\)$/);
     });
 
-    it('should not treat paths without leading and trailing slashes as regex', async () => {
+    it('should accept valid glob paths', async () => {
       const component = createComponent();
       const settings = new PluginSettings();
-      settings.includePaths = ['[not-a-regex'];
+      settings.includePaths = ['*.md', 'Attachments/**/*.pdf', 'tmp*/'];
+
+      const result = await component.validate(settings);
+
+      expect(result.includePaths).toBeUndefined();
+    });
+
+    it('should reject a glob whose character class is never closed', async () => {
+      const component = createComponent();
+      const settings = new PluginSettings();
+      Object.defineProperty(settings, 'includePaths', { get: () => ['[not-closed'] });
+
+      const result = await component.validate(settings);
+
+      expect(result.includePaths).toMatch(/^Invalid glob pattern: \[not-closed \(.+\)$/);
+    });
+
+    it('should accept an escaped bracket in a plain path', async () => {
+      const component = createComponent();
+      const settings = new PluginSettings();
+      settings.includePaths = [String.raw`Notes \[old\]`];
 
       const result = await component.validate(settings);
 

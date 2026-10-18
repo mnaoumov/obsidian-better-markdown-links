@@ -340,10 +340,7 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         desc: createFragment((f) => {
           f.appendText('Include notes from the following paths');
           f.createEl('br');
-          f.appendText('Insert each path on a new line');
-          f.createEl('br');
-          f.appendText('You can use path string or ');
-          appendCodeBlock(f, '/regular expression/');
+          appendPathEntryVocabulary(f);
           f.createEl('br');
           f.appendText('If the setting is empty, all notes are included');
         }),
@@ -358,10 +355,7 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
         desc: createFragment((f) => {
           f.appendText('Exclude notes from the following paths');
           f.createEl('br');
-          f.appendText('Insert each path on a new line');
-          f.createEl('br');
-          f.appendText('You can use path string or ');
-          appendCodeBlock(f, '/regular expression/');
+          appendPathEntryVocabulary(f);
           f.createEl('br');
           f.appendText('If the setting is empty, no notes are excluded');
         }),
@@ -378,4 +372,35 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
       })
     ];
   }
+}
+
+// The entry syntax is obsidian-lib's `PathSettings`, so both path settings describe it in the same words.
+function appendPathEntryVocabulary(f: DocumentFragment): void {
+  f.appendText('Insert each entry on a new line');
+  f.createEl('br');
+  f.appendText('An entry is a path (');
+  appendCodeBlock(f, 'Notes/Daily');
+  f.appendText('), a glob (');
+  appendCodeBlock(f, '*.pdf');
+  f.appendText(', ');
+  appendCodeBlock(f, 'Notes/**/*.md');
+  f.appendText(', ');
+  appendCodeBlock(f, 'tmp*/');
+  f.appendText(') or a ');
+  appendCodeBlock(f, '/regular expression/flags');
+  f.createEl('br');
+  f.appendText('A glob without ');
+  appendCodeBlock(f, '/');
+  f.appendText(' matches a name at any depth, and a trailing ');
+  appendCodeBlock(f, '/');
+  f.appendText(' matches folders only');
+  f.createEl('br');
+  f.appendText('Matching ignores case. Escape a literal ');
+  appendCodeBlock(f, '*');
+  f.appendText(', ');
+  appendCodeBlock(f, '?');
+  f.appendText(' or ');
+  appendCodeBlock(f, '[');
+  f.appendText(' in a path with ');
+  appendCodeBlock(f, '\\');
 }

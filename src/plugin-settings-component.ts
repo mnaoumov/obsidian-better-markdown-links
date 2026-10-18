@@ -1,9 +1,8 @@
 import type { DataHandler } from '@mnaoumov/obsidian-lib/data-handler';
 import type { PluginEventSource } from '@mnaoumov/obsidian-lib/plugin/plugin-event-source';
-import type { MaybeReturn } from '@mnaoumov/typescript-lib/type';
 
 import { PluginSettingsComponentBase } from '@mnaoumov/obsidian-lib/components/plugin-settings-component';
-import { isValidRegExp } from '@mnaoumov/typescript-lib/reg-exp';
+import { pathsValidator } from '@mnaoumov/obsidian-lib/path-settings';
 
 import { LinkConversionMode } from './link-conversion-mode.ts';
 import { LinkStyleMode } from './link-style-mode.ts';
@@ -99,18 +98,5 @@ export class PluginSettingsComponent extends PluginSettingsComponentBase<PluginS
   protected override registerValidators(): void {
     this.registerValidator('includePaths', pathsValidator);
     this.registerValidator('excludePaths', pathsValidator);
-  }
-}
-
-function pathsValidator(paths: string[]): MaybeReturn<string> {
-  for (const path of paths) {
-    if (!(path.startsWith('/') && path.endsWith('/'))) {
-      continue;
-    }
-
-    const regExp = path.slice(1, -1);
-    if (!isValidRegExp(regExp)) {
-      return `Invalid regular expression ${path}`;
-    }
   }
 }
