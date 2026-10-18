@@ -38,7 +38,7 @@ caption: Write them percent-encoded instead
 await require('/demoSetup.ts').writeAngleBracketLinks(app, false);
 ```
 
-Manual equivalent: set **Link style** to **Markdown** and toggle **Should use angle brackets** in **Settings -> Community plugins -> Better Markdown Links**, then type a link with `[[` in any note.
+Manual equivalent: set **Link style** to **Markdown** and toggle **Should use angle brackets** in **Settings -> Community plugins -> `Better Markdown Links`**, then type a link with `[[` in any note.
 
 ```code-button
 ---

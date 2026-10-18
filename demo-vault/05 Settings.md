@@ -1,6 +1,6 @@
 # Settings
 
-Open **Settings -> Community plugins -> Better Markdown Links** to configure the plugin. Each option below lists the setting key stored in the plugin's `data.json`.
+Open **Settings -> Community plugins -> `Better Markdown Links`** to configure the plugin. Each option below lists the setting key stored in the plugin's `data.json`.
 
 ## Link style
 

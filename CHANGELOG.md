@@ -2,11 +2,11 @@
 
 ## 6.1.0
 
-- docs(api-contract): refresh the copied Advanced Rename and Delete Handler debug-switch line
+- docs(api-contract): refresh the copied `Advanced Rename and Delete Handler` debug-switch line
 - docs(api-contract): merge saying the payload check follows obsidian-lib's validation debug switch
 - refactor(link-converter): merge deciding the frontmatter link style through obsidian-lib's linkStyleProvider
 - refactor(api-contract): build the options guard with objectTypeGuard's exactOptionalKeys
-- refactor(api): merge refreshing the copied Advanced Rename and Delete Handler contract
+- refactor(api): merge refreshing the copied `Advanced Rename and Delete Handler` contract
 - docs(demo-vault): merge the fresh-link buttons for the angle-bracket and relative-links notes
 - chore(github): merge linking Discussions from the new-issue page
 - refactor(api-contract): merge building the contract guards from typescript-lib and obsidian-lib
@@ -15,7 +15,7 @@
 - feat(ui): merge rendering plugin names in the suggestion reason and progress bar titles as code
 - refactor(deps): merge moving off obsidian-dev-utils onto the @mnaoumov packages
 - refactor(api): merge building the API contract on @mnaoumov/typescript-lib/api-contract
-- feat(api): merge taking Advanced Rename and Delete Handler's own migration contract
+- feat(api): merge taking `Advanced Rename and Delete Handler`'s own migration contract
 - feat(api): merge the copyable api-contract.ts with full schemas
 - docs: merge marking plugin names as code in markdown and comments
 - test: merge the capture suites' switch to obsidian-typings' declarations
@@ -39,7 +39,7 @@
 ## 5.1.0
 
 - chore(deps): merge the obsidian-test-mocks 7.0.0 float
-- test(resolve): prove and document the Advanced Metadata Cache alias fast path
+- test(resolve): prove and document the `Advanced Metadata Cache` alias fast path
 - feat(commands): merge the selection scope for every link command
 - fix(test): merge the headless demo-vault toolkit install
 - fix(deps): restore the lockfile's missing resolved and integrity fields
@@ -74,7 +74,7 @@
 
 ## 5.0.0
 
-- feat!: hand rename/delete over to Advanced Rename and Delete Handler
+- feat!: hand rename/delete over to `Advanced Rename and Delete Handler`
 - fix(build): wire build:compile to buildCompile and drop the duplicate leaf script
 
 ## 4.2.5
@@ -149,7 +149,7 @@
 - docs: standardize demo-vault README
 - docs: drop per-plugin demo-vault setup notes (bootstrap covered by the obsidian-dev-utils harness)
 - docs: unnumber demo-vault setup notes
-- docs(demo-vault): create the Better Markdown Links demo vault
+- docs(demo-vault): create the `Better Markdown Links` demo vault
 - chore: update libs
 - docs: update
 - docs: migrate to AGENTS.md

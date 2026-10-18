@@ -6,13 +6,13 @@ Beyond formatting new links, `Better Markdown Links` can rewrite links that alre
 
 Four style-agnostic commands are available in the Command Palette (four more force the Markdown style - see [Forcing Markdown links](#forcing-markdown-links) below - and four more force relative paths - see [Forcing a link path style](#forcing-a-link-path-style)):
 
-- **Better Markdown Links: Convert links in current selection**
+- **`Better Markdown Links`: Convert links in current selection**
   - rewrites only the links inside what you have selected (also available by right-clicking inside the editor). The command is greyed out when nothing is selected, so it can never be mistaken for the whole-note one. A link the selection covers only partly is left alone, and links in frontmatter are never in a selection.
-- **Better Markdown Links: Convert links in current file**
+- **`Better Markdown Links`: Convert links in current file**
   - rewrites links in the active note.
-- **Better Markdown Links: Convert links in current folder**
+- **`Better Markdown Links`: Convert links in current folder**
   - rewrites every note in a folder (also available by right-clicking a folder in the File Explorer).
-- **Better Markdown Links: Convert links in entire vault**
+- **`Better Markdown Links`: Convert links in entire vault**
   - rewrites the whole vault at once.
 
 Knowing what a messy link looks like before you have seen one converted is the awkward part, so the button writes a note full of them - percent-encoded spaces, no leading dot, a backslash-and-percent `file://` URL - and opens it:
@@ -33,7 +33,7 @@ caption: Convert links in the current file
 require('/demoSetup.ts').convertLinksInCurrentFile(app);
 ```
 
-Manual equivalent: run **Better Markdown Links: Convert links in current file** from the Command Palette.
+Manual equivalent: run **`Better Markdown Links`: Convert links in current file** from the Command Palette.
 
 Each link snaps into the readable form shown in [01 Angle bracket links](<./01 Angle bracket links.md>) and [02 Relative links](<./02 Relative links.md>). Press the first button again to get the messy note back and try a different setting.
 
@@ -73,7 +73,7 @@ caption: Back to the default (on save command)
 await require('/demoSetup.ts').changeSettings(app, { linkConversionMode: 'OnSaveCommand' });
 ```
 
-Manual equivalent: pick from the **Convert links** dropdown in **Settings -> Community plugins -> Better Markdown Links**.
+Manual equivalent: pick from the **Convert links** dropdown in **Settings -> Community plugins -> `Better Markdown Links`**.
 
 ## Forcing Markdown links
 
@@ -90,10 +90,10 @@ The **Link style** setting (`linkStyleMode`) decides which style is written:
 
 Four commands force the Markdown style for a single run, leaving the setting alone - the replacement for **Replace all wikilinks with markdown links** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links):
 
-- **Better Markdown Links: Convert links to Markdown in current selection**
-- **Better Markdown Links: Convert links to Markdown in current file**
-- **Better Markdown Links: Convert links to Markdown in current folder**
-- **Better Markdown Links: Convert links to Markdown in entire vault**
+- **`Better Markdown Links`: Convert links to Markdown in current selection**
+- **`Better Markdown Links`: Convert links to Markdown in current file**
+- **`Better Markdown Links`: Convert links to Markdown in current folder**
+- **`Better Markdown Links`: Convert links to Markdown in entire vault**
 
 The button writes a note of plain wikilinks and opens it:
 
@@ -120,7 +120,7 @@ caption: Convert links to Markdown (wikilinks do not)
 require('/demoSetup.ts').convertLinksToMarkdownInCurrentFile(app);
 ```
 
-Manual equivalent: run **Better Markdown Links: Convert links to Markdown in current file** from the Command Palette.
+Manual equivalent: run **`Better Markdown Links`: Convert links to Markdown in current file** from the Command Palette.
 
 The same thing permanently, by setting rather than by command:
 
@@ -138,7 +138,7 @@ caption: Back to the default (follow the Obsidian setting)
 await require('/demoSetup.ts').changeSettings(app, { linkStyleMode: 'ObsidianSettingsDefault' });
 ```
 
-Manual equivalent: pick from the **Link style** dropdown in **Settings -> Community plugins -> Better Markdown Links**.
+Manual equivalent: pick from the **Link style** dropdown in **Settings -> Community plugins -> `Better Markdown Links`**.
 
 ### Wikilinks in properties
 
@@ -160,7 +160,7 @@ caption: Leave property wikilinks alone (the default)
 await require('/demoSetup.ts').changeSettings(app, { shouldConvertFrontmatterWikilinksToMarkdown: false });
 ```
 
-Manual equivalent: toggle **Should convert frontmatter wikilinks to markdown** in **Settings -> Community plugins -> Better Markdown Links**.
+Manual equivalent: toggle **Should convert frontmatter wikilinks to markdown** in **Settings -> Community plugins -> `Better Markdown Links`**.
 
 ## Forcing a link path style
 
@@ -181,10 +181,10 @@ Outside the default, the **Should use leading dot for relative paths** and **Sho
 
 Four commands force the relative style for a single run, leaving the setting alone - the replacement for **Convert all link paths to relative** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links):
 
-- **Better Markdown Links: Convert link paths to relative in current selection**
-- **Better Markdown Links: Convert link paths to relative in current file**
-- **Better Markdown Links: Convert link paths to relative in current folder**
-- **Better Markdown Links: Convert link paths to relative in entire vault**
+- **`Better Markdown Links`: Convert link paths to relative in current selection**
+- **`Better Markdown Links`: Convert link paths to relative in current file**
+- **`Better Markdown Links`: Convert link paths to relative in current folder**
+- **`Better Markdown Links`: Convert link paths to relative in entire vault**
 
 The button writes a note whose links name their targets by bare file name and by vault-absolute path, and opens it:
 
@@ -204,7 +204,7 @@ caption: Convert link paths to relative
 require('/demoSetup.ts').convertLinkPathsToRelativeInCurrentFile(app);
 ```
 
-Manual equivalent: run **Better Markdown Links: Convert link paths to relative in current file** from the Command Palette.
+Manual equivalent: run **`Better Markdown Links`: Convert link paths to relative in current file** from the Command Palette.
 
 The same thing permanently, by setting rather than by command:
 
@@ -229,7 +229,7 @@ caption: Back to the default link path style
 await require('/demoSetup.ts').changeSettings(app, { linkPathStyleMode: 'ObsidianSettingsDefault' });
 ```
 
-Manual equivalent: pick from the **Link path style** dropdown in **Settings -> Community plugins -> Better Markdown Links**.
+Manual equivalent: pick from the **Link path style** dropdown in **Settings -> Community plugins -> `Better Markdown Links`**.
 
 ## Links that do not resolve
 
@@ -278,7 +278,7 @@ caption: Back to the defaults (both off)
 await require('/demoSetup.ts').changeSettings(app, { shouldCreateMissingNotes: false, shouldResolveLinksViaAliases: false });
 ```
 
-Manual equivalent: toggle the two settings in **Settings -> Community plugins -> Better Markdown Links**, then run **Better Markdown Links: Convert links in current file**.
+Manual equivalent: toggle the two settings in **Settings -> Community plugins -> `Better Markdown Links`**, then run **`Better Markdown Links`: Convert links in current file**.
 
 ## File link normalization
 

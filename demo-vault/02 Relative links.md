@@ -44,7 +44,7 @@ await require('/demoSetup.ts').writeLinksWithPathStyle(app, { linkPathStyleMode:
 
 Without the leading dot, `Targets/Simple note.md` could mean a folder beside this note or one at the vault root - the ambiguity the dot removes.
 
-Manual equivalent: set **Link style** to **Markdown**, pick the **Link path style**, and toggle **Should use leading dot for relative paths** or **Should use leading slash for absolute paths** in **Settings -> Community plugins -> Better Markdown Links**, then type a link with `[[` in any note.
+Manual equivalent: set **Link style** to **Markdown**, pick the **Link path style**, and toggle **Should use leading dot for relative paths** or **Should use leading slash for absolute paths** in **Settings -> Community plugins -> `Better Markdown Links`**, then type a link with `[[` in any note.
 
 ```code-button
 ---

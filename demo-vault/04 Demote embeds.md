@@ -12,13 +12,13 @@ The one exception is an embed with an **empty** alias pointing at a note. `![](<
 
 Four commands are available in the Command Palette:
 
-- **Better Markdown Links: Demote embeds to links in current selection**
+- **`Better Markdown Links`: Demote embeds to links in current selection**
   - demotes only the embeds inside what you have selected (also available by right-clicking inside the editor). The command is greyed out when nothing is selected, so it can never be mistaken for the whole-note one.
-- **Better Markdown Links: Demote embeds to links in current file**
+- **`Better Markdown Links`: Demote embeds to links in current file**
   - demotes every embed in the active note.
-- **Better Markdown Links: Demote embeds to links in current folder**
+- **`Better Markdown Links`: Demote embeds to links in current folder**
   - demotes every embed in a folder (also available by right-clicking a folder in the File Explorer).
-- **Better Markdown Links: Demote embeds to links in entire vault**
+- **`Better Markdown Links`: Demote embeds to links in entire vault**
   - demotes the whole vault at once.
 
 The button below writes a note whose every link is an embed — a plain one, one carrying an alias, and a wikilink embed — and opens it:
@@ -39,7 +39,7 @@ caption: Demote embeds in the current file
 require('/demoSetup.ts').demoteEmbedsInCurrentFile(app);
 ```
 
-Manual equivalent: run **Better Markdown Links: Demote embeds to links in current file** from the Command Palette.
+Manual equivalent: run **`Better Markdown Links`: Demote embeds to links in current file** from the Command Palette.
 
 Each `!` disappears and nothing else moves. Press the first button again to get the embeds back and try the setting below.
 
@@ -72,13 +72,13 @@ caption: Back to the default (no sub-bullet)
 await require('/demoSetup.ts').changeSettings(app, { shouldAppendFileNameWhenDemotingEmbeds: false });
 ```
 
-Manual equivalent: toggle **Should append file name when demoting embeds** in **Settings -> Community plugins -> Better Markdown Links**.
+Manual equivalent: toggle **Should append file name when demoting embeds** in **Settings -> Community plugins -> `Better Markdown Links`**.
 
 Reset the embeds note and demote again after switching to compare the two.
 
 ## Just part of a note
 
-There is no button for this one, because the interesting half is the gesture: press the first button above to get the embeds note back, select one of the embeds in the editor, and run **Better Markdown Links: Demote embeds to links in current selection** — or right-click the selection and pick **Demote embeds to links in selection**. Only what you selected changes.
+There is no button for this one, because the interesting half is the gesture: press the first button above to get the embeds note back, select one of the embeds in the editor, and run **`Better Markdown Links`: Demote embeds to links in current selection** — or right-click the selection and pick **Demote embeds to links in selection**. Only what you selected changes.
 
 An embed the selection covers only partly is left alone rather than half-rewritten, so you can select roughly and still get a sensible result. Selecting nothing greys the command out: an empty selection never means "the whole note".
 
