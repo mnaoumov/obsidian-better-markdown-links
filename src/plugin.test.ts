@@ -76,7 +76,7 @@ vi.mock('@mnaoumov/obsidian-lib/components/settings-migration-component', async 
   };
 });
 
-// `PluginDataHandler` and `PluginEventSourceImpl` are NOT stubbed: since obsidian-dev-utils 93.2 the base
+// `PluginDataHandler` and `PluginEventSourceImpl` are NOT stubbed: the base
 // builds its own settings component out of them during `onload`, and that component really calls
 // `pluginEventSource.on`, so a bare `vi.fn()` double makes the base throw before `onloadImpl` runs.
 vi.mock('@mnaoumov/obsidian-lib/components/plugin-settings-tab-component', () => ({
@@ -145,7 +145,7 @@ let app: AppOriginal;
 
 async function createLoadedPlugin(): Promise<Plugin> {
   const plugin = new Plugin(app, manifest);
-  // PluginBase.onload is async; driving the real async load path directly (as the obsidian-dev-utils reference test does) runs every universal component plus onloadImpl.
+  // PluginBase.onload is async; driving the real async load path directly (as the `@mnaoumov/obsidian-lib` reference test does) runs every universal component plus onloadImpl.
   await plugin.onload();
   return plugin;
 }
@@ -329,7 +329,7 @@ describe('Plugin', () => {
 
     await createLoadedPlugin();
 
-    // Since obsidian-dev-utils 89.0.0 the handlers are built lazily by a factory, so build them here.
+    // The handlers are built lazily by a factory, so build them here.
     const commandHandlerFactory = registerCommandHandlersSpy.mock.calls[1]?.[0];
     expect(commandHandlerFactory?.()).toHaveLength(17);
   });
