@@ -173,17 +173,6 @@ function createFile(path: string): TFile {
   return strictProxy<TFile>({ path });
 }
 
-/**
- * The action half of a progress bar title, after checking the plugin-name prefix is rendered as code.
- */
-function progressBarTitleText(title: DocumentFragment | string | undefined): string {
-  if (!(title instanceof DocumentFragment)) {
-    throw new TypeError('The progress bar title is not a fragment.');
-  }
-
-  expect(title.querySelector('code')?.textContent).toBe('Better Markdown Links');
-  return title.textContent.replace(/^Better Markdown Links: /, '');
-}
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(abortSignalAny).mockImplementation((...signals) => signals[0] ?? new AbortController().signal);
@@ -546,7 +535,7 @@ describe('LinkConverter', () => {
       await context.converter.convertLinksInFolder({ folder });
 
       const loopParams = vi.mocked(loop).mock.calls[0]?.[0];
-      expect(progressBarTitleText(loopParams?.progressBarTitle)).toBe('Converting links in entire vault...');
+      expect(loopParams?.progressBarTitle).toBe('Converting links in entire vault...');
       expect(vi.mocked(getMarkdownFiles)).toHaveBeenCalledWith({
         app: context.app,
         isRecursive: true,
@@ -561,7 +550,7 @@ describe('LinkConverter', () => {
       await context.converter.convertLinksInFolder({ folder });
 
       const loopParams = vi.mocked(loop).mock.calls[0]?.[0];
-      expect(progressBarTitleText(loopParams?.progressBarTitle)).toBe('Converting links in folder "sub/folder" ...');
+      expect(loopParams?.progressBarTitle).toBe('Converting links in folder "sub/folder" ...');
     });
 
     it('should say what it is doing and force the style on every file when converting to Markdown', async () => {
@@ -579,7 +568,7 @@ describe('LinkConverter', () => {
       });
 
       const loopParams = vi.mocked(loop).mock.calls[0]?.[0];
-      expect(progressBarTitleText(loopParams?.progressBarTitle)).toBe('Converting links to Markdown in entire vault...');
+      expect(loopParams?.progressBarTitle).toBe('Converting links to Markdown in entire vault...');
       expect(loopParams?.buildNoticeMessage({ item: file, iterationString: '1/1' }))
         .toBe('Converting links to Markdown in note 1/1 - note.md');
       expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkStyle).toBe('Markdown');
@@ -600,7 +589,7 @@ describe('LinkConverter', () => {
       });
 
       const loopParams = vi.mocked(loop).mock.calls[0]?.[0];
-      expect(progressBarTitleText(loopParams?.progressBarTitle)).toBe('Converting link paths to relative in entire vault...');
+      expect(loopParams?.progressBarTitle).toBe('Converting link paths to relative in entire vault...');
       expect(loopParams?.buildNoticeMessage({ item: file, iterationString: '1/1' }))
         .toBe('Converting link paths to relative in note 1/1 - note.md');
       expect(vi.mocked(updateLinksInFile).mock.calls[0]?.[0].linkPathStyle).toBe('RelativePathToTheSource');

@@ -27,7 +27,6 @@ import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-uti
 import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 
 import { getLinkStyleForReference } from './frontmatter-wikilink-style.ts';
-import { buildProgressBarTitle } from './progress-bar-title.ts';
 
 interface EmbedDemoterConstructorParams {
   readonly abortSignalComponent: AbortSignalComponent;
@@ -171,11 +170,9 @@ export class EmbedDemoter {
           file
         });
       },
-      progressBarTitle: buildProgressBarTitle(
-        params.folder.path === '/'
-          ? 'Demoting embeds to links in entire vault...'
-          : `Demoting embeds to links in folder "${params.folder.path}" ...`
-      ),
+      progressBarTitle: params.folder.path === '/'
+        ? 'Demoting embeds to links in entire vault...'
+        : `Demoting embeds to links in folder "${params.folder.path}" ...`,
       shouldContinueOnError: true,
       shouldShowProgressBar: true
     });
