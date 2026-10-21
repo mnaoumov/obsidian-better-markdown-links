@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 6.2.0
+
+- build(deps): clear the brace-expansion, sharp and fast-uri advisories
+- feat(settings): merge matching include and exclude paths case-insensitively with globs
+- docs: mark plugin names as code
+
 ## 6.1.0
 
 - docs(api-contract): refresh the copied `Advanced Rename and Delete Handler` debug-switch line
