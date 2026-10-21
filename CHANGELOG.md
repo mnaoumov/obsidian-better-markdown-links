@@ -40,7 +40,7 @@
 
 - refactor: merge the switch to obsidian-dev-utils' normalizeLinkName
 - test(screenshots): merge the reproducible desktop capture without the suggestion notice
-- chore(deps): merge the obsidian-dev-utils 107 and obsidian-integration-testing 17 float
+- chore(deps): merge the obsidian-dev-utils 107 and obsidian-integration-testing 17 float (re #42 - [BUG] "Convert links in entire vault" progress bar disappears before completion)
 
 ## 5.1.0
 
@@ -52,7 +52,7 @@
 - fix: leave an alias-only wikilink alone when several notes answer to the name
 - refactor: publish the extended declaration as the root api.d.ts
 - perf: answer the alias lookup from the name index when one is installed
-- fix: stop the on-save probe flushing the editor, which blanked another plugin's inserted properties
+- fix: stop the on-save probe flushing the editor, which blanked another plugin's inserted properties (re #40 - [BUG] Conflict with Linter Save (Ctrl+S))
 - feat: add a forced link path style and a convert-paths-to-relative command triad
 - fix(deps): float devalue to 5.9.4, clearing GHSA-9rgm-9g3h-6x36
 - build(markdownlint): forbid hard-wrapped markdown paragraphs
