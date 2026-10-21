@@ -29,7 +29,6 @@ import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 import type { ResolveUnresolvedLinksInFileParams } from './unresolved-link-resolver.ts';
 
 import { getLinkStyleForReference } from './frontmatter-wikilink-style.ts';
-import { buildProgressBarTitle } from './progress-bar-title.ts';
 import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
 
 interface GetConversionSubjectParams {
@@ -250,11 +249,9 @@ export class LinkConverter {
           shouldResolveUnresolvedLinks: params.shouldResolveUnresolvedLinks ?? false
         });
       },
-      progressBarTitle: buildProgressBarTitle(
-        params.folder.path === '/'
-          ? `Converting ${what} in entire vault...`
-          : `Converting ${what} in folder "${params.folder.path}" ...`
-      ),
+      progressBarTitle: params.folder.path === '/'
+        ? `Converting ${what} in entire vault...`
+        : `Converting ${what} in folder "${params.folder.path}" ...`,
       shouldContinueOnError: true,
       shouldShowProgressBar: true
     });
