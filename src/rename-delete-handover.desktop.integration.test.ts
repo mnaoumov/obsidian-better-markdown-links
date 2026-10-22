@@ -88,7 +88,7 @@ async function runHandover(isApplied: boolean): Promise<HandoverProbeResult> {
     }): Promise<HandoverProbeResult> {
       const OFFER_WAIT_ATTEMPTS = 50;
       const OFFER_WAIT_INTERVAL_IN_MILLISECONDS = 100;
-      const STATE_BAG_KEY = '__obsidianDevUtils';
+      const STATE_BAG_KEY = '__obsidianLib';
       const REGISTRY_KEY = 'pluginApiRegistry';
 
       interface MigrateSettingsParamsLike {
