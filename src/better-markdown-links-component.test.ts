@@ -112,10 +112,6 @@ interface MutableAbortSignalHolder {
   abortSignal: AbortSignal;
 }
 
-interface ObsidianDevUtilsStateHolder {
-  obsidianDevUtilsState: Partial<Record<string, unknown>>;
-}
-
 interface ProcessFileAbortControllersHolder {
   processFileAbortControllers: Map<string, AbortController>;
 }
@@ -151,10 +147,6 @@ function createContext(files: ConfiguredFiles = {}, options: CreateContextOption
       ...files
     }
   });
-  // The configured App mock has no `obsidianDevUtilsState`; the real obsidian-lib shared-state helpers
-  // (used by the real `GenerateMarkdownLinkDefaultParamsComponent`) read it, so seed it like the
-  // sibling-plugin tests do rather than mocking those helpers.
-  castTo<ObsidianDevUtilsStateHolder>(appMock).obsidianDevUtilsState = {};
   // Seed a stub `commands` on the configured App mock, which lacks one.
   // The real `EditorSaveFileCommandPatchComponent` reads `app.commands.findCommand` in `onload`.
   // Returning no command keeps this test focused; that patch has its own dedicated test.

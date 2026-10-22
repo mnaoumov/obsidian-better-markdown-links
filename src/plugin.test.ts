@@ -187,8 +187,6 @@ beforeEach(() => {
   });
   app = appMock.asOriginalType__();
 
-  // Seed the obsidianDevUtilsState holder on the raw target behind the strict-proxy App so the real obsidian-lib universal components can read/write shared state during load.
-  seedOnRawTarget(app, 'obsidianDevUtilsState', {});
   // The suggestion component reads the registry to decide whether there is anything to suggest.
   // Obsidian-test-mocks models `getPlugin` and `enabledPlugins`, but leaves `manifests` to throw, so only
   // that one is seeded.

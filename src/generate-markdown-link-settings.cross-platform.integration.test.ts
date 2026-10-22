@@ -267,11 +267,11 @@ async function generate(params: GenerateParams): Promise<string> {
         readonly isRevoked: boolean;
       }
 
-      interface ObsidianDevUtilsWrapper {
-        readonly __obsidianDevUtils: ObsidianDevUtilsState;
+      interface ObsidianLibWrapper {
+        readonly __obsidianLib: ObsidianLibState;
       }
 
-      interface ObsidianDevUtilsState {
+      interface ObsidianLibState {
         readonly pluginApiRegistry?: RegistryWrapper;
       }
 
@@ -283,7 +283,7 @@ async function generate(params: GenerateParams): Promise<string> {
         readonly records?: Record<string, ApiRecord[]>;
       }
 
-      const api = (window as Partial<ObsidianDevUtilsWrapper>).__obsidianDevUtils?.pluginApiRegistry?.value?.records?.[pluginId]
+      const api = (window as Partial<ObsidianLibWrapper>).__obsidianLib?.pluginApiRegistry?.value?.records?.[pluginId]
         ?.find((candidate) => !candidate.isRevoked)?.api as Partial<BetterMarkdownLinksApi> | undefined;
       if (typeof api?.generateMarkdownLinkExtended !== 'function') {
         throw new TypeError(`The plugin API of ${pluginId} is not published (missing generateMarkdownLinkExtended)`);
