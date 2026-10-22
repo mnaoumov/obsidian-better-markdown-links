@@ -60,9 +60,9 @@ vi.mock('@mnaoumov/obsidian-lib/components/plugin-suggestion-component', async (
   };
 });
 
-// The same treatment for the dev-utils settings-migration component. What is this plugin's own is the pair
+// The same treatment for the obsidian-lib settings-migration component. What is this plugin's own is the pair
 // of closures it hands over — which pending values are offered, and how the retirement is persisted — so
-// they are captured and invoked directly. The offer-and-retire dance around them belongs to dev-utils and is
+// they are captured and invoked directly. The offer-and-retire dance around them belongs to obsidian-lib and is
 // tested there.
 vi.mock('@mnaoumov/obsidian-lib/components/settings-migration-component', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@mnaoumov/obsidian-lib/components/settings-migration-component')>();
@@ -187,14 +187,14 @@ beforeEach(() => {
   });
   app = appMock.asOriginalType__();
 
-  // Seed the obsidianDevUtilsState holder on the raw target behind the strict-proxy App so the real dev-utils universal components can read/write shared state during load.
+  // Seed the obsidianDevUtilsState holder on the raw target behind the strict-proxy App so the real obsidian-lib universal components can read/write shared state during load.
   seedOnRawTarget(app, 'obsidianDevUtilsState', {});
   // The suggestion component reads the registry to decide whether there is anything to suggest.
   // Obsidian-test-mocks models `getPlugin` and `enabledPlugins`, but leaves `manifests` to throw, so only
   // that one is seeded.
   seedOnRawTarget(app.plugins, 'manifests', {});
 
-  // Expose the app as the global instance so dev-utils helpers that resolve shared state without an explicit app argument read/write the same seeded holder.
+  // Expose the app as the global instance so obsidian-lib helpers that resolve shared state without an explicit app argument read/write the same seeded holder.
   castTo<AppGlobal>(window).app = app;
 });
 

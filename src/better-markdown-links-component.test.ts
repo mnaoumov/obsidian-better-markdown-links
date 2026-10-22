@@ -33,7 +33,7 @@ import type { PluginSettingsComponent } from './plugin-settings-component.ts';
 import type { PluginSettings } from './plugin-settings.ts';
 
 // These factories only stub the return values of pure utility functions the component reads
-// (allowed thin `vi.fn()` stubs). The dev-utils base classes (LayoutReadyComponent,
+// (allowed thin `vi.fn()` stubs). The obsidian-lib base classes (LayoutReadyComponent,
 // MonkeyAroundComponent, GenerateMarkdownLinkDefaultParamsComponent) and the plugin's own patch
 // siblings are intentionally NOT mocked, so they run for real against the configured app.
 vi.mock('@mnaoumov/typescript-lib/abort-controller', () => ({
@@ -151,7 +151,7 @@ function createContext(files: ConfiguredFiles = {}, options: CreateContextOption
       ...files
     }
   });
-  // The configured App mock has no `obsidianDevUtilsState`; the real dev-utils shared-state helpers
+  // The configured App mock has no `obsidianDevUtilsState`; the real obsidian-lib shared-state helpers
   // (used by the real `GenerateMarkdownLinkDefaultParamsComponent`) read it, so seed it like the
   // sibling-plugin tests do rather than mocking those helpers.
   castTo<ObsidianDevUtilsStateHolder>(appMock).obsidianDevUtilsState = {};
@@ -307,7 +307,7 @@ describe('BetterMarkdownLinksComponent', () => {
 
       const fns = getGenerateMarkdownLinkDefaultParamsFns();
       const lastFunction = fns.at(-1);
-      // `shouldAllowEmptyEmbedAlias` must be exposed under the dev-utils name `isEmptyEmbedAliasAllowed`;
+      // `shouldAllowEmptyEmbedAlias` must be exposed under the obsidian-lib name `isEmptyEmbedAliasAllowed`;
       // Returning the settings object verbatim silently dropped it (the field names differ).
       expect(lastFunction?.()).toEqual({
         isEmptyEmbedAliasAllowed: false,

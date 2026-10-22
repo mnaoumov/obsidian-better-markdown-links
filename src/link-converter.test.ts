@@ -432,7 +432,7 @@ describe('LinkConverter', () => {
 
         await context.converter.convertLinksInFile({ file: createFile('note.md'), offsetRange: OFFSET_RANGE });
 
-        // The end moves by -100 and would fall below the start; dev-utils rejects such a range at its entry
+        // The end moves by -100 and would fall below the start; obsidian-lib rejects such a range at its entry
         // point, which is the loud failure wanted for a note deleted mid-conversion.
         expect(vi.mocked(updateFileUrlLinksInFile).mock.calls[0]?.[0].offsetRange?.endOffset).toBe(OFFSET_RANGE.endOffset - 100);
       });
