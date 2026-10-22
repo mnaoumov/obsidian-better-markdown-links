@@ -66,15 +66,15 @@ export abstract class SelectionCommandHandler extends EditorCommandHandler {
 }
 
 /**
- * Converts the editor selection into the character range dev-utils confines an edit to.
+ * Converts the editor selection into the character range obsidian-lib confines an edit to.
  *
- * **There is deliberately no off-by-one correction here.** Dev-utils tests containment as
+ * **There is deliberately no off-by-one correction here.** obsidian-lib tests containment as
  * `reference.position.end.offset <= endOffset`, and Obsidian's `position.end.offset` is the offset just
  * past the link's last character — exclusive, exactly like the editor's `to` cursor. The two exclusive
  * ends line up, so subtracting one would drop a link that ends precisely where the selection does.
  *
- * The offsets are read from the editor buffer while dev-utils rewrites the file on disk, and that is safe
- * without a flush here: every dev-utils edit saves a dirty `MarkdownView` for the file before reading it,
+ * The offsets are read from the editor buffer while obsidian-lib rewrites the file on disk, and that is safe
+ * without a flush here: every obsidian-lib edit saves a dirty `MarkdownView` for the file before reading it,
  * and what it saves is this very buffer, so the offsets still describe the content that reaches disk.
  */
 function toOffsetRange(editor: Editor): OffsetRange {

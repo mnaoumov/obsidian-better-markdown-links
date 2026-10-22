@@ -110,7 +110,7 @@ interface RunScenarioParams {
    * and every offset in the note shifted by its length.
    *
    * This is how the selection scenarios prove the one hazard a range carries: the range is measured in
-   * the editor while the rewrite happens on disk. Dev-utils saves the dirty view before it reads, so the
+   * the editor while the rewrite happens on disk. obsidian-lib saves the dirty view before it reads, so the
    * two agree — but only because it does. A prefix makes the disagreement fatal if it ever stops.
    */
   readonly dirtyPrefix?: string;
@@ -325,7 +325,7 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
         companions: TWO_EMBED_COMPANIONS,
         content: TWO_EMBED_CONTENT,
         // Shifts every offset in the note while disk and metadata cache still describe it as it was.
-        // If dev-utils read the file without first saving this view, the range would land on the wrong
+        // If obsidian-lib read the file without first saving this view, the range would land on the wrong
         // bytes and either demote the wrong embed or corrupt one — which is why this is asserted here
         // rather than assumed.
         dirtyPrefix: '# A heading typed and not saved\n\n',
@@ -935,7 +935,7 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
 
       // Polls until Obsidian's metadata cache reports a link or embed from the content just typed. Every
       // scenario writes at least one reference, and none needs the cache to be complete before the
-      // command runs — dev-utils re-reads it, after saving the view, from inside the command itself.
+      // command runs — obsidian-lib re-reads it, after saving the view, from inside the command itself.
       async function waitForIndexedReference(file: TFile): Promise<void> {
         const start = performance.now();
         while (performance.now() - start < SETTLE_TIMEOUT_IN_MILLISECONDS) {

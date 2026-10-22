@@ -110,7 +110,7 @@ describe('DemoteEmbedsInSelectionCommandHandler', () => {
 
   it('should take the range from the selection ends verbatim, since both are exclusive already', async () => {
     // The guard against a plausible off-by-one "fix". Obsidian reports a link's `position.end.offset` as
-    // the offset just past its last character, and dev-utils tests `end.offset <= endOffset`, so a
+    // the offset just past its last character, and obsidian-lib tests `end.offset <= endOffset`, so a
     // selection ending exactly where a link ends must keep that link. Subtracting one would drop it.
     const { editor, posToOffset } = createEditor(true);
 
