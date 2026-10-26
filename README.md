@@ -62,6 +62,19 @@ For better performance on a large vault, consider also installing [Backlink Cach
 
 If you turn on **Should resolve links via aliases**, consider installing [Advanced Metadata Cache](https://github.com/mnaoumov/obsidian-advanced-metadata-cache) and switching on its **Names** module. The alias lookup then reads that plugin's name index instead of walking every note in the vault for each unresolved link, which matters most for a whole-vault conversion. You do not need to change anything here: the lookup uses the index whenever it is available, and its answers are the same either way.
 
+## Similar plugins
+
+- [`Link Converter`](https://community.obsidian.md/plugins/obsidian-link-converter) — converts the links in one note or the whole vault to wikilinks or Markdown, and their paths to relative, absolute or shortest, on command; this plugin also writes angle brackets and a leading `./`, converts a selection or a folder, and can convert automatically as you save.
+- [`Update Relative Links`](https://community.obsidian.md/plugins/update-relative-links) — keeps relative Markdown link paths correct when a note moves, and can rewrite every link to a relative path; this plugin leaves moves to Obsidian or to `Advanced Rename and Delete Handler`, and also offers the other path styles and angle brackets.
+- [`Wikilinks to MDLinks`](https://community.obsidian.md/plugins/wikilinks-to-mdlinks-obsidian) — toggles the one link under the cursor between wikilink and Markdown form, in both directions; this plugin converts a whole selection, note, folder or vault to one style.
+- [`Markdown Link Space Encoder`](https://community.obsidian.md/plugins/markdown-link-space-encoder) — encodes the spaces in the selected text as `%20`; this plugin keeps the spaces and wraps the path in angle brackets instead, in every link it writes or converts.
+- [`Better Relative Wikilinks`](https://community.obsidian.md/plugins/better-relative-wikilinks) — writes a new wikilink with a relative path only when its name is ambiguous, keeping the bare name otherwise; this plugin applies one path style to every link, Markdown links included.
+- [`Alias Linker`](https://community.obsidian.md/plugins/alias-linker) — makes a bare `[[alias]]` open the note that carries the alias, without changing the note, picking the nearest note when several carry it; this plugin rewrites such a link to point at the note, on an explicit convert, and only when exactly one note carries the name.
+- [`Logseq Style Alias`](https://community.obsidian.md/plugins/logseq-style-alias) — makes a bare `[[alias]]` open the note that carries the alias, without changing the note, and can clean up empty notes created by such links; this plugin rewrites such a link to point at the note, on an explicit convert, and can create the note when nothing matches.
+- [`Embed Link Converter`](https://community.obsidian.md/plugins/embed-link-converter) — converts image embeds between wikilink and Markdown syntax in both directions, with a preview and backups, and never rewrites a path; this plugin converts every link's style and path, and demotes embeds to plain links rather than changing their syntax.
+
+Last searched for similar plugins on 2026-10-26.
+
 ## For plugin developers
 
 This plugin publishes an API through the [`@mnaoumov/obsidian-lib`](https://www.npmjs.com/package/@mnaoumov/obsidian-lib) plugin registry, under the plugin id `better-markdown-links` at contract version **1.0.0**. Its one method, `generateMarkdownLinkExtended()`, takes the full set of options this plugin generates links with. It is there for a plugin that wants to write the same readable, unambiguous links without re-implementing them.
