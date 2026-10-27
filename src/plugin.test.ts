@@ -19,12 +19,12 @@ import {
   vi
 } from 'vitest';
 
-import type { MigratableSettings } from './advanced-rename-and-delete-handler.ts';
+import type { MigratableSettings } from './rename-delete-handover/advanced-rename-and-delete-handler.ts';
 
-import { ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT } from './advanced-rename-and-delete-handler-api/api-contract.ts';
-import { PluginSettings } from './plugin-settings.ts';
+import { ADVANCED_RENAME_AND_DELETE_HANDLER_API_CONTRACT } from './rename-delete-handover/advanced-rename-and-delete-handler-api/api-contract.ts';
+import { PluginSettings } from './settings/plugin-settings.ts';
 
-vi.mock('./plugin-settings-component.ts', () => ({
+vi.mock('./settings/plugin-settings-component.ts', () => ({
   // Extends the real obsidian-test-mocks Component so the real addChild lifecycle can load it.
   PluginSettingsComponent: class extends Component {
     public settings = new PluginSettings();
@@ -84,30 +84,30 @@ vi.mock('@mnaoumov/obsidian-lib/components/plugin-settings-tab-component', () =>
   PluginSettingsTabComponent: class extends Component {}
 }));
 
-vi.mock('./plugin-settings-tab.ts', () => ({
+vi.mock('./settings/plugin-settings-tab.ts', () => ({
   PluginSettingsTab: vi.fn()
 }));
 
-vi.mock('./link-converter.ts', () => ({
+vi.mock('./conversion/link-converter.ts', () => ({
   LinkConverter: vi.fn()
 }));
 
-vi.mock('./better-markdown-links-component.ts', () => ({
+vi.mock('./automatic-conversion/better-markdown-links-component.ts', () => ({
   // Extends the real obsidian-test-mocks Component so the real addChild lifecycle can load it.
   BetterMarkdownLinksComponent: class extends Component {}
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { PluginApiImpl } from './plugin-api-impl.ts';
+import { PluginApiImpl } from './link-generation/plugin-api-impl.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
   PLUGIN_API_CONTRACT,
   PLUGIN_API_VERSION
-} from './plugin-api.ts';
-// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { PluginSettingsComponent } from './plugin-settings-component.ts';
+} from './link-generation/plugin-api.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { Plugin } from './plugin.ts';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { PluginSettingsComponent } from './settings/plugin-settings-component.ts';
 
 interface AppGlobal {
   app: AppOriginal;

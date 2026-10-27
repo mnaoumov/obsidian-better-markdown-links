@@ -1,0 +1,102 @@
+import type {
+  ApiMethodCases,
+  PayloadCases
+} from '@mnaoumov/typescript-lib/api-contract-verifier';
+
+import {
+  validateSync,
+  verifyApiContract
+} from '@mnaoumov/typescript-lib/api-contract-verifier';
+import { castTo } from '@mnaoumov/typescript-lib/object-utils';
+import {
+  App,
+  TFile
+} from 'obsidian-test-mocks/obsidian';
+import {
+  describe,
+  expect,
+  it
+} from 'vitest';
+
+import type { BetterMarkdownLinksApi } from '../../api.d.ts';
+
+import { BETTER_MARKDOWN_LINKS_API_CONTRACT } from '../../api-contract.ts';
+
+const file = TFile.create__(castTo(App.createConfigured__().vault), 'target.md').asOriginalType2__();
+
+const MINIMAL_OPTIONS = { sourcePathOrFile: 'source.md', targetPathOrFile: 'target.md' };
+
+const FULL_OPTIONS = {
+  alias: 'Alias',
+  isEmbed: true,
+  isEmptyEmbedAliasAllowed: false,
+  isNonExistingFileAllowed: true,
+  isSingleSubpathAllowed: false,
+  linkPathStyle: 'RelativePathToTheSource',
+  linkStyle: 'Markdown',
+  originalLink: '[[target]]',
+  shouldEscapeAlias: true,
+  shouldIncludeAttachmentExtensionToEmbedAlias: false,
+  shouldUseAngleBrackets: true,
+  shouldUseLeadingDotForRelativePaths: true,
+  shouldUseLeadingSlashForAbsolutePaths: false,
+  sourcePathOrFile: file,
+  subpath: '#Heading',
+  targetPathOrFile: file
+};
+
+const OPTIONS: PayloadCases = {
+  invalid: [
+    [],
+    [null],
+    [[]],
+    ['target.md'],
+    [{ sourcePathOrFile: 'source.md' }],
+    [{ targetPathOrFile: 'target.md' }],
+    [{ ...MINIMAL_OPTIONS, sourcePathOrFile: 1 }],
+    [{ ...MINIMAL_OPTIONS, targetPathOrFile: { path: 'target.md' } }],
+    [{ ...MINIMAL_OPTIONS, alias: 1 }],
+    [{ ...MINIMAL_OPTIONS, alias: undefined }],
+    [{ ...MINIMAL_OPTIONS, isEmbed: 'true' }],
+    [{ ...MINIMAL_OPTIONS, linkPathStyle: 'Relative' }],
+    [{ ...MINIMAL_OPTIONS, linkStyle: 'markdown' }],
+    [MINIMAL_OPTIONS, 'extra'],
+    MINIMAL_OPTIONS,
+    // Only own keys count: required keys reached through the prototype are still missing.
+    [Object.create(MINIMAL_OPTIONS)]
+  ],
+  valid: [
+    [MINIMAL_OPTIONS],
+    [FULL_OPTIONS],
+    [{ ...MINIMAL_OPTIONS, unknownOption: 1 }],
+    // An inherited optional key is not read, so its wrong type does not refuse the options.
+    [Object.assign(Object.create({ alias: 1 }), MINIMAL_OPTIONS)]
+  ]
+};
+
+const LINK: PayloadCases = { invalid: [null, undefined, 1, ['[[target]]']], valid: ['', '[target](<target.md>)'] };
+
+const CASES: Record<keyof BetterMarkdownLinksApi, ApiMethodCases> = {
+  generateMarkdownLinkExtended: { input: OPTIONS, output: LINK }
+};
+
+describe('BETTER_MARKDOWN_LINKS_API_CONTRACT', () => {
+  it('should pass the contract verification', async () => {
+    expect(await verifyApiContract(BETTER_MARKDOWN_LINKS_API_CONTRACT, { cases: CASES, vendor: 'better-markdown-links' })).toEqual([]);
+  });
+
+  it('should name the failing argument and what it expected', () => {
+    expect(validateSync(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.input, [{ sourcePathOrFile: 'source.md' }])).toEqual({
+      issues: [{ message: 'Expected the options of the link to generate, with a sourcePathOrFile and a targetPathOrFile.', path: [0] }]
+    });
+    expect(validateSync(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.input, MINIMAL_OPTIONS)).toEqual({
+      issues: [{ message: 'Expected an argument list.' }]
+    });
+    expect(validateSync(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.input, [MINIMAL_OPTIONS, MINIMAL_OPTIONS])).toEqual({
+      issues: [{ message: 'Expected at most 1 argument(s), got 2.' }]
+    });
+    expect(validateSync(BETTER_MARKDOWN_LINKS_API_CONTRACT.generateMarkdownLinkExtended.output, null)).toEqual({
+      issues: [{ message: 'Expected the markdown of a link.' }]
+    });
+  });
+});
