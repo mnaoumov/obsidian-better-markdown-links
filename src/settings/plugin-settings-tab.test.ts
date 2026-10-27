@@ -27,11 +27,11 @@ vi.mock('@mnaoumov/typescript-lib/html-element', () => ({
 }));
 
 interface SearchableDefinition {
-  searchable?: boolean;
+  readonly searchable?: boolean;
 }
 
 interface VisibleDefinition {
-  visible: () => boolean;
+  readonly visible: () => boolean;
 }
 
 const EXPECTED_BOUND_PROPERTIES = [

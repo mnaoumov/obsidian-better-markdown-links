@@ -66,6 +66,7 @@ import {
 import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
 
 interface PlatformMock {
+  // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- Tests switch the mocked platform and restore it after each case.
   isWin: boolean;
 }
 

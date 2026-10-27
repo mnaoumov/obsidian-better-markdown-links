@@ -26,7 +26,7 @@ interface CreateComponentResult {
 }
 
 interface SaveThis {
-  file: null | TFile;
+  readonly file: null | TFile;
 }
 
 const loadedComponents: TextFileViewSavePatchComponent[] = [];

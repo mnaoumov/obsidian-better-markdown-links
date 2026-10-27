@@ -79,11 +79,12 @@ import { handleSilentError } from '@mnaoumov/typescript-lib/async';
 import { BetterMarkdownLinksComponent } from './better-markdown-links-component.ts';
 
 interface CommandsHolder {
+  // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- The fixture installs its command stub after creating the app.
   commands: CommandsStub;
 }
 
 interface CommandsStub {
-  findCommand: (commandId: string) => unknown;
+  readonly findCommand: (commandId: string) => unknown;
 }
 
 type ConfiguredFiles = NonNullable<Parameters<typeof AppCls.createConfigured__>[0]>['files'];
@@ -101,33 +102,35 @@ interface CreateContextOptions {
 }
 
 interface DeletedHolder {
+  // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- Tests simulate a file being deleted after its conversion starts.
   deleted: boolean;
 }
 
 interface HandleModifyHolder {
-  handleModify: (file: TAbstractFile) => Promise<void>;
+  readonly handleModify: (file: TAbstractFile) => Promise<void>;
 }
 
 interface MutableAbortSignalHolder {
+  // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- Tests replace the signal to exercise cancellation during conversion.
   abortSignal: AbortSignal;
 }
 
 interface ProcessFileAbortControllersHolder {
-  processFileAbortControllers: Map<string, AbortController>;
+  readonly processFileAbortControllers: Map<string, AbortController>;
 }
 
 interface TestContext {
-  abortSignalComponent: AbortSignalComponent;
-  app: App;
-  appMock: ReturnType<typeof AppCls.createConfigured__>;
-  component: BetterMarkdownLinksComponent;
-  consoleDebug: ReturnType<typeof vi.fn>;
-  convertLinksInFile: ReturnType<typeof vi.fn<LinkConverter['convertLinksInFile']>>;
-  isPathIgnored: ReturnType<typeof vi.fn>;
-  settings: PluginSettings;
-  shouldConvertLinksOnModify: ReturnType<typeof vi.fn<() => boolean>>;
-  shouldConvertLinksOnNavigation: ReturnType<typeof vi.fn<() => boolean>>;
-  shouldConvertLinksOnSave: ReturnType<typeof vi.fn<(isSaveCommand: boolean) => boolean>>;
+  readonly abortSignalComponent: AbortSignalComponent;
+  readonly app: App;
+  readonly appMock: ReturnType<typeof AppCls.createConfigured__>;
+  readonly component: BetterMarkdownLinksComponent;
+  readonly consoleDebug: ReturnType<typeof vi.fn>;
+  readonly convertLinksInFile: ReturnType<typeof vi.fn<LinkConverter['convertLinksInFile']>>;
+  readonly isPathIgnored: ReturnType<typeof vi.fn>;
+  readonly settings: PluginSettings;
+  readonly shouldConvertLinksOnModify: ReturnType<typeof vi.fn<() => boolean>>;
+  readonly shouldConvertLinksOnNavigation: ReturnType<typeof vi.fn<() => boolean>>;
+  readonly shouldConvertLinksOnSave: ReturnType<typeof vi.fn<(isSaveCommand: boolean) => boolean>>;
 }
 
 /**

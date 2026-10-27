@@ -45,15 +45,15 @@ import { DemoteEmbedsInFileCommandHandler } from './demote-embeds-in-file-comman
 let app: AppOriginal;
 
 interface MenuItemMock {
-  onClick: (callback: () => void) => MenuItemMock;
-  setIcon: () => MenuItemMock;
-  setSection: () => MenuItemMock;
-  setTitle: () => MenuItemMock;
+  readonly onClick: (callback: () => void) => MenuItemMock;
+  readonly setIcon: () => MenuItemMock;
+  readonly setSection: () => MenuItemMock;
+  readonly setTitle: () => MenuItemMock;
 }
 
 interface MenuMock {
-  addItem: ReturnType<typeof vi.fn>;
-  menu: MenuOriginal;
+  readonly addItem: ReturnType<typeof vi.fn>;
+  readonly menu: MenuOriginal;
 }
 
 describe('DemoteEmbedsInFileCommandHandler', () => {

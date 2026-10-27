@@ -110,11 +110,12 @@ import { Plugin } from './plugin.ts';
 import { PluginSettingsComponent } from './settings/plugin-settings-component.ts';
 
 interface AppGlobal {
+  // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- The fixture installs the app on the mocked global.
   app: AppOriginal;
 }
 
 interface PluginApisReader {
-  getPluginApis: () => PluginApiDeclaration[];
+  readonly getPluginApis: () => PluginApiDeclaration[];
 }
 
 interface PluginSuggestionComponentParams {
