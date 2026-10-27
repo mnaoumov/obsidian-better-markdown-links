@@ -39,28 +39,20 @@ A copy of the vault ships with every release. You can access it via any of the f
 
 ## What it does
 
-- **Angle bracket links** — `[Title](<path with space/note with space.md>)` instead of `%20` noise. The Markdown spec allows it and Obsidian understands it; Obsidian just never generates it. [01 Angle bracket links](<./demo-vault/01 Angle bracket links.md>)
-- **Explicit relative links** — a leading `./`, so a relative path cannot be [mistaken for an absolute one](https://forum.obsidian.md/t/add-settings-to-control-link-resolution-mode/69560) by anything that reads your vault. [02 Relative links](<./demo-vault/02 Relative links.md>)
-- **Convert what you already have** — a selection, one note, one folder, or the whole vault; on command, on save, on auto-save, or on every modification, whichever suits how eagerly you want it to work. [03 Convert links](<./demo-vault/03 Convert links.md>)
-- **`file://` normalization** — `[note](file:///C:%5Cnotes%5Cplan.md)` becomes `[note](file:///C:/notes/plan.md)`. Other links are left alone. [03 Convert links](<./demo-vault/03 Convert links.md>)
-- **Force Markdown links** — write `[alias](<path.md>)` even in a vault whose own **Use `[[Wikilinks]]`** setting says otherwise, either permanently via the **Link style** setting or for one run via the **Convert links to Markdown** commands. Replaces **Replace all wikilinks with markdown links** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links). A wikilink in a note's properties stays a wikilink, because Obsidian treats a property as a link only in that form (a Bases item's `base` property among them); a setting converts those too, for vaults running [`Frontmatter Markdown Links`](https://github.com/mnaoumov/obsidian-frontmatter-markdown-links). [03 Convert links](<./demo-vault/03 Convert links.md>)
-- **Force a link path style** — write relative, shortest or vault-absolute paths whatever Obsidian's own **New link format** setting says, either permanently via the **Link path style** setting or for one run via the **Convert link paths to relative** commands. Replaces **Convert all link paths to relative** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links). [03 Convert links](<./demo-vault/03 Convert links.md>)
-- **Demote embeds to links** — strip the `!` off every embed in a selection, a note, a folder, or the vault, optionally leaving the target's file name behind as a sub-bullet. [04 Demote embeds](<./demo-vault/04 Demote embeds.md>)
-- **Links that do not resolve** — convert an alias-only wikilink by looking the alias up across the vault, and optionally create the note when nothing matches. A name several notes carry is left alone rather than guessed at. [03 Convert links](<./demo-vault/03 Convert links.md>)
-
-## Renames
-
-Up to version 4 this plugin updated the links pointing at a note when you renamed or moved it. Since **5.0.0** it does not, and rename and delete handling belongs to [Advanced Rename and Delete Handler](https://github.com/mnaoumov/obsidian-advanced-rename-and-delete-handler) instead — one plugin owning it for the whole vault, rather than a copy inside each plugin that happened to need it.
-
-This plugin offers to install it, once, and carries your old rename-handling value — along with the include and exclude paths that scoped it — over for you to approve. Declining costs you nothing else: every feature above keeps working, with Obsidian's own link update in charge of renames.
+- **Angle bracket links** — `[Title](<path with space/note.md>)` instead of `%20` noise: [01 Angle bracket links](<./demo-vault/01 Angle bracket links.md>).
+- **Explicit relative links** — a leading `./`, so a relative path cannot be mistaken for an absolute one: [02 Relative links](<./demo-vault/02 Relative links.md>).
+- **Convert what you already have** — a selection, a note, a folder or the whole vault, on command or automatically as you save: [03 Convert links](<./demo-vault/03 Convert links.md>).
+- **`file://` normalization** — escaped backslashes in a `file://` link become plain forward slashes: [03 Convert links](<./demo-vault/03 Convert links.md>).
+- **Force Markdown links** — whatever Obsidian's **Use `[[Wikilinks]]`** setting says, permanently or for one run: [03 Convert links](<./demo-vault/03 Convert links.md>).
+- **Force a link path style** — relative, shortest or vault-absolute, whatever Obsidian's **New link format** setting says: [03 Convert links](<./demo-vault/03 Convert links.md>).
+- **Demote embeds to links** — strip the `!` off every embed in a selection, a note, a folder or the vault: [04 Demote embeds](<./demo-vault/04 Demote embeds.md>).
+- **Links that do not resolve** — point an alias-only wikilink at the note carrying the alias, or create the note: [03 Convert links](<./demo-vault/03 Convert links.md>).
 
 ## Integration with other plugins
 
-Rename and delete handling is not this plugin's any more — see [Renames](#renames) above. Install [Advanced Rename and Delete Handler](https://community.obsidian.md/plugins/advanced-rename-and-delete-handler) to keep it.
-
-For better performance on a large vault, consider also installing [Backlink Cache](https://community.obsidian.md/plugins/backlink-cache).
-
-If you turn on **Should resolve links via aliases**, consider installing [Advanced Metadata Cache](https://github.com/mnaoumov/obsidian-advanced-metadata-cache) and switching on its **Names** module. The alias lookup then reads that plugin's name index instead of walking every note in the vault for each unresolved link, which matters most for a whole-vault conversion. You do not need to change anything here: the lookup uses the index whenever it is available, and its answers are the same either way.
+- Since **5.0.0**, renames and deletes are handled by [`Advanced Rename and Delete Handler`](https://community.obsidian.md/plugins/advanced-rename-and-delete-handler), which this plugin offers to install: [05 Settings](<./demo-vault/05 Settings.md>).
+- [`Backlink Cache`](https://community.obsidian.md/plugins/backlink-cache) speeds this plugin up on a large vault.
+- [`Advanced Metadata Cache`](https://github.com/mnaoumov/obsidian-advanced-metadata-cache), with its **Names** module on, speeds up resolving links via aliases: [03 Convert links](<./demo-vault/03 Convert links.md>).
 
 ## Similar plugins
 
@@ -77,36 +69,9 @@ Last searched for similar plugins on 2026-10-26.
 
 ## For plugin developers
 
-This plugin publishes an API through the [`@mnaoumov/obsidian-lib`](https://www.npmjs.com/package/@mnaoumov/obsidian-lib) plugin registry, under the plugin id `better-markdown-links` at contract version **1.0.0**. Its one method, `generateMarkdownLinkExtended()`, takes the full set of options this plugin generates links with. It is there for a plugin that wants to write the same readable, unambiguous links without re-implementing them.
+This plugin publishes an API, `generateMarkdownLinkExtended()`, through the [`@mnaoumov/obsidian-lib`](https://www.npmjs.com/package/@mnaoumov/obsidian-lib) plugin registry under the id `better-markdown-links`, for a plugin that wants to write the same links without re-implementing them. Copy [`api.d.ts`](./api.d.ts) and [`api-contract.ts`](./api-contract.ts) into your plugin.
 
-The types are in [`api.d.ts`](./api.d.ts) at the root of this repository. Copy that file into your own plugin: it imports from `obsidian` and nothing else, so it costs you no dependency on this one.
-
-Beside `api.d.ts`, [`api-contract.ts`](./api-contract.ts) holds the API's contract, `BETTER_MARKDOWN_LINKS_API_CONTRACT`: for every method, a schema over its arguments and a schema over what it returns. It is the constant this plugin publishes with the API, so copy it next to `api.d.ts` and pass it as the `contract`, and both sides check the same definition. Its schemas are [Standard Schema](https://standardschema.dev) objects built with [`@mnaoumov/typescript-lib/api-contract`](https://www.npmjs.com/package/@mnaoumov/typescript-lib), which carries the generic half (the contract types, the schema builders and the guard builders), and its path-or-file guard comes from [`@mnaoumov/obsidian-lib`](https://www.npmjs.com/package/@mnaoumov/obsidian-lib), so copying it means adding both packages (`npm install @mnaoumov/typescript-lib @mnaoumov/obsidian-lib`, typescript-lib `1.5.0` or later). Apart from those two, the file imports only `obsidian` and `./api.d.ts`. (It is not named `api.ts`: TypeScript would read `api.d.ts` as that file's own declarations.)
-
-```ts
-import { watchPluginApi } from '@mnaoumov/obsidian-lib/plugin/plugin-api';
-
-import type { BetterMarkdownLinksApi } from './api.d.ts';
-
-import { BETTER_MARKDOWN_LINKS_API_CONTRACT } from './api-contract.ts';
-
-const ref = watchPluginApi<BetterMarkdownLinksApi>({
-  apiVersionRange: '^1',
-  app: this.app,
-  component: this,
-  contract: BETTER_MARKDOWN_LINKS_API_CONTRACT,
-  pluginId: 'better-markdown-links'
-});
-
-const link = ref.value?.generateMarkdownLinkExtended({ sourcePathOrFile, targetPathOrFile, shouldUseAngleBrackets: true })
-  ?? this.app.fileManager.generateMarkdownLink(targetFile, sourcePath);
-```
-
-`ref.value` is `null` while this plugin is not loaded, so the fallback above keeps working without it. The contract version does not follow the plugin version: ask for `'^1'`, and every plugin release that changes nothing you depend on keeps working.
-
-While this plugin is enabled, [`app.fileManager.generateMarkdownLink()`][generateMarkdownLink] itself is still patched, with its built-in signature, to write links the way this plugin does.
-
-**Before 6.0.0** the extended function was a member hung off that call, `app.fileManager.generateMarkdownLink.extended()`. 6.0.0 removed that member. `generateMarkdownLinkExtended()` takes exactly the options `extended()` took, so moving over only changes how you find the function.
+Usage, the contract, versioning, and moving over from the pre-6.0.0 `generateMarkdownLink.extended()`: [Plugin API](./docs/plugin-api.md).
 
 ## Installation
 
@@ -151,4 +116,3 @@ Contributions are welcome — see [CONTRIBUTING](./CONTRIBUTING.md) to get set u
 © [Michael Naumov](https://github.com/mnaoumov/)
 
 [Obsidian]: https://obsidian.md/
-[generateMarkdownLink]: https://docs.obsidian.md/Reference/TypeScript+API/FileManager/generateMarkdownLink
