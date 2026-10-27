@@ -38,7 +38,7 @@ import { LinkConversionMode } from '../settings/link-conversion-mode.ts';
  * same way the plugin's own settings UI does.
  */
 interface TestableSettingsComponent {
-  editAndSave: (settingsEditor: (settings: PluginSettings) => Promise<void> | void) => Promise<void>;
+  readonly editAndSave: (settingsEditor: (settings: PluginSettings) => Promise<void> | void) => Promise<void>;
 }
 
 /**

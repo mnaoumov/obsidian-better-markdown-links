@@ -34,8 +34,8 @@ interface DemotedWithRange {
 }
 
 interface EditorMock {
-  editor: Editor;
-  posToOffset: ReturnType<typeof vi.fn>;
+  readonly editor: Editor;
+  readonly posToOffset: ReturnType<typeof vi.fn>;
 }
 
 interface TestableHandler {

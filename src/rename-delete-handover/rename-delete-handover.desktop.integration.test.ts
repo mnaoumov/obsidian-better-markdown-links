@@ -103,24 +103,27 @@ async function runHandover(isApplied: boolean): Promise<HandoverProbeResult> {
       // A holder rather than a bare variable: the only assignment happens inside the stub the registry
       // calls, which the compiler cannot see, so a bare variable would be narrowed to `null` at every read.
       interface OfferHolder {
+        // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- The registry callback records the migration offer for later assertions.
         value: MigrateSettingsParamsLike | null;
       }
 
       interface RegistryRecord {
-        api: unknown;
-        apiVersion: string;
-        contract: Record<string, unknown>;
-        isRevoked: boolean;
-        pluginId: string;
+        readonly api: unknown;
+        readonly apiVersion: string;
+        readonly contract: Record<string, unknown>;
+        readonly isRevoked: boolean;
+        readonly pluginId: string;
       }
 
       interface RegistryValue {
+        // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- The fixture initializes missing registry records on the shared wrapper.
         records: Record<string, RegistryRecord[]>;
+        // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- The fixture initializes missing registry subscribers on the shared wrapper.
         subscribers: (() => void)[];
       }
 
       interface RegistryWrapper {
-        value: Partial<RegistryValue>;
+        readonly value: Partial<RegistryValue>;
       }
 
       const dataPath = `.obsidian/plugins/${pluginId}/data.json`;

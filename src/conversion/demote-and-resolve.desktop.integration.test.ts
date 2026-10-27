@@ -58,14 +58,16 @@ import { LinkStyleMode } from '../settings/link-style-mode.ts';
  * function object the plugin under test duck-types, carrying the reverse lookup it reads.
  */
 interface GraftedGetLinkSuggestions {
+  // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- The suite replaces this graft with a recording wrapper.
   getPathsByNameSafe?: (name: string) => Promise<string[]>;
-  safe?: () => Promise<unknown>;
+  readonly safe?: () => Promise<unknown>;
 }
 
 /**
  * `Advanced Metadata Cache`'s settings, seen through the one the suite switches.
  */
 interface NamesModuleSettings {
+  // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- The settings editor enables the real index module for these cases.
   isNamesModuleEnabled: boolean;
 }
 
@@ -73,7 +75,7 @@ interface NamesModuleSettings {
  * `Advanced Metadata Cache`'s settings component, seen through the one method the suite needs.
  */
 interface NamesModuleSettingsComponent {
-  editAndSave: (editor: (settings: NamesModuleSettings) => void) => Promise<void>;
+  readonly editAndSave: (editor: (settings: NamesModuleSettings) => void) => Promise<void>;
 }
 
 /**
@@ -89,6 +91,7 @@ declare global {
      * The names the recording wrapper saw `Advanced Metadata Cache`'s index asked for, kept on the renderer's
      * global so a later `evalInObsidian` call can read them back.
      */
+    // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- The suite initializes, resets and deletes its recording buffer.
     betterMarkdownLinksNameLookups?: string[];
   }
 }
@@ -165,7 +168,7 @@ interface ScenarioSettings {
  * same way the plugin's own settings UI does.
  */
 interface TestableSettingsComponent {
-  editAndSave: (settingsEditor: (settings: PluginSettings) => Promise<void> | void) => Promise<void>;
+  readonly editAndSave: (settingsEditor: (settings: PluginSettings) => Promise<void> | void) => Promise<void>;
 }
 
 /**

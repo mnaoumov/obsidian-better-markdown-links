@@ -25,10 +25,10 @@ interface CreateComponentOptions {
 }
 
 interface TestContext {
-  command: Command;
-  component: EditorSaveFileCommandPatchComponent;
-  findCommand: ReturnType<typeof vi.fn>;
-  markSaveCommand: ReturnType<typeof vi.fn>;
+  readonly command: Command;
+  readonly component: EditorSaveFileCommandPatchComponent;
+  readonly findCommand: ReturnType<typeof vi.fn>;
+  readonly markSaveCommand: ReturnType<typeof vi.fn>;
 }
 
 const loadedComponents: EditorSaveFileCommandPatchComponent[] = [];

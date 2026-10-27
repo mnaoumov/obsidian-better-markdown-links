@@ -30,7 +30,7 @@ import type { PluginSettings } from '../settings/plugin-settings.ts';
  * same way the plugin's own settings UI does.
  */
 interface TestableSettingsComponent {
-  editAndSave: (settingsEditor: (settings: PluginSettings) => Promise<void> | void) => Promise<void>;
+  readonly editAndSave: (settingsEditor: (settings: PluginSettings) => Promise<void> | void) => Promise<void>;
 }
 
 /**
