@@ -11,7 +11,7 @@ export const configs: Linter.Config[] = defineEslintConfigs({
     return defineConfig([
       // A verbatim copy of the provider's hand-written `api.d.ts`, refreshed from its repository rather than edited,
       // so its style is the provider's to keep.
-      globalIgnores(['src/advanced-rename-and-delete-handler-api/api.d.ts']),
+      globalIgnores(['src/rename-delete-handover/advanced-rename-and-delete-handler-api/api.d.ts']),
       {
         rules: {
           'obsidianmd/ui/sentence-case': [

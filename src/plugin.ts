@@ -9,39 +9,39 @@ import { appendCodeBlock } from '@mnaoumov/obsidian-lib/html-element';
 import { PluginBase } from '@mnaoumov/obsidian-lib/plugin/plugin';
 import { PluginEventSourceImpl } from '@mnaoumov/obsidian-lib/plugin/plugin-event-source';
 
-import type { MigratableSettings } from './advanced-rename-and-delete-handler.ts';
+import type { MigratableSettings } from './rename-delete-handover/advanced-rename-and-delete-handler.ts';
 
+import { BetterMarkdownLinksComponent } from './automatic-conversion/better-markdown-links-component.ts';
+import { ConvertLinkPathsToRelativeInEntireVaultCommandHandler } from './commands/convert-link-paths-to-relative/convert-link-paths-to-relative-in-entire-vault-command-handler.ts';
+import { ConvertLinkPathsToRelativeInFileCommandHandler } from './commands/convert-link-paths-to-relative/convert-link-paths-to-relative-in-file-command-handler.ts';
+import { ConvertLinkPathsToRelativeInFolderCommandHandler } from './commands/convert-link-paths-to-relative/convert-link-paths-to-relative-in-folder-command-handler.ts';
+import { ConvertLinkPathsToRelativeInSelectionCommandHandler } from './commands/convert-link-paths-to-relative/convert-link-paths-to-relative-in-selection-command-handler.ts';
+import { ConvertLinksToMarkdownInEntireVaultCommandHandler } from './commands/convert-links-to-markdown/convert-links-to-markdown-in-entire-vault-command-handler.ts';
+import { ConvertLinksToMarkdownInFileCommandHandler } from './commands/convert-links-to-markdown/convert-links-to-markdown-in-file-command-handler.ts';
+import { ConvertLinksToMarkdownInFolderCommandHandler } from './commands/convert-links-to-markdown/convert-links-to-markdown-in-folder-command-handler.ts';
+import { ConvertLinksToMarkdownInSelectionCommandHandler } from './commands/convert-links-to-markdown/convert-links-to-markdown-in-selection-command-handler.ts';
+import { ConvertLinksInEntireVaultCommandHandler } from './commands/convert-links/convert-links-in-entire-vault-command-handler.ts';
+import { ConvertLinksInFileCommandHandler } from './commands/convert-links/convert-links-in-file-command-handler.ts';
+import { ConvertLinksInFolderCommandHandler } from './commands/convert-links/convert-links-in-folder-command-handler.ts';
+import { ConvertLinksInSelectionCommandHandler } from './commands/convert-links/convert-links-in-selection-command-handler.ts';
+import { DemoteEmbedsInEntireVaultCommandHandler } from './commands/demote-embeds/demote-embeds-in-entire-vault-command-handler.ts';
+import { DemoteEmbedsInFileCommandHandler } from './commands/demote-embeds/demote-embeds-in-file-command-handler.ts';
+import { DemoteEmbedsInFolderCommandHandler } from './commands/demote-embeds/demote-embeds-in-folder-command-handler.ts';
+import { DemoteEmbedsInSelectionCommandHandler } from './commands/demote-embeds/demote-embeds-in-selection-command-handler.ts';
+import { EmbedDemoter } from './conversion/embed-demoter.ts';
+import { LinkConverter } from './conversion/link-converter.ts';
+import { PluginApiImpl } from './link-generation/plugin-api-impl.ts';
+import {
+  PLUGIN_API_CONTRACT,
+  PLUGIN_API_VERSION
+} from './link-generation/plugin-api.ts';
 import {
   ADVANCED_RENAME_AND_DELETE_HANDLER_MIGRATION_API_CONTRACT,
   ADVANCED_RENAME_AND_DELETE_HANDLER_PLUGIN_ID,
   ADVANCED_RENAME_AND_DELETE_HANDLER_PLUGIN_NAME
-} from './advanced-rename-and-delete-handler.ts';
-import { BetterMarkdownLinksComponent } from './better-markdown-links-component.ts';
-import { ConvertLinkPathsToRelativeInEntireVaultCommandHandler } from './commands/convert-link-paths-to-relative-in-entire-vault-command-handler.ts';
-import { ConvertLinkPathsToRelativeInFileCommandHandler } from './commands/convert-link-paths-to-relative-in-file-command-handler.ts';
-import { ConvertLinkPathsToRelativeInFolderCommandHandler } from './commands/convert-link-paths-to-relative-in-folder-command-handler.ts';
-import { ConvertLinkPathsToRelativeInSelectionCommandHandler } from './commands/convert-link-paths-to-relative-in-selection-command-handler.ts';
-import { ConvertLinksInEntireVaultCommandHandler } from './commands/convert-links-in-entire-vault-command-handler.ts';
-import { ConvertLinksInFileCommandHandler } from './commands/convert-links-in-file-command-handler.ts';
-import { ConvertLinksInFolderCommandHandler } from './commands/convert-links-in-folder-command-handler.ts';
-import { ConvertLinksInSelectionCommandHandler } from './commands/convert-links-in-selection-command-handler.ts';
-import { ConvertLinksToMarkdownInEntireVaultCommandHandler } from './commands/convert-links-to-markdown-in-entire-vault-command-handler.ts';
-import { ConvertLinksToMarkdownInFileCommandHandler } from './commands/convert-links-to-markdown-in-file-command-handler.ts';
-import { ConvertLinksToMarkdownInFolderCommandHandler } from './commands/convert-links-to-markdown-in-folder-command-handler.ts';
-import { ConvertLinksToMarkdownInSelectionCommandHandler } from './commands/convert-links-to-markdown-in-selection-command-handler.ts';
-import { DemoteEmbedsInEntireVaultCommandHandler } from './commands/demote-embeds-in-entire-vault-command-handler.ts';
-import { DemoteEmbedsInFileCommandHandler } from './commands/demote-embeds-in-file-command-handler.ts';
-import { DemoteEmbedsInFolderCommandHandler } from './commands/demote-embeds-in-folder-command-handler.ts';
-import { DemoteEmbedsInSelectionCommandHandler } from './commands/demote-embeds-in-selection-command-handler.ts';
-import { EmbedDemoter } from './embed-demoter.ts';
-import { LinkConverter } from './link-converter.ts';
-import { PluginApiImpl } from './plugin-api-impl.ts';
-import {
-  PLUGIN_API_CONTRACT,
-  PLUGIN_API_VERSION
-} from './plugin-api.ts';
-import { PluginSettingsComponent } from './plugin-settings-component.ts';
-import { PluginSettingsTab } from './plugin-settings-tab.ts';
+} from './rename-delete-handover/advanced-rename-and-delete-handler.ts';
+import { PluginSettingsComponent } from './settings/plugin-settings-component.ts';
+import { PluginSettingsTab } from './settings/plugin-settings-tab.ts';
 
 export class Plugin extends PluginBase {
   private pluginApi: null | PluginApiImpl = null;
