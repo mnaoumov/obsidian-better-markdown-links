@@ -7,6 +7,7 @@ import type {
 import type { CachedMetadataEx } from '@mnaoumov/obsidian-lib/metadata-cache';
 import type {
   App,
+  Pos,
   Reference,
   TAbstractFile,
   TFile
@@ -258,6 +259,26 @@ function makeLink(original: string): Reference {
   return castTo<Reference>({ original });
 }
 
+/**
+ * A heading spanning offsets 0-30, for the probe's heading skip. `isReferenceInHeading` is NOT mocked, so the
+ * probe is asked the real question against these positions.
+ */
+const HEADING_CACHE = {
+  features: [],
+  headings: [{ position: makePosition(0, 30) }]
+};
+
+function makePosition(startOffset: number, endOffset: number): Pos {
+  return {
+    end: { col: endOffset, line: 0, offset: endOffset },
+    start: { col: startOffset, line: 0, offset: startOffset }
+  };
+}
+
+function makePositionedLink(original: string, startOffset: number, endOffset: number): Reference {
+  return castTo<Reference>({ original, position: makePosition(startOffset, endOffset) });
+}
+
 function makeTFile(path: string): TFile {
   return castTo<TFile>(TFileCls.create__(realVault, path));
 }
@@ -493,6 +514,41 @@ describe('BetterMarkdownLinksComponent', () => {
       await handleModify(context.component, file);
 
       expect(context.convertLinksInFile).toHaveBeenCalledOnce();
+    });
+
+    // Issue #44: a link inside a heading is part of the heading's text. `LinkConverter` skips it, so a probe
+    // that counted it would re-run a conversion that changes nothing on every save.
+    it('should not convert when the only differing link is inside a heading', async () => {
+      const context = createContext();
+      vi.mocked(parseMetadata).mockResolvedValue(castTo<CachedMetadataEx>(HEADING_CACHE));
+      vi.mocked(getLinks).mockReturnValue([makePositionedLink('[[Target]]', 3, 13)]);
+
+      await handleModify(context.component, makeTFile('note.md'));
+
+      expect(vi.mocked(convertLink)).not.toHaveBeenCalled();
+      expect(context.convertLinksInFile).not.toHaveBeenCalled();
+    });
+
+    it('should convert when a differing link lies outside every heading', async () => {
+      const context = createContext();
+      vi.mocked(parseMetadata).mockResolvedValue(castTo<CachedMetadataEx>(HEADING_CACHE));
+      vi.mocked(getLinks).mockReturnValue([makePositionedLink('[[Target]]', 3, 13), makePositionedLink('[[Other]]', 40, 49)]);
+
+      await handleModify(context.component, makeTFile('note.md'));
+
+      expect(context.convertLinksInFile).toHaveBeenCalledOnce();
+    });
+
+    it('should not convert when the only file:// link is inside a heading', async () => {
+      const context = createContext();
+      vi.mocked(parseMetadata).mockResolvedValue(castTo<CachedMetadataEx>({
+        ...HEADING_CACHE,
+        externalLinks: [{ parseLinkResult: { isFileUrl: true }, position: makePosition(3, 20) }]
+      }));
+
+      await handleModify(context.component, makeTFile('note.md'));
+
+      expect(context.convertLinksInFile).not.toHaveBeenCalled();
     });
 
     it('should not convert when the only external link is not a file:// link', async () => {

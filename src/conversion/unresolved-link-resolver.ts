@@ -120,6 +120,9 @@ export async function resolveUnresolvedLinksInFile(params: ResolveUnresolvedLink
 
   abortSignal.throwIfAborted();
 
+  // A wikilink inside a heading is part of the heading's text, so resolving it would change the heading and
+  // break every `#heading` link to it (issue #44). Skipping it here also keeps `createNote` from firing for it.
+
   // A range is applied BEFORE `linkConverter` runs, so a wikilink outside the selection never reaches
   // `createNote` either: the selection bounds the side effect, not only the rewrite.
   await editLinks(normalizeOptionalProperties<EditLinksParams>({
@@ -165,7 +168,8 @@ export async function resolveUnresolvedLinksInFile(params: ResolveUnresolvedLink
     offsetRange,
     pathOrFile: file,
     pluginNoticeComponent,
-    resourceLockComponent
+    resourceLockComponent,
+    shouldSkipLinksInHeadings: true
   }));
 }
 

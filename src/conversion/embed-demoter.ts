@@ -149,7 +149,10 @@ export class EmbedDemoter {
       offsetRange: params.offsetRange,
       pathOrFile: file,
       pluginNoticeComponent: this.pluginNoticeComponent,
-      resourceLockComponent: this.resourceLockComponent
+      resourceLockComponent: this.resourceLockComponent,
+      // An embed inside a heading is part of the heading's text, so demoting it would change the heading and
+      // break every `#heading` link to it (issue #44).
+      shouldSkipLinksInHeadings: true
     }));
   }
 
