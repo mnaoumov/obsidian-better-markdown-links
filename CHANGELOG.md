@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 6.2.2
+
+- fix: re #43
+- chore(deps): update vulnerable development dependencies
+- chore: adopt readonly interface members
+- docs(readme): combine related resources and plugin comparisons
+- refactor: group the source and command files into folders by subject
+- docs(readme): cut the README to a landing page
+- docs(readme): add a Similar plugins section
+
 ## 6.2.1
 
 - test(demo-vault): floor `CodeScript Toolkit` at 15.0.0
