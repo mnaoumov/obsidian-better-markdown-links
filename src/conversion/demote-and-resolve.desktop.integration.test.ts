@@ -853,6 +853,11 @@ async function runScenario(params: RunScenarioParams): Promise<ScenarioResult> {
         throw new Error(`Settings tab not found for plugin: ${pluginId}`);
       }
 
+      // The `ObsidianSettingsDefault` modes read these, and other suites sharing the vault change them, so they
+      // are pinned to Obsidian's own defaults rather than inherited from whichever suite ran before.
+      app.vault.setConfig('useMarkdownLinks', false);
+      app.vault.setConfig('newLinkFormat', 'shortest');
+
       await (settingTab as TestableSettingsTab).pluginSettingsComponent.editAndSave((pluginSettings) => {
         // Pinned so the scenarios assert the conversion, not the ambient link style.
         pluginSettings.linkConversionMode = settings.linkConversionMode ?? explicitCommandMode;
