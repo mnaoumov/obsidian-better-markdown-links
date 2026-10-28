@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 6.2.3
+
+- test: pin Obsidian's link settings in the demote-and-resolve suite
+- fix: re #44
+- build(deps): bump @mnaoumov/typescript-dev-toolkit to ^5.1.0
+
 ## 6.2.2
 
 - fix: re #43
