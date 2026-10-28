@@ -217,6 +217,8 @@ describe('resolveUnresolvedLinksInFile', () => {
     expect(editLinksParams?.pluginNoticeComponent).toBe(context.pluginNoticeComponent);
     expect(editLinksParams?.resourceLockComponent).toBe(context.resourceLockComponent);
     expect(editLinksParams?.offsetRange).toBeUndefined();
+    // Resolving a wikilink inside a heading would change the heading's text and break links to it.
+    expect(editLinksParams?.shouldSkipLinksInHeadings).toBe(true);
   });
 
   // `editLinks` filters by the range BEFORE calling the converter, so handing it the range is also what

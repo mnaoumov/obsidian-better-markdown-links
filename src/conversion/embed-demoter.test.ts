@@ -162,6 +162,8 @@ describe('EmbedDemoter', () => {
       expect(editLinksParams?.pathOrFile).toBe(file);
       expect(editLinksParams?.pluginNoticeComponent).toBe(context.pluginNoticeComponent);
       expect(editLinksParams?.resourceLockComponent).toBe(context.resourceLockComponent);
+      // Demoting an embed inside a heading would change the heading's text and break links to it.
+      expect(editLinksParams?.shouldSkipLinksInHeadings).toBe(true);
     });
 
     it('should pass no range when none is given, so the whole file is demoted', async () => {

@@ -202,6 +202,9 @@ export class LinkConverter {
       offsetRange,
       pluginNoticeComponent: this.pluginNoticeComponent,
       resourceLockComponent: this.resourceLockComponent,
+      // A link inside a heading is part of the heading's text, so converting it would change the heading and
+      // break every `#heading` link to it (issue #44). The automatic-conversion probe skips the same links.
+      shouldSkipLinksInHeadings: true,
       ...settings.buildLinkPathStyleParams(
         params.shouldForceRelativeLinkPathStyle ? LinkPathStyle.RelativePathToTheSource : settings.getLinkPathStyle()
       )
@@ -219,6 +222,7 @@ export class LinkConverter {
       pathOrFile: params.file,
       pluginNoticeComponent: this.pluginNoticeComponent,
       resourceLockComponent: this.resourceLockComponent,
+      shouldSkipLinksInHeadings: true,
       shouldUseAngleBrackets: settings.shouldUseAngleBrackets
     }));
   }

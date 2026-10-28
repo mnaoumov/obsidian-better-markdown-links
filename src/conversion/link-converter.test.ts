@@ -211,7 +211,8 @@ describe('LinkConverter', () => {
         linkStyleProvider: expect.any(Function) as unknown,
         newSourcePathOrFile: file,
         pluginNoticeComponent: context.pluginNoticeComponent,
-        resourceLockComponent: context.resourceLockComponent
+        resourceLockComponent: context.resourceLockComponent,
+        shouldSkipLinksInHeadings: true
       });
     });
 
@@ -305,6 +306,7 @@ describe('LinkConverter', () => {
         pathOrFile: file,
         pluginNoticeComponent: context.pluginNoticeComponent,
         resourceLockComponent: context.resourceLockComponent,
+        shouldSkipLinksInHeadings: true,
         shouldUseAngleBrackets: true
       });
     });

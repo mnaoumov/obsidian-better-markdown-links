@@ -15,6 +15,8 @@ Four style-agnostic commands are available in the Command Palette (four more for
 - **`Better Markdown Links`: Convert links in entire vault**
   - rewrites the whole vault at once.
 
+A link inside a heading, such as `## [[Target]] notes`, is always left exactly as written, by these commands and by automatic conversion alike. It is part of the heading's text, so rewriting it would rename the heading and break every `#heading` link pointing at it.
+
 Knowing what a messy link looks like before you have seen one converted is the awkward part, so the button writes a note full of them - percent-encoded spaces, no leading dot, a backslash-and-percent `file://` URL - and opens it:
 
 ```code-button

@@ -14,6 +14,7 @@ import {
   getLinks,
   parseMetadata
 } from '@mnaoumov/obsidian-lib/metadata-cache';
+import { isReferenceInHeading } from '@mnaoumov/obsidian-lib/reference';
 import { abortSignalAny } from '@mnaoumov/typescript-lib/abort-controller';
 import { convertAsyncToSync } from '@mnaoumov/typescript-lib/async';
 import { SilentError } from '@mnaoumov/typescript-lib/error';
@@ -152,7 +153,7 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
       ...cache.frontmatterExternalLinks ?? [],
       ...cache.multiValueFrontmatterExternalLinks ?? []
     ];
-    return externalLinks.some((externalLink) => externalLink.parseLinkResult.isFileUrl);
+    return externalLinks.some((externalLink) => externalLink.parseLinkResult.isFileUrl && !isReferenceInHeading(externalLink, cache));
   }
 
   private async processFile(file: TFile): Promise<void> {
@@ -204,18 +205,21 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
       // change needed" for a link the converter would have rewritten — a forced relative style with the
       // leading dot on being exactly that case — and the automatic modes would then never fire.
       const linkPathStyleParams = settings.buildLinkPathStyleParams(settings.getLinkPathStyle());
+      // A link inside a heading is skipped, exactly as `LinkConverter` skips it. A probe that counted it would
+      // report a change the converter then declines, and re-run a no-op conversion on every save.
       const needsInternalConversion = links.some((link) =>
-        link.original !== convertLink(normalizeOptionalProperties<ConvertLinkParams>({
-          app: this.app,
-          link,
-          linkStyle: getLinkStyleForReference({
-            linkStyle: settings.getLinkStyle(),
-            reference: link,
-            shouldConvertFrontmatterWikilinksToMarkdown: settings.shouldConvertFrontmatterWikilinksToMarkdown
-          }),
-          newSourcePathOrFile: file,
-          ...linkPathStyleParams
-        }))
+        !isReferenceInHeading(link, cache)
+        && link.original !== convertLink(normalizeOptionalProperties<ConvertLinkParams>({
+            app: this.app,
+            link,
+            linkStyle: getLinkStyleForReference({
+              linkStyle: settings.getLinkStyle(),
+              reference: link,
+              shouldConvertFrontmatterWikilinksToMarkdown: settings.shouldConvertFrontmatterWikilinksToMarkdown
+            }),
+            newSourcePathOrFile: file,
+            ...linkPathStyleParams
+          }))
       );
       const needsFileUrlNormalization = shouldNormalizeFileLinks && this.hasFileUrlLink(cache);
       if (needsInternalConversion || needsFileUrlNormalization) {
