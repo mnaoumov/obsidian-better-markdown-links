@@ -95,7 +95,7 @@ describe('getLinkTargetExclusionPredicate', () => {
     const { app, sourceFile } = createContext();
     const settings = new PluginSettings();
 
-    expect(getLinkTargetExclusionPredicate({ app, settings, sourceFile })).toBeUndefined();
+    expect(getLinkTargetExclusionPredicate({ app, settings, sourceFile })).toBeNull();
   });
 
   it('should exclude a link whose target matches, and only that one', () => {

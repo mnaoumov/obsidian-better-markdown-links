@@ -151,7 +151,7 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     await this.processFile(file);
   }
 
-  private hasFileUrlLink(cache: CachedMetadataEx, shouldSkipReference: ((reference: Reference) => boolean) | undefined): boolean {
+  private hasFileUrlLink(cache: CachedMetadataEx, shouldSkipReference: ((reference: Reference) => boolean) | null): boolean {
     const externalLinks = [
       ...cache.externalLinks ?? [],
       ...cache.frontmatterExternalLinks ?? [],

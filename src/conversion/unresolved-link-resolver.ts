@@ -71,9 +71,9 @@ export interface ResolveUnresolvedLinksInFileParams {
    * Leaves a reference alone — neither resolved nor created — when it answers `true`. The
    * `excludeLinkTargetPaths` predicate, so an excluded `[[missing.base]]` never reaches `createNote`.
    *
-   * @default `undefined`, meaning no reference is skipped.
+   * @default `undefined`, meaning no reference is skipped; `null` means the same.
    */
-  readonly shouldSkipReference?: (reference: Reference) => boolean;
+  readonly shouldSkipReference?: ((reference: Reference) => boolean) | null;
 }
 
 /**

@@ -141,7 +141,7 @@ beforeEach(() => {
   vi.mocked(getMarkdownFiles).mockReturnValue([]);
   vi.mocked(hasEmbedSyntax).mockReturnValue(true);
   vi.mocked(generateMarkdownLink).mockReturnValue(GENERATED_LINK);
-  vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(undefined);
+  vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(null);
 });
 
 describe('EmbedDemoter', () => {
