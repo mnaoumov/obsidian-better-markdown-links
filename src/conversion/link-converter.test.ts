@@ -7,6 +7,7 @@ import type {
 import type { ResourceLockComponent } from '@mnaoumov/obsidian-lib/resource-lock';
 import type {
   App,
+  Reference,
   TFile,
   TFolder
 } from 'obsidian';
@@ -55,6 +56,10 @@ vi.mock('./frontmatter-wikilink-style.ts', () => ({
   getLinkStyleForReference: vi.fn()
 }));
 
+vi.mock('./link-target-exclusion.ts', () => ({
+  getLinkTargetExclusionPredicate: vi.fn()
+}));
+
 vi.mock('@mnaoumov/obsidian-lib/loop', () => ({
   loop: vi.fn()
 }));
@@ -91,6 +96,8 @@ import { abortSignalAny } from '@mnaoumov/typescript-lib/abort-controller';
 import { getLinkStyleForReference } from './frontmatter-wikilink-style.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { LinkConverter } from './link-converter.ts';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { getLinkTargetExclusionPredicate } from './link-target-exclusion.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
 
@@ -181,6 +188,7 @@ beforeEach(() => {
   vi.mocked(loop).mockResolvedValue(undefined);
   vi.mocked(getMarkdownFiles).mockReturnValue([]);
   vi.mocked(resolveUnresolvedLinksInFile).mockResolvedValue(undefined);
+  vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(undefined);
 });
 
 describe('LinkConverter', () => {
@@ -214,6 +222,26 @@ describe('LinkConverter', () => {
         resourceLockComponent: context.resourceLockComponent,
         shouldSkipReferencesInHeadings: true
       });
+    });
+
+    // The predicate is `getLinkTargetExclusionPredicate`'s, pinned in its own suite. What matters here is that
+    // every pass gets the same one, so a link left alone by one pass is not rewritten by the next (issue #45).
+    it('should hand the link target exclusion predicate to all three passes', async () => {
+      const context = createConverter({ shouldNormalizeFileLinks: true, shouldResolveLinksViaAliases: true });
+      const shouldSkipReference = vi.fn<(reference: Reference) => boolean>();
+      vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(shouldSkipReference);
+      const file = createFile('note.md');
+
+      await context.converter.convertLinksInFile({ file, shouldResolveUnresolvedLinks: true });
+
+      expect(vi.mocked(getLinkTargetExclusionPredicate)).toHaveBeenCalledExactlyOnceWith({
+        app: context.app,
+        settings: expect.anything() as unknown,
+        sourceFile: file
+      });
+      expect(vi.mocked(resolveUnresolvedLinksInFile).mock.calls[0]?.[0].shouldSkipReference).toBe(shouldSkipReference);
+      expect(vi.mocked(updateReferencesInFile).mock.calls[0]?.[0].shouldSkipReference).toBe(shouldSkipReference);
+      expect(vi.mocked(updateFileUrlLinksInFile).mock.calls[0]?.[0].shouldSkipReference).toBe(shouldSkipReference);
     });
 
     // The per-reference decision is `getLinkStyleForReference`'s, pinned in its own suite. What matters here

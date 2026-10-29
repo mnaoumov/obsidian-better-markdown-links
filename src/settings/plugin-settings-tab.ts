@@ -369,12 +369,37 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
             });
           });
         }
+      }),
+      this.settingEx({
+        desc: createFragment((f) => {
+          f.appendText('Leave links whose target matches the following paths exactly as written');
+          f.createEl('br');
+          f.appendText('They are not converted, restyled, normalized, demoted or resolved; every other link in the note still is');
+          f.createEl('br');
+          f.appendText('For example, ');
+          appendCodeBlock(f, '*.base');
+          f.appendText(' keeps ');
+          appendCodeBlock(f, '![[file.base]]');
+          f.appendText(' embeds for a publisher that reads only the wikilink form');
+          f.createEl('br');
+          f.appendText('The target is the file the link resolves to, or for an unresolved link the path it names');
+          f.createEl('br');
+          appendPathEntryVocabulary(f);
+          f.createEl('br');
+          f.appendText('If the setting is empty, no links are excluded');
+        }),
+        name: 'Exclude link target paths',
+        render: (setting) => {
+          setting.addMultipleText((multipleText) => {
+            this.bind({ propertyName: 'excludeLinkTargetPaths', valueComponent: multipleText });
+          });
+        }
       })
     ];
   }
 }
 
-// The entry syntax is obsidian-lib's `PathSettings`, so both path settings describe it in the same words.
+// The entry syntax is obsidian-lib's `PathSettings`, so every path setting describes it in the same words.
 function appendPathEntryVocabulary(f: DocumentFragment): void {
   f.appendText('Insert each entry on a new line');
   f.createEl('br');

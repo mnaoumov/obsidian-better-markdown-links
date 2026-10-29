@@ -63,6 +63,18 @@ export class PluginSettings {
   public shouldUseLeadingDotForRelativePaths = true;
   public shouldUseLeadingSlashForAbsolutePaths = true;
 
+  /**
+   * Entries matched against the TARGET of each link rather than against the note holding it. A link whose
+   * target matches is left exactly as written by every pass. Same entry syntax as {@link excludePaths}.
+   */
+  public get excludeLinkTargetPaths(): string[] {
+    return this._linkTargetPathSettings.excludePaths;
+  }
+
+  public set excludeLinkTargetPaths(value: string[]) {
+    this._linkTargetPathSettings.excludePaths = value;
+  }
+
   public get excludePaths(): string[] {
     return this._pathSettings.excludePaths;
   }
@@ -79,6 +91,8 @@ export class PluginSettings {
     this._pathSettings.includePaths = value;
   }
 
+  // Only its exclude list is ever set, so its include list keeps the default that includes everything.
+  private readonly _linkTargetPathSettings = new PathSettings();
   private readonly _pathSettings = new PathSettings();
 
   public constructor() {
@@ -162,6 +176,16 @@ export class PluginSettings {
     }
 
     return this.linkStyleMode === LinkStyleMode.PreserveExisting ? LinkStyle.PreserveExisting : LinkStyle.ObsidianSettingsDefault;
+  }
+
+  /**
+   * Whether a link whose target is `path` is to be left as written. See {@link excludeLinkTargetPaths}.
+   *
+   * @param path - The link's target path, as `getReferenceTargetPath` computes it.
+   * @returns `true` if the link is excluded.
+   */
+  public isLinkTargetPathExcluded(path: string): boolean {
+    return this._linkTargetPathSettings.isPathIgnored(path);
   }
 
   public isPathIgnored(path: string): boolean {

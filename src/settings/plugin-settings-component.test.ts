@@ -89,6 +89,16 @@ describe('PluginSettingsComponent', () => {
       expect(result.excludePaths).toMatch(/^Invalid regular expression: \/\[invalid\/ \(.+\)$/);
     });
 
+    it('should reject invalid regex paths in excludeLinkTargetPaths', async () => {
+      const component = createComponent();
+      const settings = new PluginSettings();
+      Object.defineProperty(settings, 'excludeLinkTargetPaths', { get: () => ['/[invalid/'] });
+
+      const result = await component.validate(settings);
+
+      expect(result.excludeLinkTargetPaths).toMatch(/^Invalid regular expression: \/\[invalid\/ \(.+\)$/);
+    });
+
     it('should accept valid glob paths', async () => {
       const component = createComponent();
       const settings = new PluginSettings();

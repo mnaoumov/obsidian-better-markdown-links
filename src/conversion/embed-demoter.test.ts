@@ -36,6 +36,10 @@ vi.mock('@mnaoumov/obsidian-lib/link', () => ({
   hasEmbedSyntax: vi.fn()
 }));
 
+vi.mock('./link-target-exclusion.ts', () => ({
+  getLinkTargetExclusionPredicate: vi.fn()
+}));
+
 vi.mock('@mnaoumov/obsidian-lib/loop', () => ({
   loop: vi.fn()
 }));
@@ -62,6 +66,8 @@ import { abortSignalAny } from '@mnaoumov/typescript-lib/abort-controller';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { EmbedDemoter } from './embed-demoter.ts';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { getLinkTargetExclusionPredicate } from './link-target-exclusion.ts';
 
 const GENERATED_LINK = '[Diagram](<Materials/Diagram.png>)';
 
@@ -135,6 +141,7 @@ beforeEach(() => {
   vi.mocked(getMarkdownFiles).mockReturnValue([]);
   vi.mocked(hasEmbedSyntax).mockReturnValue(true);
   vi.mocked(generateMarkdownLink).mockReturnValue(GENERATED_LINK);
+  vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(undefined);
 });
 
 describe('EmbedDemoter', () => {
@@ -149,6 +156,22 @@ describe('EmbedDemoter', () => {
       expect(vi.mocked(editReferences)).not.toHaveBeenCalled();
     });
 
+    // An embed whose target `excludeLinkTargetPaths` matches stays an embed (issue #45).
+    it('should hand the link target exclusion predicate to editReferences', async () => {
+      const context = createDemoter();
+      const shouldSkipReference = vi.fn<(reference: Reference) => boolean>();
+      vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(shouldSkipReference);
+      const file = createFile('note.md');
+
+      await context.demoter.demoteEmbedsInFile({ file });
+
+      expect(vi.mocked(getLinkTargetExclusionPredicate)).toHaveBeenCalledExactlyOnceWith({
+        app: context.app,
+        settings: expect.anything() as unknown,
+        sourceFile: file
+      });
+      expect(vi.mocked(editReferences).mock.calls[0]?.[0].shouldSkipReference).toBe(shouldSkipReference);
+    });
     it('should edit the links of a non-ignored file', async () => {
       const context = createDemoter();
       const file = createFile('note.md');

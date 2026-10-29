@@ -98,5 +98,6 @@ export class PluginSettingsComponent extends PluginSettingsComponentBase<PluginS
   protected override registerValidators(): void {
     this.registerValidator('includePaths', pathsValidator);
     this.registerValidator('excludePaths', pathsValidator);
+    this.registerValidator('excludeLinkTargetPaths', pathsValidator);
   }
 }

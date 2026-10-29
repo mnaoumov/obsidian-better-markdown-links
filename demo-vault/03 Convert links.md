@@ -282,6 +282,46 @@ await require('/demoSetup.ts').changeSettings(app, { shouldCreateMissingNotes: f
 
 Manual equivalent: toggle the two settings in **Settings -> Community plugins -> `Better Markdown Links`**, then run **`Better Markdown Links`: Convert links in current file**.
 
+## Leaving chosen links alone
+
+**Include paths** and **Exclude paths** decide which *notes* are converted. Sometimes the problem is one kind of *link* instead: a publisher that renders `![[file.base]]` or `![[file.canvas]]` but shows the Markdown form `![](file.base)` as a broken image. Excluding every note that embeds a base is too coarse, because each of those notes then keeps all its other wikilinks too.
+
+The **Exclude link target paths** setting (`excludeLinkTargetPaths`) is matched against each link's *target* instead: the file it resolves to, or the path an unresolved link names. A link whose target matches is left exactly as written by everything this plugin does - converting, forcing a style or a path, `file://` normalization, demoting embeds, resolving and creating missing notes - while every other link in the same note is converted as usual. It takes the same entries as the note paths (see [05 Settings](<./05 Settings.md#scope>)), so `*.base` means the same thing in every vault that shares the setting.
+
+The button writes a note embedding a `.base` file beside two ordinary wikilinks, plus the `.base` file itself:
+
+```code-button
+---
+caption: Create a note embedding a base
+---
+await require('/demoSetup.ts').openExcludedTargetNote(app);
+```
+
+```code-button
+---
+caption: Exclude .base targets
+---
+await require('/demoSetup.ts').changeSettings(app, { excludeLinkTargetPaths: ['*.base'] });
+```
+
+```code-button
+---
+caption: Convert the base note to Markdown
+---
+require('/demoSetup.ts').convertLinksToMarkdownInCurrentFile(app);
+```
+
+The two links are now Markdown links; `![[Reading list.base]]` is untouched.
+
+```code-button
+---
+caption: Exclude no link targets (the default)
+---
+await require('/demoSetup.ts').changeSettings(app, { excludeLinkTargetPaths: [] });
+```
+
+Manual equivalent: add `*.base` to **Exclude link target paths** in **Settings -> Community plugins -> `Better Markdown Links`**, then run **`Better Markdown Links`: Convert links to Markdown in current file**.
+
 ## File link normalization
 
 With **Should normalize file links** enabled (the default), external `file://` links are tidied up during conversion - backslashes become forward slashes and percent-encoding is decoded:

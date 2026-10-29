@@ -49,7 +49,8 @@ const EXPECTED_BOUND_PROPERTIES = [
   'shouldResolveLinksViaAliases',
   'shouldCreateMissingNotes',
   'includePaths',
-  'excludePaths'
+  'excludePaths',
+  'excludeLinkTargetPaths'
 ];
 
 // The suggestion banner rides along as an extra row that binds nothing.
@@ -73,6 +74,7 @@ function createTab(): PluginSettingsTab {
       effectiveValues: new PluginSettings(),
       inputValues: new PluginSettings(),
       validationMessages: {
+        excludeLinkTargetPaths: '',
         excludePaths: '',
         includePaths: '',
         isAdvancedRenameAndDeleteHandlerSuggestionDeclined: '',

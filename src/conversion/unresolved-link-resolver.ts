@@ -4,6 +4,7 @@ import type { OffsetRange } from '@mnaoumov/obsidian-lib/reference';
 import type { ResourceLockComponent } from '@mnaoumov/obsidian-lib/resource-lock';
 import type {
   App,
+  Reference,
   TFile
 } from 'obsidian';
 
@@ -65,6 +66,14 @@ export interface ResolveUnresolvedLinksInFileParams {
    * Only an UNAMBIGUOUS answer is written: a name several notes carry leaves the link alone.
    */
   readonly shouldResolveLinksViaAliases: boolean;
+
+  /**
+   * Leaves a reference alone — neither resolved nor created — when it answers `true`. The
+   * `excludeLinkTargetPaths` predicate, so an excluded `[[missing.base]]` never reaches `createNote`.
+   *
+   * @default `undefined`, meaning no reference is skipped.
+   */
+  readonly shouldSkipReference?: (reference: Reference) => boolean;
 }
 
 /**
@@ -115,7 +124,8 @@ export async function resolveUnresolvedLinksInFile(params: ResolveUnresolvedLink
     pluginNoticeComponent,
     resourceLockComponent,
     shouldCreateMissingNotes,
-    shouldResolveLinksViaAliases
+    shouldResolveLinksViaAliases,
+    shouldSkipReference
   } = params;
 
   abortSignal.throwIfAborted();
@@ -169,6 +179,7 @@ export async function resolveUnresolvedLinksInFile(params: ResolveUnresolvedLink
         : undefined;
     },
     resourceLockComponent,
+    shouldSkipReference,
     shouldSkipReferencesInHeadings: true
   }));
 }

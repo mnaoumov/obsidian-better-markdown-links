@@ -56,6 +56,12 @@ vi.mock('@mnaoumov/obsidian-lib/link', async (importOriginal) => ({
   convertLink: vi.fn()
 }));
 
+// The predicate is getLinkTargetExclusionPredicate's, pinned in its own suite; this one asks only that the
+// probe honours whatever it answers.
+vi.mock('../conversion/link-target-exclusion.ts', () => ({
+  getLinkTargetExclusionPredicate: vi.fn()
+}));
+
 vi.mock('@mnaoumov/obsidian-lib/metadata-cache', () => ({
   getReferences: vi.fn(),
   parseMetadata: vi.fn()
@@ -76,6 +82,8 @@ import { abortSignalAny } from '@mnaoumov/typescript-lib/abort-controller';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { handleSilentError } from '@mnaoumov/typescript-lib/async';
 
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { getLinkTargetExclusionPredicate } from '../conversion/link-target-exclusion.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { BetterMarkdownLinksComponent } from './better-markdown-links-component.ts';
 
@@ -296,6 +304,7 @@ beforeEach(() => {
   vi.mocked(getReferences).mockReturnValue([]);
   vi.mocked(convertLink).mockReturnValue('converted');
   vi.mocked(handleSilentError).mockReturnValue(false);
+  vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(undefined);
 });
 
 afterEach(() => {
@@ -551,6 +560,46 @@ describe('BetterMarkdownLinksComponent', () => {
       expect(context.convertLinksInFile).not.toHaveBeenCalled();
     });
 
+    // A probe that counted a link the converter skips would re-run a no-op conversion on every save (issue #45).
+    it('should not convert when the only differing link has an excluded target', async () => {
+      const context = createContext();
+      const file = makeTFile('note.md');
+      const link = makeLink('[[table.base]]');
+      const shouldSkipReference = vi.fn<(reference: Reference) => boolean>().mockReturnValue(true);
+      vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(shouldSkipReference);
+      vi.mocked(getReferences).mockReturnValue([link]);
+
+      await handleModify(context.component, file);
+
+      expect(vi.mocked(getLinkTargetExclusionPredicate)).toHaveBeenCalledExactlyOnceWith({
+        app: context.app,
+        settings: context.settings,
+        sourceFile: file
+      });
+      expect(shouldSkipReference).toHaveBeenCalledWith(link);
+      expect(vi.mocked(convertLink)).not.toHaveBeenCalled();
+      expect(context.convertLinksInFile).not.toHaveBeenCalled();
+    });
+
+    it('should convert when a differing link has a target the predicate does not exclude', async () => {
+      const context = createContext();
+      vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(vi.fn<(reference: Reference) => boolean>().mockReturnValue(false));
+      vi.mocked(getReferences).mockReturnValue([makeLink('[[note]]')]);
+
+      await handleModify(context.component, makeTFile('note.md'));
+
+      expect(context.convertLinksInFile).toHaveBeenCalledOnce();
+    });
+
+    it('should not convert when the only file:// link has an excluded target', async () => {
+      const context = createContext();
+      vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(vi.fn<(reference: Reference) => boolean>().mockReturnValue(true));
+      vi.mocked(parseMetadata).mockResolvedValue(makeCacheWithExternalLinks(true, 'body'));
+
+      await handleModify(context.component, makeTFile('note.md'));
+
+      expect(context.convertLinksInFile).not.toHaveBeenCalled();
+    });
     it('should not convert when the only external link is not a file:// link', async () => {
       const context = createContext();
       vi.mocked(getReferences).mockReturnValue([makeLink('converted')]);
