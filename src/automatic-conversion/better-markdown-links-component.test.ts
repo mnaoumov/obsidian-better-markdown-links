@@ -304,7 +304,7 @@ beforeEach(() => {
   vi.mocked(getReferences).mockReturnValue([]);
   vi.mocked(convertLink).mockReturnValue('converted');
   vi.mocked(handleSilentError).mockReturnValue(false);
-  vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(undefined);
+  vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(null);
 });
 
 afterEach(() => {

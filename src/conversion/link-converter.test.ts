@@ -188,7 +188,7 @@ beforeEach(() => {
   vi.mocked(loop).mockResolvedValue(undefined);
   vi.mocked(getMarkdownFiles).mockReturnValue([]);
   vi.mocked(resolveUnresolvedLinksInFile).mockResolvedValue(undefined);
-  vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(undefined);
+  vi.mocked(getLinkTargetExclusionPredicate).mockReturnValue(null);
 });
 
 describe('LinkConverter', () => {
@@ -220,6 +220,7 @@ describe('LinkConverter', () => {
         newSourcePathOrFile: file,
         pluginNoticeComponent: context.pluginNoticeComponent,
         resourceLockComponent: context.resourceLockComponent,
+        shouldSkipReference: null,
         shouldSkipReferencesInHeadings: true
       });
     });
@@ -334,6 +335,7 @@ describe('LinkConverter', () => {
         pathOrFile: file,
         pluginNoticeComponent: context.pluginNoticeComponent,
         resourceLockComponent: context.resourceLockComponent,
+        shouldSkipReference: null,
         shouldSkipReferencesInHeadings: true,
         shouldUseAngleBrackets: true
       });
@@ -504,7 +506,8 @@ describe('LinkConverter', () => {
           pluginNoticeComponent: context.pluginNoticeComponent,
           resourceLockComponent: context.resourceLockComponent,
           shouldCreateMissingNotes: false,
-          shouldResolveLinksViaAliases: true
+          shouldResolveLinksViaAliases: true,
+          shouldSkipReference: null
         });
         expect(vi.mocked(resolveUnresolvedLinksInFile).mock.invocationCallOrder[0])
           .toBeLessThan(vi.mocked(updateReferencesInFile).mock.invocationCallOrder[0] ?? 0);

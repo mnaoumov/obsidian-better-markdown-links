@@ -63,12 +63,12 @@ export interface GetReferenceTargetPathParams {
  * conversion on every save.
  *
  * @param params - See {@link GetLinkTargetExclusionPredicateParams}.
- * @returns The predicate, or `undefined` when nothing is excluded, so no target is ever computed for nothing.
+ * @returns The predicate, or `null` when nothing is excluded, so no target is ever computed for nothing.
  */
-export function getLinkTargetExclusionPredicate(params: GetLinkTargetExclusionPredicateParams): ((reference: Reference) => boolean) | undefined {
+export function getLinkTargetExclusionPredicate(params: GetLinkTargetExclusionPredicateParams): ((reference: Reference) => boolean) | null {
   const { app, settings, sourceFile } = params;
   return settings.excludeLinkTargetPaths.length === 0
-    ? undefined
+    ? null
     : (reference): boolean => settings.isLinkTargetPathExcluded(getReferenceTargetPath({ app, reference, sourceFile }));
 }
 
