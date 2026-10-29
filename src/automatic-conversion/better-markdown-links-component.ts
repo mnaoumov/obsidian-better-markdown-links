@@ -5,7 +5,10 @@ import type {
   GenerateMarkdownLinkParams
 } from '@mnaoumov/obsidian-lib/link';
 import type { CachedMetadataEx } from '@mnaoumov/obsidian-lib/metadata-cache';
-import type { App } from 'obsidian';
+import type {
+  App,
+  Reference
+} from 'obsidian';
 
 import { GenerateMarkdownLinkDefaultParamsComponent } from '@mnaoumov/obsidian-lib/components/generate-markdown-link-default-params-component';
 import { LayoutReadyComponent } from '@mnaoumov/obsidian-lib/components/layout-ready-component';
@@ -31,6 +34,7 @@ import type { LinkConverter } from '../conversion/link-converter.ts';
 import type { PluginSettingsComponent } from '../settings/plugin-settings-component.ts';
 
 import { getLinkStyleForReference } from '../conversion/frontmatter-wikilink-style.ts';
+import { getLinkTargetExclusionPredicate } from '../conversion/link-target-exclusion.ts';
 import { GenerateMarkdownLinkPatchComponent } from '../link-generation/generate-markdown-link-extended-impl.ts';
 import { EditorSaveFileCommandPatchComponent } from './patches/editor-save-file-command-patch-component.ts';
 import { TextFileViewSavePatchComponent } from './patches/text-file-view-save-patch-component.ts';
@@ -147,13 +151,17 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     await this.processFile(file);
   }
 
-  private hasFileUrlLink(cache: CachedMetadataEx): boolean {
+  private hasFileUrlLink(cache: CachedMetadataEx, shouldSkipReference: ((reference: Reference) => boolean) | undefined): boolean {
     const externalLinks = [
       ...cache.externalLinks ?? [],
       ...cache.frontmatterExternalLinks ?? [],
       ...cache.multiValueFrontmatterExternalLinks ?? []
     ];
-    return externalLinks.some((externalLink) => externalLink.parseLinkResult.isFileUrl && !isReferenceInHeading(externalLink, cache));
+    return externalLinks.some((externalLink) =>
+      externalLink.parseLinkResult.isFileUrl
+      && !isReferenceInHeading(externalLink, cache)
+      && !shouldSkipReference?.(externalLink)
+    );
   }
 
   private async processFile(file: TFile): Promise<void> {
@@ -205,10 +213,13 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
       // change needed" for a link the converter would have rewritten — a forced relative style with the
       // leading dot on being exactly that case — and the automatic modes would then never fire.
       const linkPathStyleParams = settings.buildLinkPathStyleParams(settings.getLinkPathStyle());
-      // A link inside a heading is skipped, exactly as `LinkConverter` skips it. A probe that counted it would
-      // report a change the converter then declines, and re-run a no-op conversion on every save.
+      // A link inside a heading, or one whose target `excludeLinkTargetPaths` matches, is skipped exactly as
+      // `LinkConverter` skips it. A probe that counted it would report a change the converter then declines,
+      // and re-run a no-op conversion on every save.
+      const shouldSkipReference = getLinkTargetExclusionPredicate({ app: this.app, settings, sourceFile: file });
       const needsInternalConversion = links.some((link) =>
         !isReferenceInHeading(link, cache)
+        && !shouldSkipReference?.(link)
         && link.original !== convertLink(normalizeOptionalProperties<ConvertLinkParams>({
             app: this.app,
             linkStyle: getLinkStyleForReference({
@@ -221,7 +232,7 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
             ...linkPathStyleParams
           }))
       );
-      const needsFileUrlNormalization = shouldNormalizeFileLinks && this.hasFileUrlLink(cache);
+      const needsFileUrlNormalization = shouldNormalizeFileLinks && this.hasFileUrlLink(cache, shouldSkipReference);
       if (needsInternalConversion || needsFileUrlNormalization) {
         await this.linkConverter.convertLinksInFile({
           abortSignal: combinedAbortSignal,

@@ -223,6 +223,26 @@ describe('resolveUnresolvedLinksInFile', () => {
 
   // `editReferences` filters by the range BEFORE calling the converter, so handing it the range is also what
   // keeps `createNote` from firing for a wikilink outside the selection.
+  // An excluded `[[missing.base]]` must never reach `createNote`, which is why the skip is the library's,
+  // applied before the converter is called at all (issue #45).
+  it('should hand the reference skip predicate straight to editReferences', async () => {
+    const context = createContext();
+    const shouldSkipReference = vi.fn<(reference: Reference) => boolean>();
+
+    await resolveUnresolvedLinksInFile({
+      abortSignal: context.abortSignal,
+      app: context.app,
+      file: context.file,
+      pluginNoticeComponent: context.pluginNoticeComponent,
+      resourceLockComponent: context.resourceLockComponent,
+      shouldCreateMissingNotes: true,
+      shouldResolveLinksViaAliases: true,
+      shouldSkipReference
+    });
+
+    expect(vi.mocked(editReferences).mock.calls[0]?.[0].shouldSkipReference).toBe(shouldSkipReference);
+  });
+
   it('should hand the offset range straight to editReferences', async () => {
     const context = createContext();
     const offsetRange = { endOffset: 42, startOffset: 10 };

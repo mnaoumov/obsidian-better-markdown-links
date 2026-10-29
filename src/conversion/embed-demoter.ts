@@ -27,6 +27,7 @@ import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-uti
 import type { PluginSettingsComponent } from '../settings/plugin-settings-component.ts';
 
 import { getLinkStyleForReference } from './frontmatter-wikilink-style.ts';
+import { getLinkTargetExclusionPredicate } from './link-target-exclusion.ts';
 
 interface EmbedDemoterConstructorParams {
   readonly abortSignalComponent: AbortSignalComponent;
@@ -150,6 +151,8 @@ export class EmbedDemoter {
         return settings.shouldAppendFileNameWhenDemotingEmbeds ? `${linkMarkdown}\n  - ${linkFile.name}` : linkMarkdown;
       },
       resourceLockComponent: this.resourceLockComponent,
+      // An embed whose target `excludeLinkTargetPaths` matches stays an embed (issue #45).
+      shouldSkipReference: getLinkTargetExclusionPredicate({ app: this.app, settings, sourceFile: file }),
       // An embed inside a heading is part of the heading's text, so demoting it would change the heading and
       // break every `#heading` link to it (issue #44).
       shouldSkipReferencesInHeadings: true

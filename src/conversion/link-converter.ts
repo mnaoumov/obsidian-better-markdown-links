@@ -29,6 +29,7 @@ import type { PluginSettingsComponent } from '../settings/plugin-settings-compon
 import type { ResolveUnresolvedLinksInFileParams } from './unresolved-link-resolver.ts';
 
 import { getLinkStyleForReference } from './frontmatter-wikilink-style.ts';
+import { getLinkTargetExclusionPredicate } from './link-target-exclusion.ts';
 import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
 
 interface GetConversionSubjectParams {
@@ -158,6 +159,7 @@ export class LinkConverter {
       }
     }
 
+    const shouldSkipReference = getLinkTargetExclusionPredicate({ app: this.app, settings, sourceFile: params.file });
     let offsetRange = params.offsetRange;
     // `readSafe` saves a dirty editor before reading, so this is the length of the content the first pass
     // is about to read — the same content the editor selection was measured against.
@@ -182,7 +184,8 @@ export class LinkConverter {
         pluginNoticeComponent: this.pluginNoticeComponent,
         resourceLockComponent: this.resourceLockComponent,
         shouldCreateMissingNotes: settings.shouldCreateMissingNotes,
-        shouldResolveLinksViaAliases: settings.shouldResolveLinksViaAliases
+        shouldResolveLinksViaAliases: settings.shouldResolveLinksViaAliases,
+        shouldSkipReference
       }));
       await carryOffsetRange();
     }
@@ -202,6 +205,8 @@ export class LinkConverter {
       offsetRange,
       pluginNoticeComponent: this.pluginNoticeComponent,
       resourceLockComponent: this.resourceLockComponent,
+      // A link whose target `excludeLinkTargetPaths` matches is left as written (issue #45).
+      shouldSkipReference,
       // A link inside a heading is part of the heading's text, so converting it would change the heading and
       // break every `#heading` link to it (issue #44). The automatic-conversion probe skips the same links.
       shouldSkipReferencesInHeadings: true,
@@ -222,6 +227,7 @@ export class LinkConverter {
       pathOrFile: params.file,
       pluginNoticeComponent: this.pluginNoticeComponent,
       resourceLockComponent: this.resourceLockComponent,
+      shouldSkipReference,
       shouldSkipReferencesInHeadings: true,
       shouldUseAngleBrackets: settings.shouldUseAngleBrackets
     }));

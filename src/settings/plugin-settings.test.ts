@@ -60,6 +60,28 @@ describe('PluginSettings', () => {
     });
   });
 
+  describe('excludeLinkTargetPaths', () => {
+    it('should exclude no link target by default', () => {
+      const settings = new PluginSettings();
+
+      expect(settings.excludeLinkTargetPaths).toEqual([]);
+      expect(settings.isLinkTargetPathExcluded('Bases/table.base')).toBe(false);
+    });
+
+    // Its own matcher, separate from the note paths: a note path list must not leak into it, nor it into them.
+    it('should match only its own entries, independently of the note exclude paths', () => {
+      const settings = new PluginSettings();
+
+      settings.excludeLinkTargetPaths = ['*.base'];
+
+      expect(settings.excludeLinkTargetPaths).toEqual(['*.base']);
+      expect(settings.isLinkTargetPathExcluded('Bases/table.base')).toBe(true);
+      expect(settings.isLinkTargetPathExcluded('note.md')).toBe(false);
+      expect(settings.isLinkTargetPathExcluded('drawing.excalidraw.md')).toBe(false);
+      expect(settings.isPathIgnored('Bases/table.base')).toBe(false);
+    });
+  });
+
   describe('includePaths', () => {
     it('should get and set include paths', () => {
       const settings = new PluginSettings();

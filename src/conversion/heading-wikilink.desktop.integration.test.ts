@@ -113,6 +113,9 @@ async function runScenario(): Promise<ScenarioResult> {
       await (settingTab as TestableSettingsTab).pluginSettingsComponent.editAndSave((settings) => {
         settings.linkConversionMode = mode;
         settings.shouldUseAngleBrackets = true;
+        // Pinned, because the converted body link is asserted with its dot and an earlier suite may have
+        // switched it off.
+        settings.shouldUseLeadingDotForRelativePaths = true;
       });
 
       for (const path of [sourcePath, inboundPath, targetPath]) {

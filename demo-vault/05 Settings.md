@@ -56,8 +56,10 @@ Two keys are left behind to make the handover work. Neither is a toggle you set 
   - only convert links in files matching these paths (empty means all files).
 - `excludePaths`
   - never convert links in files matching these paths; defaults to skipping `Excalidraw` and `tldraw` notes.
+- `excludeLinkTargetPaths`
+  - leave a link exactly as written when its TARGET matches these paths, while every other link in the same note is still converted (empty means no link is left alone). The target is the file the link resolves to, or the path an unresolved link names; for an external link it is its URL. An excluded link is not converted, restyled, normalized, demoted or resolved, and no note is created for it. `*.base` keeps `![[file.base]]` embeds for a publisher that only reads the wikilink form, and unlike a list of note paths it means the same thing in every vault.
 
-Each entry of either list takes one of three forms, and every form matches case-insensitively:
+Each entry of any of these lists takes one of three forms, and every form matches case-insensitively:
 
 - a path, such as `Notes/Daily`, which matches that path and everything inside it;
 - a glob, such as `*.pdf`, `Notes/**/*.md` or `tmp*/`: `*` matches within one folder level, `**` across levels, `?` one character and `[abc]` / `[!abc]` a character class. A glob without `/` matches a name at any depth, and a trailing `/` matches folders only;

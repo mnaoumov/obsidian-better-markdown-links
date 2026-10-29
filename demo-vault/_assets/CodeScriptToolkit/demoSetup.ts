@@ -16,8 +16,11 @@ const FIRST_CONTESTED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/First contested not
 const SECOND_CONTESTED_NOTE_PATH = `${UNRESOLVED_FOLDER_PATH}/Second contested note.md`;
 const WIKILINK_NOTE_PATH = `${MESSY_FOLDER_PATH}/Wikilinks.md`;
 const PATH_STYLE_NOTE_PATH = `${MESSY_FOLDER_PATH}/Non-relative paths.md`;
+const EXCLUDED_TARGET_NOTE_PATH = `${MESSY_FOLDER_PATH}/Excluded targets.md`;
+const EXCLUDED_TARGET_BASE_PATH = `${MESSY_FOLDER_PATH}/Reading list.base`;
 
 interface DemoSettingsPatch {
+  excludeLinkTargetPaths?: string[];
   linkConversionMode?: string;
   linkPathStyleMode?: string;
   linkStyleMode?: string;
@@ -290,6 +293,44 @@ export async function openPathStyleNote(app: App): Promise<void> {
  */
 export function convertLinkPathsToRelativeInCurrentFile(app: App): void {
   app.commands.executeCommandById(`${PLUGIN_ID}:convert-link-paths-to-relative-in-current-file`);
+}
+
+// A note with one embed of a `.base` file and two ordinary links. With `*.base` in `excludeLinkTargetPaths`,
+// converting to Markdown rewrites the two links and leaves the embed exactly as it is - the form a publisher
+// that only reads `![[file.base]]` needs.
+const EXCLUDED_TARGET_CONTENT = [
+  '# Excluded targets',
+  '',
+  'The embed below points at a `.base` file. Exclude `*.base` by target and force the Markdown style:',
+  'the two links are rewritten, and the embed stays a wikilink embed.',
+  '',
+  '![[Reading list.base]]',
+  '',
+  '- A link: [[../02 Relative links/Targets/Simple note]]',
+  '- Another link: [[../02 Relative links/Targets/Nested folder/Deep note]]',
+  ''
+].join('\n');
+
+// The smallest `.base` file Obsidian opens: one table view, no filters.
+const EXCLUDED_TARGET_BASE_CONTENT = [
+  'views:',
+  '  - type: table',
+  '    name: Table',
+  ''
+].join('\n');
+
+/**
+ * Creates (or restores) a note embedding a `.base` file, with the `.base` file beside it, and opens it.
+ *
+ * Manual equivalent: create a base, embed it with `![[...base]]` in a note, and add a few wikilinks.
+ */
+export async function openExcludedTargetNote(app: App): Promise<void> {
+  await openDemoNote(app, MESSY_FOLDER_PATH, EXCLUDED_TARGET_NOTE_PATH, EXCLUDED_TARGET_CONTENT);
+  // Created after the note is open and never opened itself, so the note stays in front.
+  if (!app.vault.getFileByPath(EXCLUDED_TARGET_BASE_PATH)) {
+    await app.vault.create(EXCLUDED_TARGET_BASE_PATH, EXCLUDED_TARGET_BASE_CONTENT);
+  }
+  new Notice('Excluded targets note ready. Now exclude *.base and force the Markdown style.');
 }
 
 const ANGLE_BRACKET_FOLDER_PATH = 'Materials/01 Angle bracket links';
