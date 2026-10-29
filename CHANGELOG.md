@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 6.3.0
+
+- feat: re #45
+- build(deps): bump @mnaoumov/obsidian-lib to ^10.1.0 and adopt its Reference API names
+- build(deps): bump typescript-dev-toolkit to ^5.2.0
+
 ## 6.2.3
 
 - test: pin Obsidian's link settings in the demote-and-resolve suite
