@@ -1,7 +1,7 @@
 import type { AbortSignalComponent } from '@mnaoumov/obsidian-lib/components/abort-signal-component';
 import type { PluginNoticeComponent } from '@mnaoumov/obsidian-lib/components/plugin-notice-component';
 import type {
-  EditLinksParams,
+  EditReferencesParams,
   GenerateMarkdownLinkParams
 } from '@mnaoumov/obsidian-lib/link';
 import type { OffsetRange } from '@mnaoumov/obsidian-lib/reference';
@@ -14,8 +14,8 @@ import type {
 
 import { getMarkdownFiles } from '@mnaoumov/obsidian-lib/file-system';
 import {
-  editLinks,
-  extractLinkFile,
+  editReferences,
+  extractReferenceFile,
   generateMarkdownLink,
   hasEmbedSyntax
 } from '@mnaoumov/obsidian-lib/link';
@@ -111,17 +111,20 @@ export class EmbedDemoter {
       }
     }
 
-    await editLinks(normalizeOptionalProperties<EditLinksParams>({
+    await editReferences(normalizeOptionalProperties<EditReferencesParams>({
       abortSignal,
       app: this.app,
-      linkConverter: (link) => {
+      offsetRange: params.offsetRange,
+      pathOrFile: file,
+      pluginNoticeComponent: this.pluginNoticeComponent,
+      referenceConverter: (link) => {
         if (!hasEmbedSyntax(link.original)) {
           return;
         }
 
-        const linkFile = extractLinkFile({
+        const linkFile = extractReferenceFile({
           app: this.app,
-          link,
+          reference: link,
           sourcePathOrFile: file
         });
 
@@ -146,13 +149,10 @@ export class EmbedDemoter {
 
         return settings.shouldAppendFileNameWhenDemotingEmbeds ? `${linkMarkdown}\n  - ${linkFile.name}` : linkMarkdown;
       },
-      offsetRange: params.offsetRange,
-      pathOrFile: file,
-      pluginNoticeComponent: this.pluginNoticeComponent,
       resourceLockComponent: this.resourceLockComponent,
       // An embed inside a heading is part of the heading's text, so demoting it would change the heading and
       // break every `#heading` link to it (issue #44).
-      shouldSkipLinksInHeadings: true
+      shouldSkipReferencesInHeadings: true
     }));
   }
 

@@ -1,5 +1,5 @@
 import type { PluginNoticeComponent } from '@mnaoumov/obsidian-lib/components/plugin-notice-component';
-import type { EditLinksParams } from '@mnaoumov/obsidian-lib/link';
+import type { EditReferencesParams } from '@mnaoumov/obsidian-lib/link';
 import type { OffsetRange } from '@mnaoumov/obsidian-lib/reference';
 import type { ResourceLockComponent } from '@mnaoumov/obsidian-lib/resource-lock';
 import type {
@@ -12,7 +12,7 @@ import {
   isMarkdownFile
 } from '@mnaoumov/obsidian-lib/file-system';
 import {
-  editLinks,
+  editReferences,
   generateMarkdownLink,
   hasWikilinkSyntax
 } from '@mnaoumov/obsidian-lib/link';
@@ -125,10 +125,13 @@ export async function resolveUnresolvedLinksInFile(params: ResolveUnresolvedLink
 
   // A range is applied BEFORE `linkConverter` runs, so a wikilink outside the selection never reaches
   // `createNote` either: the selection bounds the side effect, not only the rewrite.
-  await editLinks(normalizeOptionalProperties<EditLinksParams>({
+  await editReferences(normalizeOptionalProperties<EditReferencesParams>({
     abortSignal,
     app,
-    linkConverter: async (link) => {
+    offsetRange,
+    pathOrFile: file,
+    pluginNoticeComponent,
+    referenceConverter: async (link) => {
       if (!hasWikilinkSyntax(link.original)) {
         return;
       }
@@ -165,11 +168,8 @@ export async function resolveUnresolvedLinksInFile(params: ResolveUnresolvedLink
         })
         : undefined;
     },
-    offsetRange,
-    pathOrFile: file,
-    pluginNoticeComponent,
     resourceLockComponent,
-    shouldSkipLinksInHeadings: true
+    shouldSkipReferencesInHeadings: true
   }));
 }
 
