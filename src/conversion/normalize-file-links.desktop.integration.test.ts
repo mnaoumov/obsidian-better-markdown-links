@@ -7,7 +7,9 @@
  * - enabled: a body `file://` link with an encoded backslash is rewritten to forward slashes on the
  *   `Save current file` command, even though the note has no internal links to convert,
  * - enabled: `file://` links inside a multi-link frontmatter value are likewise normalized,
- * - disabled: the same `file://` link is left untouched.
+ * - disabled: the same `file://` link is left untouched,
+ * - enabled, on every modification: a `file:` word in a code fence's info string is left alone, and a
+ *   bare `file://` URL in prose stays bare, gaining only forward slashes; neither becomes an empty link.
  *
  * Each scenario uses its own source file so a pending async conversion never leaks between tests.
  *
@@ -55,6 +57,16 @@ const BODY_CONTENT = '[body](file:///F:%5Cover%5Cage.txt)';
 const FRONTMATTER_MULTI_LINK_CONTENT = '---\nkey: "file:///F:%5Cover%5Care.txt file:///F:%5Cover%5Cage.txt"\n---\n\nbody\n';
 const ENCODED_BACKSLASH_MARKER = '%5C';
 
+// A `file:` word in a code fence's info string is not a link, and a bare `file://` URL in prose is not a
+// markdown link: normalizing must leave the first alone and keep the second bare, never wrapping either
+// as `[](<...>)`.
+const BARE_FILE_URL_WITH_BACKSLASH = String.raw`file:///C:\x`;
+const BARE_FILE_URL_NORMALIZED = 'file:///C:/x';
+const CODE_FENCE_AND_PROSE_PREFIX = '```python fold file:python3.py\nprint(1)\n```\n\nSee ';
+const PROSE_SUFFIX = ' for details.\n';
+const CODE_FENCE_AND_BARE_FILE_URL_CONTENT = `${CODE_FENCE_AND_PROSE_PREFIX}${BARE_FILE_URL_WITH_BACKSLASH}${PROSE_SUFFIX}`;
+const CODE_FENCE_AND_BARE_FILE_URL_EXPECTED = `${CODE_FENCE_AND_PROSE_PREFIX}${BARE_FILE_URL_NORMALIZED}${PROSE_SUFFIX}`;
+
 describe('normalize file links (Desktop)', () => {
   it('should normalize a body file:// link on the save command when enabled', async () => {
     const content = await runScenario({
@@ -89,6 +101,18 @@ describe('normalize file links (Desktop)', () => {
     expect(content).toContain(ENCODED_BACKSLASH_MARKER);
     expect(content).not.toContain('file:///F:/over/age.txt');
   });
+
+  it('should leave a code fence info string alone and keep a bare file:// URL bare on every modification', async () => {
+    const content = await runScenario({
+      content: CODE_FENCE_AND_BARE_FILE_URL_CONTENT,
+      mode: LinkConversionMode.OnEveryModification,
+      pendingMarker: BARE_FILE_URL_WITH_BACKSLASH,
+      shouldNormalizeFileLinks: true,
+      sourceKey: 'code-fence-and-bare-url'
+    });
+
+    expect(content).toBe(CODE_FENCE_AND_BARE_FILE_URL_EXPECTED);
+  });
 });
 
 /**
@@ -96,21 +120,33 @@ describe('normalize file links (Desktop)', () => {
  */
 interface RunScenarioParams {
   readonly content: string;
+
+  /**
+   * The conversion mode. `OnSaveCommand` (the default) types the content into the editor and runs the save
+   * command; `OnEveryModification` writes it through `vault.modify` instead.
+   */
+  readonly mode?: LinkConversionMode;
+
+  /**
+   * A string present in the content until normalization has happened. Defaults to the encoded backslash.
+   */
+  readonly pendingMarker?: string;
   readonly shouldNormalizeFileLinks: boolean;
   readonly sourceKey: string;
 }
 
 /**
- * Applies the given `shouldNormalizeFileLinks` setting (with the `OnSaveCommand` conversion mode), opens
- * a fresh source file with the given un-normalized `file://` content typed in its editor, runs the save
- * command, waits for any normalization to settle, and returns the resulting on-disk content.
+ * Applies the given `shouldNormalizeFileLinks` setting and conversion mode, writes the given
+ * un-normalized `file://` content into a fresh source file (typed in its editor and saved by the save
+ * command, or written through `vault.modify` in the `OnEveryModification` mode), waits for any
+ * normalization to settle, and returns the resulting on-disk content.
  *
  * @param params - See {@link RunScenarioParams}.
  * @returns The on-disk content of the source file after the save settles.
  */
 async function runScenario(params: RunScenarioParams): Promise<string> {
   return evalInObsidian({
-    async callback({ app, content, encodedBackslashMarker, mode, obsidianModule, pluginId, shouldNormalizeFileLinks, sourcePath }): Promise<string> {
+    async callback({ app, content, mode, obsidianModule, pendingMarker, pluginId, shouldNormalizeFileLinks, sourcePath, writesThroughVault }): Promise<string> {
       const EDITOR_WAIT_ATTEMPTS = 50;
       const EDITOR_WAIT_INTERVAL_IN_MILLISECONDS = 50;
       const SETTLE_TIMEOUT_IN_MILLISECONDS = 2500;
@@ -133,6 +169,11 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
       }
 
       const sourceFile = await app.vault.create(sourcePath, '');
+
+      if (writesThroughVault) {
+        await app.vault.modify(sourceFile, content);
+        return waitForSettledContent(sourceFile);
+      }
 
       const leaf = app.workspace.getLeaf(false);
       await leaf.openFile(sourceFile);
@@ -158,7 +199,7 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
         throw new Error('Markdown editor did not become active');
       }
 
-      // Returns as soon as the links are normalized (no encoded backslash remains); otherwise waits the
+      // Returns as soon as the links are normalized (no pending marker remains); otherwise waits the
       // full timeout so the write has flushed and any (absent) normalization has had time to happen, then
       // returns the on-disk content.
       async function waitForSettledContent(file: TFile): Promise<string> {
@@ -166,7 +207,7 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
         let fileContent = await app.vault.read(file);
         while (performance.now() - start < SETTLE_TIMEOUT_IN_MILLISECONDS) {
           fileContent = await app.vault.read(file);
-          if (!fileContent.includes(encodedBackslashMarker)) {
+          if (!fileContent.includes(pendingMarker)) {
             return fileContent;
           }
 
@@ -178,11 +219,12 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
     },
     input: {
       content: params.content,
-      encodedBackslashMarker: ENCODED_BACKSLASH_MARKER,
-      mode: LinkConversionMode.OnSaveCommand,
+      mode: params.mode ?? LinkConversionMode.OnSaveCommand,
+      pendingMarker: params.pendingMarker ?? ENCODED_BACKSLASH_MARKER,
       pluginId: PLUGIN_ID,
       shouldNormalizeFileLinks: params.shouldNormalizeFileLinks,
-      sourcePath: `normalize-file-links-${params.sourceKey}.md`
+      sourcePath: `normalize-file-links-${params.sourceKey}.md`,
+      writesThroughVault: params.mode === LinkConversionMode.OnEveryModification
     },
     vaultPath: getTemporaryVault().path
   });
