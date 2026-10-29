@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 6.3.1
+
+- fix: stop file-link normalization wrapping bare file: words and code-fence labels
+
 ## 6.3.0
 
 - feat: re #45
