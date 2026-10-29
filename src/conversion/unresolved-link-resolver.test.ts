@@ -29,7 +29,7 @@ vi.mock('@mnaoumov/obsidian-lib/file-system', () => ({
 }));
 
 vi.mock('@mnaoumov/obsidian-lib/link', () => ({
-  editLinks: vi.fn(),
+  editReferences: vi.fn(),
   generateMarkdownLink: vi.fn(),
   hasWikilinkSyntax: vi.fn()
 }));
@@ -46,7 +46,7 @@ import {
 } from '@mnaoumov/obsidian-lib/file-system';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
-  editLinks,
+  editReferences,
   generateMarkdownLink,
   hasWikilinkSyntax
 } from '@mnaoumov/obsidian-lib/link';
@@ -164,18 +164,18 @@ function createLink(original: string, displayText?: string): Reference {
 }
 
 /**
- * Runs the converter callback the resolver handed to `editLinks` against one link, the way `editLinks`
+ * Runs the converter callback the resolver handed to `editReferences` against one link, the way `editReferences`
  * itself would.
  */
 async function runLinkConverter(link: Reference): Promise<string | undefined> {
-  const editLinksParams = vi.mocked(editLinks).mock.calls[0]?.[0];
-  return await editLinksParams?.linkConverter(link) as string | undefined;
+  const editLinksParams = vi.mocked(editReferences).mock.calls[0]?.[0];
+  return await editLinksParams?.referenceConverter(link) as string | undefined;
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
   castTo<PlatformMock>(Platform).isWin = true;
-  vi.mocked(editLinks).mockResolvedValue(undefined);
+  vi.mocked(editReferences).mockResolvedValue(undefined);
   vi.mocked(hasWikilinkSyntax).mockReturnValue(true);
   vi.mocked(getLinkpath).mockReturnValue('Some Alias');
   vi.mocked(parseFrontMatterAliases).mockReturnValue(null);
@@ -201,7 +201,7 @@ describe('resolveUnresolvedLinksInFile', () => {
       shouldCreateMissingNotes: true,
       shouldResolveLinksViaAliases: true
     })).rejects.toThrow();
-    expect(vi.mocked(editLinks)).not.toHaveBeenCalled();
+    expect(vi.mocked(editReferences)).not.toHaveBeenCalled();
   });
 
   it('should edit the links of the file', async () => {
@@ -209,8 +209,8 @@ describe('resolveUnresolvedLinksInFile', () => {
 
     await context.run();
 
-    expect(vi.mocked(editLinks)).toHaveBeenCalledOnce();
-    const editLinksParams = vi.mocked(editLinks).mock.calls[0]?.[0];
+    expect(vi.mocked(editReferences)).toHaveBeenCalledOnce();
+    const editLinksParams = vi.mocked(editReferences).mock.calls[0]?.[0];
     expect(editLinksParams?.abortSignal).toBe(context.abortSignal);
     expect(editLinksParams?.app).toBe(context.app);
     expect(editLinksParams?.pathOrFile).toBe(context.file);
@@ -218,12 +218,12 @@ describe('resolveUnresolvedLinksInFile', () => {
     expect(editLinksParams?.resourceLockComponent).toBe(context.resourceLockComponent);
     expect(editLinksParams?.offsetRange).toBeUndefined();
     // Resolving a wikilink inside a heading would change the heading's text and break links to it.
-    expect(editLinksParams?.shouldSkipLinksInHeadings).toBe(true);
+    expect(editLinksParams?.shouldSkipReferencesInHeadings).toBe(true);
   });
 
-  // `editLinks` filters by the range BEFORE calling the converter, so handing it the range is also what
+  // `editReferences` filters by the range BEFORE calling the converter, so handing it the range is also what
   // keeps `createNote` from firing for a wikilink outside the selection.
-  it('should hand the offset range straight to editLinks', async () => {
+  it('should hand the offset range straight to editReferences', async () => {
     const context = createContext();
     const offsetRange = { endOffset: 42, startOffset: 10 };
 
@@ -238,10 +238,10 @@ describe('resolveUnresolvedLinksInFile', () => {
       shouldResolveLinksViaAliases: true
     });
 
-    expect(vi.mocked(editLinks).mock.calls[0]?.[0]?.offsetRange).toBe(offsetRange);
+    expect(vi.mocked(editReferences).mock.calls[0]?.[0]?.offsetRange).toBe(offsetRange);
   });
 
-  describe('the link converter it hands to editLinks', () => {
+  describe('the link converter it hands to editReferences', () => {
     it('should leave a markdown link alone', async () => {
       const context = createContext({ shouldResolveLinksViaAliases: true });
       vi.mocked(hasWikilinkSyntax).mockReturnValue(false);

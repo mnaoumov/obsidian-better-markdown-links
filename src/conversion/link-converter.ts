@@ -2,7 +2,7 @@ import type { AbortSignalComponent } from '@mnaoumov/obsidian-lib/components/abo
 import type { PluginNoticeComponent } from '@mnaoumov/obsidian-lib/components/plugin-notice-component';
 import type {
   UpdateFileUrlLinksInFileParams,
-  UpdateLinksInFileParams
+  UpdateReferencesInFileParams
 } from '@mnaoumov/obsidian-lib/link';
 import type { OffsetRange } from '@mnaoumov/obsidian-lib/reference';
 import type { ResourceLockComponent } from '@mnaoumov/obsidian-lib/resource-lock';
@@ -17,7 +17,7 @@ import {
   LinkPathStyle,
   LinkStyle,
   updateFileUrlLinksInFile,
-  updateLinksInFile
+  updateReferencesInFile
 } from '@mnaoumov/obsidian-lib/link';
 import { loop } from '@mnaoumov/obsidian-lib/loop';
 import { confirm } from '@mnaoumov/obsidian-lib/modals/confirm';
@@ -188,7 +188,7 @@ export class LinkConverter {
     }
 
     const linkStyle = params.shouldForceMarkdownLinkStyle ? LinkStyle.Markdown : settings.getLinkStyle();
-    await updateLinksInFile(normalizeOptionalProperties<UpdateLinksInFileParams>({
+    await updateReferencesInFile(normalizeOptionalProperties<UpdateReferencesInFileParams>({
       abortSignal,
       app: this.app,
       linkStyle,
@@ -204,7 +204,7 @@ export class LinkConverter {
       resourceLockComponent: this.resourceLockComponent,
       // A link inside a heading is part of the heading's text, so converting it would change the heading and
       // break every `#heading` link to it (issue #44). The automatic-conversion probe skips the same links.
-      shouldSkipLinksInHeadings: true,
+      shouldSkipReferencesInHeadings: true,
       ...settings.buildLinkPathStyleParams(
         params.shouldForceRelativeLinkPathStyle ? LinkPathStyle.RelativePathToTheSource : settings.getLinkPathStyle()
       )
@@ -222,7 +222,7 @@ export class LinkConverter {
       pathOrFile: params.file,
       pluginNoticeComponent: this.pluginNoticeComponent,
       resourceLockComponent: this.resourceLockComponent,
-      shouldSkipLinksInHeadings: true,
+      shouldSkipReferencesInHeadings: true,
       shouldUseAngleBrackets: settings.shouldUseAngleBrackets
     }));
   }

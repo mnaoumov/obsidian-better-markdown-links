@@ -11,7 +11,7 @@ import { GenerateMarkdownLinkDefaultParamsComponent } from '@mnaoumov/obsidian-l
 import { LayoutReadyComponent } from '@mnaoumov/obsidian-lib/components/layout-ready-component';
 import { convertLink } from '@mnaoumov/obsidian-lib/link';
 import {
-  getLinks,
+  getReferences,
   parseMetadata
 } from '@mnaoumov/obsidian-lib/metadata-cache';
 import { isReferenceInHeading } from '@mnaoumov/obsidian-lib/reference';
@@ -199,7 +199,7 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
         shouldParseMultiValueFrontmatterExternalLinks: shouldNormalizeFileLinks
       });
       combinedAbortSignal.throwIfAborted();
-      const links = getLinks({ cache });
+      const links = getReferences({ cache });
       const settings = this.pluginSettingsComponent.settings;
       // The same path params `LinkConverter` writes with. A probe that asked for less would answer "no
       // change needed" for a link the converter would have rewritten — a forced relative style with the
@@ -211,13 +211,13 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
         !isReferenceInHeading(link, cache)
         && link.original !== convertLink(normalizeOptionalProperties<ConvertLinkParams>({
             app: this.app,
-            link,
             linkStyle: getLinkStyleForReference({
               linkStyle: settings.getLinkStyle(),
               reference: link,
               shouldConvertFrontmatterWikilinksToMarkdown: settings.shouldConvertFrontmatterWikilinksToMarkdown
             }),
             newSourcePathOrFile: file,
+            reference: link,
             ...linkPathStyleParams
           }))
       );

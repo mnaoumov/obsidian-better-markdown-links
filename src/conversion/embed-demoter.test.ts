@@ -30,8 +30,8 @@ vi.mock('@mnaoumov/obsidian-lib/file-system', () => ({
 }));
 
 vi.mock('@mnaoumov/obsidian-lib/link', () => ({
-  editLinks: vi.fn(),
-  extractLinkFile: vi.fn(),
+  editReferences: vi.fn(),
+  extractReferenceFile: vi.fn(),
   generateMarkdownLink: vi.fn(),
   hasEmbedSyntax: vi.fn()
 }));
@@ -48,8 +48,8 @@ vi.mock('@mnaoumov/obsidian-lib/modals/confirm', () => ({
 import { getMarkdownFiles } from '@mnaoumov/obsidian-lib/file-system';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
-  editLinks,
-  extractLinkFile,
+  editReferences,
+  extractReferenceFile,
   generateMarkdownLink,
   hasEmbedSyntax
 } from '@mnaoumov/obsidian-lib/link';
@@ -119,18 +119,18 @@ function createLink(original: string, displayText?: string): Reference {
 }
 
 /**
- * Runs the converter callback the demoter handed to `editLinks` against one link, the way `editLinks`
+ * Runs the converter callback the demoter handed to `editReferences` against one link, the way `editReferences`
  * itself would.
  */
 async function runLinkConverter(link: Reference): Promise<string | undefined> {
-  const editLinksParams = vi.mocked(editLinks).mock.calls[0]?.[0];
-  return await editLinksParams?.linkConverter(link) as string | undefined;
+  const editLinksParams = vi.mocked(editReferences).mock.calls[0]?.[0];
+  return await editLinksParams?.referenceConverter(link) as string | undefined;
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(abortSignalAny).mockImplementation((...signals) => signals[0] ?? new AbortController().signal);
-  vi.mocked(editLinks).mockResolvedValue(undefined);
+  vi.mocked(editReferences).mockResolvedValue(undefined);
   vi.mocked(loop).mockResolvedValue(undefined);
   vi.mocked(getMarkdownFiles).mockReturnValue([]);
   vi.mocked(hasEmbedSyntax).mockReturnValue(true);
@@ -146,7 +146,7 @@ describe('EmbedDemoter', () => {
       vi.mocked(abortSignalAny).mockReturnValue(controller.signal);
 
       await expect(context.demoter.demoteEmbedsInFile({ file: createFile('note.md') })).rejects.toThrow();
-      expect(vi.mocked(editLinks)).not.toHaveBeenCalled();
+      expect(vi.mocked(editReferences)).not.toHaveBeenCalled();
     });
 
     it('should edit the links of a non-ignored file', async () => {
@@ -155,15 +155,15 @@ describe('EmbedDemoter', () => {
 
       await context.demoter.demoteEmbedsInFile({ file });
 
-      expect(vi.mocked(editLinks)).toHaveBeenCalledOnce();
-      const editLinksParams = vi.mocked(editLinks).mock.calls[0]?.[0];
+      expect(vi.mocked(editReferences)).toHaveBeenCalledOnce();
+      const editLinksParams = vi.mocked(editReferences).mock.calls[0]?.[0];
       expect(editLinksParams?.abortSignal).toBe(context.abortSignal);
       expect(editLinksParams?.app).toBe(context.app);
       expect(editLinksParams?.pathOrFile).toBe(file);
       expect(editLinksParams?.pluginNoticeComponent).toBe(context.pluginNoticeComponent);
       expect(editLinksParams?.resourceLockComponent).toBe(context.resourceLockComponent);
       // Demoting an embed inside a heading would change the heading's text and break links to it.
-      expect(editLinksParams?.shouldSkipLinksInHeadings).toBe(true);
+      expect(editLinksParams?.shouldSkipReferencesInHeadings).toBe(true);
     });
 
     it('should pass no range when none is given, so the whole file is demoted', async () => {
@@ -171,19 +171,19 @@ describe('EmbedDemoter', () => {
 
       await context.demoter.demoteEmbedsInFile({ file: createFile('note.md') });
 
-      // `editLinks` gates on `offsetRange !== undefined`, so an explicitly `undefined` range and an absent
+      // `editReferences` gates on `offsetRange !== undefined`, so an explicitly `undefined` range and an absent
       // one are the same whole-file case. `normalizeOptionalProperties` is a compile-time cast that keeps
       // `exactOptionalPropertyTypes` happy; it does not strip the key, and does not need to.
-      expect(vi.mocked(editLinks).mock.calls[0]?.[0]?.offsetRange).toBeUndefined();
+      expect(vi.mocked(editReferences).mock.calls[0]?.[0]?.offsetRange).toBeUndefined();
     });
 
-    it('should hand the offset range straight to editLinks, which is what confines a demotion to a selection', async () => {
+    it('should hand the offset range straight to editReferences, which is what confines a demotion to a selection', async () => {
       const context = createDemoter();
       const offsetRange = { endOffset: 42, startOffset: 10 };
 
       await context.demoter.demoteEmbedsInFile({ file: createFile('note.md'), offsetRange });
 
-      expect(vi.mocked(editLinks).mock.calls[0]?.[0]?.offsetRange).toBe(offsetRange);
+      expect(vi.mocked(editReferences).mock.calls[0]?.[0]?.offsetRange).toBe(offsetRange);
     });
 
     it('should skip an ignored file when not prompting', async () => {
@@ -193,7 +193,7 @@ describe('EmbedDemoter', () => {
       await context.demoter.demoteEmbedsInFile({ file: createFile('ignored.md') });
 
       expect(vi.mocked(confirm)).not.toHaveBeenCalled();
-      expect(vi.mocked(editLinks)).not.toHaveBeenCalled();
+      expect(vi.mocked(editReferences)).not.toHaveBeenCalled();
     });
 
     it('should skip an ignored file when prompting and the user declines', async () => {
@@ -207,7 +207,7 @@ describe('EmbedDemoter', () => {
       });
 
       expect(vi.mocked(confirm)).toHaveBeenCalledOnce();
-      expect(vi.mocked(editLinks)).not.toHaveBeenCalled();
+      expect(vi.mocked(editReferences)).not.toHaveBeenCalled();
     });
 
     it('should demote an ignored file when prompting and the user confirms', async () => {
@@ -220,10 +220,10 @@ describe('EmbedDemoter', () => {
         shouldPromptForExcludedFile: true
       });
 
-      expect(vi.mocked(editLinks)).toHaveBeenCalledOnce();
+      expect(vi.mocked(editReferences)).toHaveBeenCalledOnce();
     });
 
-    describe('the link converter it hands to editLinks', () => {
+    describe('the link converter it hands to editReferences', () => {
       it('should leave a link that is not an embed alone', async () => {
         const context = createDemoter();
         vi.mocked(hasEmbedSyntax).mockReturnValue(false);
@@ -237,7 +237,7 @@ describe('EmbedDemoter', () => {
 
       it('should leave an embed whose target cannot be extracted alone', async () => {
         const context = createDemoter();
-        vi.mocked(extractLinkFile).mockReturnValue(null);
+        vi.mocked(extractReferenceFile).mockReturnValue(null);
         await context.demoter.demoteEmbedsInFile({ file: createFile('note.md') });
 
         const result = await runLinkConverter(createLink('![[missing.png]]'));
@@ -250,7 +250,7 @@ describe('EmbedDemoter', () => {
         const context = createDemoter();
         const file = createFile('note.md');
         const targetFile = createFile('Materials/Diagram.png', 'Diagram.png');
-        vi.mocked(extractLinkFile).mockReturnValue(targetFile);
+        vi.mocked(extractReferenceFile).mockReturnValue(targetFile);
         await context.demoter.demoteEmbedsInFile({ file });
 
         const result = await runLinkConverter(createLink('![Diagram](<Materials/Diagram.png>)', 'Diagram'));
@@ -268,7 +268,7 @@ describe('EmbedDemoter', () => {
 
       it('should pass an empty alias when the embed has no display text', async () => {
         const context = createDemoter();
-        vi.mocked(extractLinkFile).mockReturnValue(createFile('Materials/Diagram.png', 'Diagram.png'));
+        vi.mocked(extractReferenceFile).mockReturnValue(createFile('Materials/Diagram.png', 'Diagram.png'));
         await context.demoter.demoteEmbedsInFile({ file: createFile('note.md') });
 
         await runLinkConverter(createLink('![[Materials/Diagram.png]]'));
@@ -278,7 +278,7 @@ describe('EmbedDemoter', () => {
 
       it('should append the target file name as a sub-bullet when the setting is enabled', async () => {
         const context = createDemoter({ shouldAppendFileNameWhenDemotingEmbeds: true });
-        vi.mocked(extractLinkFile).mockReturnValue(createFile('Materials/Diagram.png', 'Diagram.png'));
+        vi.mocked(extractReferenceFile).mockReturnValue(createFile('Materials/Diagram.png', 'Diagram.png'));
         await context.demoter.demoteEmbedsInFile({ file: createFile('note.md') });
 
         const result = await runLinkConverter(createLink('![[Materials/Diagram.png]]'));
@@ -325,8 +325,8 @@ describe('EmbedDemoter', () => {
 
       await context.demoter.demoteEmbedsInFolder({ folder });
 
-      expect(vi.mocked(editLinks)).toHaveBeenCalledOnce();
-      expect(vi.mocked(editLinks).mock.calls[0]?.[0].pathOrFile).toBe(file);
+      expect(vi.mocked(editReferences)).toHaveBeenCalledOnce();
+      expect(vi.mocked(editReferences).mock.calls[0]?.[0].pathOrFile).toBe(file);
     });
   });
 });
