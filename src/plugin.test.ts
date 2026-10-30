@@ -359,14 +359,14 @@ describe('Plugin', () => {
     expect(registerCommandHandlersSpy).toHaveBeenCalledTimes(2);
   });
 
-  it('should register the twelve conversion and four demotion command handlers plus the undo bulk operation and open demo vault commands', async () => {
+  it('should register the twelve conversion and four demotion command handlers plus the undo bulk operation, report bug and open demo vault commands', async () => {
     const registerCommandHandlersSpy = vi.spyOn(CommandHandlerComponent.prototype, 'registerCommandHandlers');
 
     await createLoadedPlugin();
 
     // The handlers are built lazily by a factory, so build them here.
     const commandHandlerFactory = registerCommandHandlersSpy.mock.calls[1]?.[0];
-    expect(commandHandlerFactory?.()).toHaveLength(18);
+    expect(commandHandlerFactory?.()).toHaveLength(19);
   });
 
   it('should declare no api before it has loaded', () => {
@@ -393,6 +393,17 @@ describe('Plugin', () => {
 
     expect(addCommandSpy).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'open-demo-vault' })
+    );
+  });
+
+  it('should register the report bug command via its command handler', async () => {
+    const plugin = new Plugin(app, manifest);
+    const addCommandSpy = vi.spyOn(plugin, 'addCommand');
+
+    await plugin.onload();
+
+    expect(addCommandSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'report-bug' })
     );
   });
 });
