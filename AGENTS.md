@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Filing an issue (for AI agents and humans)
+
+Open issues through the [issue forms](https://github.com/mnaoumov/obsidian-better-markdown-links/issues/new/choose), not as blank issues.
+
+Filing from the CLI or the API (`gh issue create --body`, or an AI agent filing for you) skips the form, and `gh issue create --template` cannot load an issue form. In that case, open the matching form in [`.github/ISSUE_TEMPLATE/`](https://github.com/mnaoumov/obsidian-better-markdown-links/tree/HEAD/.github/ISSUE_TEMPLATE), copy every field as a `### <label>` heading in the form's order, and fill in each one. Always state the plugin version, the Obsidian version and your operating system.
+
 ## Overview
 
 `Better Markdown Links` is an Obsidian plugin that adds support for angle bracket links (`[Title](<path with space/note.md>)`) and manages relative links properly (prepending `./`), plus link conversion (per-file, per-folder, entire-vault, and automatic), a force-Markdown link style that overrides Obsidian's own `Use [[Wikilinks]]` setting (as a setting and as its own command triad), a forced link PATH style that overrides Obsidian's own `New link format` setting (as a setting, and as a force-relative command triad), demotion of embeds to plain links, resolution of wikilinks Obsidian cannot resolve (by alias, or by creating the missing note), and a plugin API (`generateMarkdownLinkExtended`) that generates links with the full option set. Rename/delete handling was dropped in 5.0.0 and belongs to the `advanced-rename-and-delete-handler` plugin; this plugin only suggests that plugin and offers it the settings the old handler used. It is built on `@mnaoumov/obsidian-lib` (a runtime dependency providing the `PluginBase`, component, command-handler, and link utilities the plugin composes) and `@mnaoumov/typescript-lib`, with its build, lint and test tooling from `@mnaoumov/obsidian-dev-toolkit` and `@mnaoumov/typescript-dev-toolkit`. Vault scripts under `demo-vault/_assets/CodeScriptToolkit/` import `@mnaoumov/obsidian-lib`, which `CodeScript Toolkit` serves to them.
