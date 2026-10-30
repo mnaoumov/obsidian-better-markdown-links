@@ -54,6 +54,7 @@ export class PluginSettings {
 
   public shouldAllowEmptyEmbedAlias = true;
   public shouldAppendFileNameWhenDemotingEmbeds = false;
+  public shouldCommitBulkOperations = false;
   public shouldConvertFrontmatterWikilinksToMarkdown = false;
   public shouldCreateMissingNotes = false;
   public shouldIncludeAttachmentExtensionToEmbedAlias = false;

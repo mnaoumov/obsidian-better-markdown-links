@@ -1,3 +1,4 @@
+import type { BulkOperationCommitComponent } from '@mnaoumov/obsidian-lib/components/bulk-operation-commit-component';
 import type { TFolder } from 'obsidian';
 
 import { FolderCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/folder-command-handler';
@@ -5,10 +6,12 @@ import { FolderCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/fo
 import { LinkConverter } from '../../conversion/link-converter.ts';
 
 interface ConvertLinksInFolderCommandHandlerConstructorParams {
+  readonly bulkOperationCommitComponent: BulkOperationCommitComponent;
   readonly linkConverter: LinkConverter;
 }
 
 export class ConvertLinksInFolderCommandHandler extends FolderCommandHandler {
+  private readonly bulkOperationCommitComponent: BulkOperationCommitComponent;
   private readonly linkConverter: LinkConverter;
 
   public constructor(params: ConvertLinksInFolderCommandHandlerConstructorParams) {
@@ -22,6 +25,7 @@ export class ConvertLinksInFolderCommandHandler extends FolderCommandHandler {
       shouldAddCommandToSubmenu: true
     });
 
+    this.bulkOperationCommitComponent = params.bulkOperationCommitComponent;
     this.linkConverter = params.linkConverter;
   }
 
@@ -30,9 +34,14 @@ export class ConvertLinksInFolderCommandHandler extends FolderCommandHandler {
   }
 
   protected override async executeFolder(folder: TFolder): Promise<void> {
-    await this.linkConverter.convertLinksInFolder({
-      folder,
-      shouldResolveUnresolvedLinks: true
+    await this.bulkOperationCommitComponent.runBulkOperation({
+      operation: async () => {
+        await this.linkConverter.convertLinksInFolder({
+          folder,
+          shouldResolveUnresolvedLinks: true
+        });
+      },
+      summary: `Convert links in ${folder.path}`
     });
   }
 

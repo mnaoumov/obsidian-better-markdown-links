@@ -5,6 +5,8 @@ import type {
 } from 'obsidian';
 
 import { CommandHandlerComponent } from '@mnaoumov/obsidian-lib/command-handlers/command-handler-component';
+import { UndoBulkOperationCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/undo-bulk-operation-command-handler';
+import { BulkOperationCommitComponent } from '@mnaoumov/obsidian-lib/components/bulk-operation-commit-component';
 import { ObsidianLibrary } from '@mnaoumov/obsidian-lib/library';
 import { Library } from '@mnaoumov/typescript-lib/library';
 import { castTo } from '@mnaoumov/typescript-lib/object-utils';
@@ -112,6 +114,10 @@ import { PluginSettingsComponent } from './settings/plugin-settings-component.ts
 interface AppGlobal {
   // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- The fixture installs the app on the mocked global.
   app: AppOriginal;
+}
+
+interface IsEnabledReader {
+  readonly isEnabled: (this: void) => boolean;
 }
 
 interface PluginApisReader {
@@ -251,6 +257,36 @@ describe('Plugin', () => {
     expect(params.isSuggestionDeclined()).toBe(true);
   });
 
+  // Both the commit wrapper and the undo command read the opt-in setting on every call, so turning it on
+  // applies to the next run without a reload.
+  it('should commit bulk operations and offer their undo only while the setting is on', async () => {
+    const registerCommandHandlersSpy = vi.spyOn(CommandHandlerComponent.prototype, 'registerCommandHandlers');
+    const plugin = new Plugin(app, manifest);
+    const addChildSpy = vi.spyOn(plugin, 'addChild');
+    await plugin.onload();
+
+    const children = addChildSpy.mock.calls.map((call) => call[0]);
+    const settingsComponent = children.find((child) => child instanceof PluginSettingsComponent);
+    const bulkOperationCommitComponent = children.find((child) => child instanceof BulkOperationCommitComponent);
+    const undoCommandHandler = registerCommandHandlersSpy.mock.calls[1]?.[0]()
+      .find((handler) => handler instanceof UndoBulkOperationCommandHandler);
+    if (!settingsComponent || !bulkOperationCommitComponent || !undoCommandHandler) {
+      throw new Error('The plugin did not wire up bulk-operation commits.');
+    }
+
+    const isCommitEnabled = castTo<IsEnabledReader>(bulkOperationCommitComponent).isEnabled;
+    const isUndoEnabled = castTo<IsEnabledReader>(undoCommandHandler).isEnabled;
+    expect(isCommitEnabled()).toBe(false);
+    expect(isUndoEnabled()).toBe(false);
+
+    await settingsComponent.editAndSave((settings) => {
+      settings.shouldCommitBulkOperations = true;
+    });
+
+    expect(isCommitEnabled()).toBe(true);
+    expect(isUndoEnabled()).toBe(true);
+  });
+
   it('should wire up the settings migration once on load', async () => {
     await createLoadedPlugin();
 
@@ -323,14 +359,14 @@ describe('Plugin', () => {
     expect(registerCommandHandlersSpy).toHaveBeenCalledTimes(2);
   });
 
-  it('should register the twelve conversion and four demotion command handlers plus the open demo vault command', async () => {
+  it('should register the twelve conversion and four demotion command handlers plus the undo bulk operation and open demo vault commands', async () => {
     const registerCommandHandlersSpy = vi.spyOn(CommandHandlerComponent.prototype, 'registerCommandHandlers');
 
     await createLoadedPlugin();
 
     // The handlers are built lazily by a factory, so build them here.
     const commandHandlerFactory = registerCommandHandlersSpy.mock.calls[1]?.[0];
-    expect(commandHandlerFactory?.()).toHaveLength(17);
+    expect(commandHandlerFactory?.()).toHaveLength(18);
   });
 
   it('should declare no api before it has loaded', () => {

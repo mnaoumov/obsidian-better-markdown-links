@@ -1,6 +1,8 @@
 import type { PluginApiDeclaration } from '@mnaoumov/obsidian-lib/plugin/plugin-api';
 
 import { OpenDemoVaultCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/open-demo-vault-command-handler';
+import { UndoBulkOperationCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/undo-bulk-operation-command-handler';
+import { BulkOperationCommitComponent } from '@mnaoumov/obsidian-lib/components/bulk-operation-commit-component';
 import { PluginSettingsTabComponent } from '@mnaoumov/obsidian-lib/components/plugin-settings-tab-component';
 import { PluginSuggestionComponent } from '@mnaoumov/obsidian-lib/components/plugin-suggestion-component';
 import { SettingsMigrationComponent } from '@mnaoumov/obsidian-lib/components/settings-migration-component';
@@ -165,15 +167,26 @@ export class Plugin extends PluginBase {
       })
     );
 
+    const bulkOperationCommitComponent = this.addChild(
+      new BulkOperationCommitComponent({
+        app: this.app,
+        isEnabled: (): boolean => pluginSettingsComponent.settings.shouldCommitBulkOperations,
+        pluginId: this.manifest.id,
+        pluginNoticeComponent: this.pluginNoticeComponent
+      })
+    );
+
     await this.commandHandlerComponent.registerCommandHandlers(() => [
       new ConvertLinksInFileCommandHandler({
         linkConverter
       }),
       new ConvertLinksInFolderCommandHandler({
+        bulkOperationCommitComponent,
         linkConverter
       }),
       new ConvertLinksInEntireVaultCommandHandler({
         app: this.app,
+        bulkOperationCommitComponent,
         linkConverter
       }),
       new ConvertLinksInSelectionCommandHandler({
@@ -183,10 +196,12 @@ export class Plugin extends PluginBase {
         linkConverter
       }),
       new ConvertLinksToMarkdownInFolderCommandHandler({
+        bulkOperationCommitComponent,
         linkConverter
       }),
       new ConvertLinksToMarkdownInEntireVaultCommandHandler({
         app: this.app,
+        bulkOperationCommitComponent,
         linkConverter
       }),
       new ConvertLinksToMarkdownInSelectionCommandHandler({
@@ -196,10 +211,12 @@ export class Plugin extends PluginBase {
         linkConverter
       }),
       new ConvertLinkPathsToRelativeInFolderCommandHandler({
+        bulkOperationCommitComponent,
         linkConverter
       }),
       new ConvertLinkPathsToRelativeInEntireVaultCommandHandler({
         app: this.app,
+        bulkOperationCommitComponent,
         linkConverter
       }),
       new ConvertLinkPathsToRelativeInSelectionCommandHandler({
@@ -209,14 +226,20 @@ export class Plugin extends PluginBase {
         embedDemoter
       }),
       new DemoteEmbedsInFolderCommandHandler({
+        bulkOperationCommitComponent,
         embedDemoter
       }),
       new DemoteEmbedsInEntireVaultCommandHandler({
         app: this.app,
+        bulkOperationCommitComponent,
         embedDemoter
       }),
       new DemoteEmbedsInSelectionCommandHandler({
         embedDemoter
+      }),
+      new UndoBulkOperationCommandHandler({
+        bulkOperationCommitComponent,
+        isEnabled: (): boolean => pluginSettingsComponent.settings.shouldCommitBulkOperations
       }),
       new OpenDemoVaultCommandHandler({
         app: this.app,

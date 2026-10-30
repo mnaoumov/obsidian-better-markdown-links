@@ -1,3 +1,4 @@
+import type { BulkOperationCommitComponent } from '@mnaoumov/obsidian-lib/components/bulk-operation-commit-component';
 import type { TFolder } from 'obsidian';
 
 import { FolderCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/folder-command-handler';
@@ -5,10 +6,12 @@ import { FolderCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/fo
 import type { EmbedDemoter } from '../../conversion/embed-demoter.ts';
 
 interface DemoteEmbedsInFolderCommandHandlerConstructorParams {
+  readonly bulkOperationCommitComponent: BulkOperationCommitComponent;
   readonly embedDemoter: EmbedDemoter;
 }
 
 export class DemoteEmbedsInFolderCommandHandler extends FolderCommandHandler {
+  private readonly bulkOperationCommitComponent: BulkOperationCommitComponent;
   private readonly embedDemoter: EmbedDemoter;
 
   public constructor(params: DemoteEmbedsInFolderCommandHandlerConstructorParams) {
@@ -22,6 +25,7 @@ export class DemoteEmbedsInFolderCommandHandler extends FolderCommandHandler {
       shouldAddCommandToSubmenu: true
     });
 
+    this.bulkOperationCommitComponent = params.bulkOperationCommitComponent;
     this.embedDemoter = params.embedDemoter;
   }
 
@@ -30,8 +34,13 @@ export class DemoteEmbedsInFolderCommandHandler extends FolderCommandHandler {
   }
 
   protected override async executeFolder(folder: TFolder): Promise<void> {
-    await this.embedDemoter.demoteEmbedsInFolder({
-      folder
+    await this.bulkOperationCommitComponent.runBulkOperation({
+      operation: async () => {
+        await this.embedDemoter.demoteEmbedsInFolder({
+          folder
+        });
+      },
+      summary: `Demote embeds to links in ${folder.path}`
     });
   }
 

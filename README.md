@@ -47,6 +47,7 @@ A copy of the vault ships with every release. You can access it via any of the f
 - **Force a link path style** — relative, shortest or vault-absolute, whatever Obsidian's **New link format** setting says: [03 Convert links](<./demo-vault/03 Convert links.md>).
 - **Demote embeds to links** — strip the `!` off every embed in a selection, a note, a folder or the vault: [04 Demote embeds](<./demo-vault/04 Demote embeds.md>).
 - **Links that do not resolve** — point an alias-only wikilink at the note carrying the alias, or create the note: [03 Convert links](<./demo-vault/03 Convert links.md>).
+- **Undo a folder or vault run with git** — in a vault kept in git, each in-folder or entire-vault run becomes one commit that the **Undo a bulk operation...** command reverts: [05 Settings](<./demo-vault/05 Settings.md#undo-with-git>).
 - **Leave chosen links alone** — keep links to matching targets, such as `![[file.base]]` embeds, exactly as written while converting the rest: [03 Convert links](<./demo-vault/03 Convert links.md>).
 
 ## Integration with other plugins

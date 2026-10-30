@@ -3,6 +3,7 @@ import type {
   CommandHandler,
   CommandHandlerRegistrationContext
 } from '@mnaoumov/obsidian-lib/command-handlers/command-handler';
+import type { BulkOperationCommitComponent } from '@mnaoumov/obsidian-lib/components/bulk-operation-commit-component';
 import type {
   FileMenuEventHandler,
   FilesMenuEventHandler,
@@ -39,13 +40,16 @@ describe('DemoteEmbedsInFolderCommandHandler', () => {
   let demoteEmbedsInFolder: ReturnType<typeof vi.fn<EmbedDemoter['demoteEmbedsInFolder']>>;
   let fileMenuHandlers: FileMenuEventHandler[];
   let handler: DemoteEmbedsInFolderCommandHandler;
+  let runBulkOperation: ReturnType<typeof vi.fn<BulkOperationCommitComponent['runBulkOperation']>>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     app = App.createConfigured__().asOriginalType__();
     demoteEmbedsInFolder = vi.fn<EmbedDemoter['demoteEmbedsInFolder']>().mockResolvedValue(undefined);
     const embedDemoter = strictProxy<EmbedDemoter>({ demoteEmbedsInFolder });
-    handler = new DemoteEmbedsInFolderCommandHandler({ embedDemoter });
+    runBulkOperation = vi.fn<BulkOperationCommitComponent['runBulkOperation']>(async (params) => await params.operation());
+    const bulkOperationCommitComponent = strictProxy<BulkOperationCommitComponent>({ runBulkOperation: castTo(runBulkOperation) });
+    handler = new DemoteEmbedsInFolderCommandHandler({ bulkOperationCommitComponent, embedDemoter });
 
     fileMenuHandlers = [];
     const activeFileProvider: ActiveFileProvider = { getActiveFile: () => null };
@@ -125,6 +129,7 @@ describe('DemoteEmbedsInFolderCommandHandler', () => {
 
     await vi.waitFor(() => {
       expect(demoteEmbedsInFolder).toHaveBeenCalledExactlyOnceWith({ folder });
+      expect(runBulkOperation).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Demote embeds to links in some/folder' }));
     });
   });
 

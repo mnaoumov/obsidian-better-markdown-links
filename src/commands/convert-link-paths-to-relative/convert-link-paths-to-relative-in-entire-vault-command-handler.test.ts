@@ -1,5 +1,7 @@
+import type { BulkOperationCommitComponent } from '@mnaoumov/obsidian-lib/components/bulk-operation-commit-component';
 import type { App as AppOriginal } from 'obsidian';
 
+import { castTo } from '@mnaoumov/typescript-lib/object-utils';
 import { strictProxy } from '@mnaoumov/typescript-test-toolkit/strict-proxy';
 import { App } from 'obsidian-test-mocks/obsidian';
 import {
@@ -18,12 +20,15 @@ describe('ConvertLinkPathsToRelativeInEntireVaultCommandHandler', () => {
   let app: AppOriginal;
   let convertLinksInFolder: ReturnType<typeof vi.fn<LinkConverter['convertLinksInFolder']>>;
   let handler: ConvertLinkPathsToRelativeInEntireVaultCommandHandler;
+  let runBulkOperation: ReturnType<typeof vi.fn<BulkOperationCommitComponent['runBulkOperation']>>;
 
   beforeEach(() => {
     app = App.createConfigured__().asOriginalType__();
     convertLinksInFolder = vi.fn<LinkConverter['convertLinksInFolder']>().mockResolvedValue(undefined);
     const linkConverter = strictProxy<LinkConverter>({ convertLinksInFolder });
-    handler = new ConvertLinkPathsToRelativeInEntireVaultCommandHandler({ app, linkConverter });
+    runBulkOperation = vi.fn<BulkOperationCommitComponent['runBulkOperation']>(async (params) => await params.operation());
+    const bulkOperationCommitComponent = strictProxy<BulkOperationCommitComponent>({ runBulkOperation: castTo(runBulkOperation) });
+    handler = new ConvertLinkPathsToRelativeInEntireVaultCommandHandler({ app, bulkOperationCommitComponent, linkConverter });
   });
 
   it('should create an instance', () => {
@@ -40,6 +45,7 @@ describe('ConvertLinkPathsToRelativeInEntireVaultCommandHandler', () => {
         shouldForceRelativeLinkPathStyle: true,
         shouldResolveUnresolvedLinks: true
       });
+      expect(runBulkOperation).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Convert link paths to relative in entire vault' }));
     });
   });
 });

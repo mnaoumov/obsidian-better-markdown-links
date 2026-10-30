@@ -37,6 +37,11 @@ Open **Settings -> Community plugins -> `Better Markdown Links`** to configure t
 - `shouldAppendFileNameWhenDemotingEmbeds`
   - append the target's file name as a sub-bullet when demoting an embed to a link (see [04 Demote embeds](<./04 Demote embeds.md>)).
 
+## Undo with git
+
+- `shouldCommitBulkOperations`
+  - desktop only, off by default. When the vault is inside a git repository, every in-folder and entire-vault command run (convert links, convert links to Markdown, convert link paths to relative, demote embeds) is recorded as two commits: `chore: before OP<n>` with whatever was pending, then `OP<n>: <command> in <folder>` with the run's own changes. The **`Better Markdown Links`: Undo a bulk operation...** command lists those runs and reverts the one you pick with `git revert`; a conflict is left for you to resolve. It uses the system `git`, so the repository's own config, hooks and filters apply.
+
 ## Renames moved to another plugin
 
 Up to version 4, this plugin updated the links pointing at a note when you renamed or moved it. Since **5.0.0** it does not: rename and delete handling is owned by [Advanced Rename and Delete Handler](https://github.com/mnaoumov/obsidian-advanced-rename-and-delete-handler), a separate plugin, so a vault has exactly one of them rather than one per plugin that happened to bundle a copy.

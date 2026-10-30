@@ -10,6 +10,7 @@ import { SettingEx } from '@mnaoumov/obsidian-lib/setting-ex';
 import { castTo } from '@mnaoumov/typescript-lib/object-utils';
 import { ensureNonNullable } from '@mnaoumov/typescript-lib/type-guards';
 import { strictProxy } from '@mnaoumov/typescript-test-toolkit/strict-proxy';
+import { Platform } from 'obsidian';
 import {
   beforeEach,
   describe,
@@ -48,6 +49,7 @@ const EXPECTED_BOUND_PROPERTIES = [
   'shouldAppendFileNameWhenDemotingEmbeds',
   'shouldResolveLinksViaAliases',
   'shouldCreateMissingNotes',
+  'shouldCommitBulkOperations',
   'includePaths',
   'excludePaths',
   'excludeLinkTargetPaths'
@@ -174,6 +176,23 @@ describe('PluginSettingsTab', () => {
       LinkStyleMode.ObsidianSettingsDefault,
       LinkStyleMode.Markdown
     ]);
+  });
+
+  // The commits run the system `git`, which only the desktop app can reach.
+  it('should show the bulk operation commits row on desktop only', () => {
+    const tab = createTab();
+    const definition = ensureNonNullable(tab.getSettingDefinitions()[settingNames(tab).indexOf('Should commit bulk operations')]);
+    const visible = castTo<VisibleDefinition>(definition).visible;
+    const isDesktop = Platform.isDesktop;
+
+    try {
+      Platform.isDesktop = true;
+      expect(visible()).toBe(true);
+      Platform.isDesktop = false;
+      expect(visible()).toBe(false);
+    } finally {
+      Platform.isDesktop = isDesktop;
+    }
   });
 
   it('should render the banner into an emptied row element', () => {
