@@ -219,9 +219,9 @@ export function demoteEmbedsInCurrentFile(app: App): void {
 // A note of plain wikilinks. Nothing here is malformed - with Obsidian's `Use [[Wikilinks]]` setting on,
 // this is what Obsidian itself writes, and what a plain convert run leaves untouched. It is the note the
 // Force-Markdown surfaces exist for.
-// The `related` property is a wikilink on purpose: Obsidian reads a property as a link only in that form,
-// so forcing the Markdown style must leave it alone while `shouldConvertFrontmatterWikilinksToMarkdown` is
-// off.
+// The `related` property is a wikilink on purpose: Bases reads a property as a link value only in that
+// form, so forcing the Markdown style must leave it alone while `shouldConvertFrontmatterWikilinksToMarkdown`
+// is off.
 const WIKILINK_CONTENT = [
   '---',
   'related: "[[../02 Relative links/Targets/Simple note]]"',
