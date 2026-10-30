@@ -1,3 +1,4 @@
+import type { BulkOperationCommitComponent } from '@mnaoumov/obsidian-lib/components/bulk-operation-commit-component';
 import type { App } from 'obsidian';
 
 import { GlobalCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/global-command-handler';
@@ -6,6 +7,7 @@ import type { LinkConverter } from '../../conversion/link-converter.ts';
 
 interface ConvertLinkPathsToRelativeInEntireVaultCommandHandlerConstructorParams {
   readonly app: App;
+  readonly bulkOperationCommitComponent: BulkOperationCommitComponent;
   readonly linkConverter: LinkConverter;
 }
 
@@ -15,6 +17,7 @@ interface ConvertLinkPathsToRelativeInEntireVaultCommandHandlerConstructorParams
  */
 export class ConvertLinkPathsToRelativeInEntireVaultCommandHandler extends GlobalCommandHandler {
   private readonly app: App;
+  private readonly bulkOperationCommitComponent: BulkOperationCommitComponent;
   private readonly linkConverter: LinkConverter;
 
   public constructor(params: ConvertLinkPathsToRelativeInEntireVaultCommandHandlerConstructorParams) {
@@ -24,15 +27,21 @@ export class ConvertLinkPathsToRelativeInEntireVaultCommandHandler extends Globa
       name: 'Convert link paths to relative in entire vault'
     });
 
+    this.bulkOperationCommitComponent = params.bulkOperationCommitComponent;
     this.app = params.app;
     this.linkConverter = params.linkConverter;
   }
 
   protected override async execute(): Promise<void> {
-    await this.linkConverter.convertLinksInFolder({
-      folder: this.app.vault.getRoot(),
-      shouldForceRelativeLinkPathStyle: true,
-      shouldResolveUnresolvedLinks: true
+    await this.bulkOperationCommitComponent.runBulkOperation({
+      operation: async () => {
+        await this.linkConverter.convertLinksInFolder({
+          folder: this.app.vault.getRoot(),
+          shouldForceRelativeLinkPathStyle: true,
+          shouldResolveUnresolvedLinks: true
+        });
+      },
+      summary: 'Convert link paths to relative in entire vault'
     });
   }
 }

@@ -3,6 +3,7 @@ import type {
   CommandHandler,
   CommandHandlerRegistrationContext
 } from '@mnaoumov/obsidian-lib/command-handlers/command-handler';
+import type { BulkOperationCommitComponent } from '@mnaoumov/obsidian-lib/components/bulk-operation-commit-component';
 import type {
   FileMenuEventHandler,
   FilesMenuEventHandler,
@@ -39,13 +40,16 @@ describe('ConvertLinksInFolderCommandHandler', () => {
   let convertLinksInFolder: ReturnType<typeof vi.fn<LinkConverter['convertLinksInFolder']>>;
   let fileMenuHandlers: FileMenuEventHandler[];
   let handler: ConvertLinksInFolderCommandHandler;
+  let runBulkOperation: ReturnType<typeof vi.fn<BulkOperationCommitComponent['runBulkOperation']>>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     app = App.createConfigured__().asOriginalType__();
     convertLinksInFolder = vi.fn<LinkConverter['convertLinksInFolder']>().mockResolvedValue(undefined);
     const linkConverter = strictProxy<LinkConverter>({ convertLinksInFolder });
-    handler = new ConvertLinksInFolderCommandHandler({ linkConverter });
+    runBulkOperation = vi.fn<BulkOperationCommitComponent['runBulkOperation']>(async (params) => await params.operation());
+    const bulkOperationCommitComponent = strictProxy<BulkOperationCommitComponent>({ runBulkOperation: castTo(runBulkOperation) });
+    handler = new ConvertLinksInFolderCommandHandler({ bulkOperationCommitComponent, linkConverter });
 
     fileMenuHandlers = [];
     const activeFileProvider: ActiveFileProvider = { getActiveFile: () => null };
@@ -125,6 +129,7 @@ describe('ConvertLinksInFolderCommandHandler', () => {
 
     await vi.waitFor(() => {
       expect(convertLinksInFolder).toHaveBeenCalledExactlyOnceWith({ folder, shouldResolveUnresolvedLinks: true });
+      expect(runBulkOperation).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Convert links in some/folder' }));
     });
   });
 

@@ -3,6 +3,7 @@ import type {
   CommandHandler,
   CommandHandlerRegistrationContext
 } from '@mnaoumov/obsidian-lib/command-handlers/command-handler';
+import type { BulkOperationCommitComponent } from '@mnaoumov/obsidian-lib/components/bulk-operation-commit-component';
 import type {
   FileMenuEventHandler,
   FilesMenuEventHandler,
@@ -41,13 +42,16 @@ describe('ConvertLinkPathsToRelativeInFolderCommandHandler', () => {
   let convertLinksInFolder: ReturnType<typeof vi.fn<LinkConverter['convertLinksInFolder']>>;
   let fileMenuHandlers: FileMenuEventHandler[];
   let handler: ConvertLinkPathsToRelativeInFolderCommandHandler;
+  let runBulkOperation: ReturnType<typeof vi.fn<BulkOperationCommitComponent['runBulkOperation']>>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     app = App.createConfigured__({ files: { 'some/folder/note.md': '' } }).asOriginalType__();
     convertLinksInFolder = vi.fn<LinkConverter['convertLinksInFolder']>().mockResolvedValue(undefined);
     const linkConverter = strictProxy<LinkConverter>({ convertLinksInFolder });
-    handler = new ConvertLinkPathsToRelativeInFolderCommandHandler({ linkConverter });
+    runBulkOperation = vi.fn<BulkOperationCommitComponent['runBulkOperation']>(async (params) => await params.operation());
+    const bulkOperationCommitComponent = strictProxy<BulkOperationCommitComponent>({ runBulkOperation: castTo(runBulkOperation) });
+    handler = new ConvertLinkPathsToRelativeInFolderCommandHandler({ bulkOperationCommitComponent, linkConverter });
 
     fileMenuHandlers = [];
     // The palette command resolves the folder from the active file's parent, so the provider has to hand
@@ -92,6 +96,7 @@ describe('ConvertLinkPathsToRelativeInFolderCommandHandler', () => {
         shouldForceRelativeLinkPathStyle: true,
         shouldResolveUnresolvedLinks: true
       });
+      expect(runBulkOperation).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ summary: 'Convert link paths to relative in some/folder' }));
     });
   });
 
