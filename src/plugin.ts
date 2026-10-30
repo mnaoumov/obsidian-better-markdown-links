@@ -1,5 +1,6 @@
 import type { PluginApiDeclaration } from '@mnaoumov/obsidian-lib/plugin/plugin-api';
 
+import { OpenBugReportCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/open-bug-report-command-handler';
 import { OpenDemoVaultCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/open-demo-vault-command-handler';
 import { UndoBulkOperationCommandHandler } from '@mnaoumov/obsidian-lib/command-handlers/undo-bulk-operation-command-handler';
 import { BulkOperationCommitComponent } from '@mnaoumov/obsidian-lib/components/bulk-operation-commit-component';
@@ -240,6 +241,11 @@ export class Plugin extends PluginBase {
       new UndoBulkOperationCommandHandler({
         bulkOperationCommitComponent,
         isEnabled: (): boolean => pluginSettingsComponent.settings.shouldCommitBulkOperations
+      }),
+      new OpenBugReportCommandHandler({
+        app: this.app,
+        gitHubRepo: 'mnaoumov/obsidian-better-markdown-links',
+        pluginId: this.manifest.id
       }),
       new OpenDemoVaultCommandHandler({
         app: this.app,
