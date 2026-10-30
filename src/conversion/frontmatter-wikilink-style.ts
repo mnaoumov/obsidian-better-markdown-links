@@ -30,11 +30,12 @@ export interface GetLinkStyleForReferenceParams {
 /**
  * The style to write for one particular reference, given the style the run would otherwise write.
  *
- * A wikilink in a note's frontmatter keeps the wikilink style unless the setting says otherwise, because
- * Obsidian reads a link in a property only when it is a wikilink: a markdown link written in its place is a
- * plain string to Obsidian, so the property stops linking anywhere (a Bases item whose `base` property was
- * converted drops out of its table). Its path style is still converted, since that keeps it a wikilink. A
- * canvas reference is frontmatter-shaped without being frontmatter, so it keeps the run's style.
+ * A wikilink in a note's frontmatter keeps the wikilink style unless the setting says otherwise. Since
+ * Obsidian 1.11 a markdown link in a property is indexed, rendered and renamed like a wikilink, but Bases
+ * still reads it as text rather than a link value, so a filter comparing the property with a link (such as
+ * `related == link("Note")`) drops a converted note from its table. Its path style is still converted,
+ * since that keeps it a wikilink. A canvas reference is frontmatter-shaped without being frontmatter, so it
+ * keeps the run's style.
  *
  * Every surface that rewrites an existing reference goes through this — the converter, the
  * automatic-conversion probe and the embed demoter — so they cannot disagree.

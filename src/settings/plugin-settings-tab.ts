@@ -221,11 +221,15 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
           appendCodeBlock(f, 'base: "[[table.base]]"');
           f.appendText(', is converted to a markdown link like the links in the note\'s body.');
           f.createEl('br');
-          f.appendText('Obsidian treats a property value as a link only when it is a wikilink, so a markdown link there is plain text: the property stops linking, and a Bases item whose property was converted drops out of its table.');
+          f.appendText('Since Obsidian 1.11 a property whose value is one markdown link is a real link: it shows as a link, counts as a backlink, follows a rename, and matches a Bases ');
+          appendCodeBlock(f, 'file.hasLink()');
+          f.appendText(' filter.');
           f.createEl('br');
-          f.appendText('Enable it only if another plugin makes markdown links work in properties, such as ');
-          appendCodeBlock(f, 'Frontmatter Markdown Links');
-          f.appendText('. Either way, a property wikilink\'s path style is still converted.');
+          f.appendText('Off by default because Bases still reads it as text rather than a link: a filter comparing the property with a link, such as ');
+          appendCodeBlock(f, 'related == link("Note")');
+          f.appendText(', drops a converted note from its table.');
+          f.createEl('br');
+          f.appendText('Either way, a property wikilink\'s path style is still converted.');
         }),
         name: 'Should convert frontmatter wikilinks to markdown',
         render: (setting) => {

@@ -144,9 +144,9 @@ Manual equivalent: pick from the **Link style** dropdown in **Settings -> Commun
 
 ### Wikilinks in properties
 
-Obsidian treats a property value as a link only when it is a wikilink: `related: "[[Simple note]]"` links, `related: "[Simple note](<Simple note.md>)"` is plain text. A Bases item is the sharpest case - its `base` property is what puts it in the table, so converting it drops the item out.
+Since Obsidian 1.11, `related: "[Simple note](<Simple note.md>)"` is a link just like `related: "[[Simple note]]"`: it shows as a link in the properties, counts as a backlink, follows a rename, and matches a Bases `file.hasLink()` filter. One difference is left: Bases reads the markdown form as text rather than as a link, so a filter that compares the property with a link, such as `related == link("Simple note")`, drops a converted note from its table.
 
-So neither the Markdown style nor the convert-to-Markdown commands touch a wikilink in a note's properties: its path style is still converted, but it stays a wikilink. The wikilinks note above has a `related` property to show it. The **Should convert frontmatter wikilinks to markdown** setting (`shouldConvertFrontmatterWikilinksToMarkdown`) lifts that, for a vault where another plugin, such as [`Frontmatter Markdown Links`](https://github.com/mnaoumov/obsidian-frontmatter-markdown-links), makes markdown links work in properties.
+So by default neither the Markdown style nor the convert-to-Markdown commands touch a wikilink in a note's properties: its path style is still converted, but it stays a wikilink. The wikilinks note above has a `related` property to show it. The **Should convert frontmatter wikilinks to markdown** setting (`shouldConvertFrontmatterWikilinksToMarkdown`) converts them too, for a vault whose bases do not compare properties with links. A property holding several links in one value still needs [`Frontmatter Markdown Links`](https://github.com/mnaoumov/obsidian-frontmatter-markdown-links).
 
 ```code-button
 ---

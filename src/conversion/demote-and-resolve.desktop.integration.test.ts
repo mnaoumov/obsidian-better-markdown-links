@@ -582,9 +582,9 @@ describe('demote embeds and resolve unresolved links (Desktop)', () => {
       expect(result.content).not.toContain('[[');
     });
 
-    // Obsidian reads a link in a property only when it is a wikilink, so a markdown link written there is a
-    // plain string: a Bases item whose `base` property was converted drops out of its table. The body link
-    // beside it is the proof that the run did convert.
+    // Bases reads a markdown link in a property as text rather than a link value, so a filter comparing the
+    // property with a link drops a converted note (pinned in `frontmatter-markdown-link.desktop.integration.test.ts`).
+    // The body link beside it is the proof that the run did convert.
     it('should leave a frontmatter wikilink alone when forcing markdown', async () => {
       const result = await runScenario({
         commandId: `${PLUGIN_ID}:convert-links-to-markdown-in-current-file`,
