@@ -181,6 +181,8 @@ The **Link path style** setting (`linkPathStyleMode`) overrides that:
 
 Outside the default, the **Should use leading dot for relative paths** and **Should use leading slash for absolute paths** settings from [02 Relative links](<./02 Relative links.md>) are applied as written rather than copied from the link being replaced - which is the whole point, since a link that was absolute has no `./` to copy.
 
+A relative path is always rewritten as the shortest relative path to its target. A link that climbs out of its folders and back in, such as `[[../../alpha/bravo/delta]]` in `alpha/bravo/charlie.md`, becomes `[[./delta]]`, and `[delta](<../../alpha/bravo/delta.md>)` becomes `[delta](<./delta.md>)`. The leading dot keeps it visibly relative, so it is not the bare `[[delta]]` of the shortest path style. The convert commands, the automatic conversion and the commands below all do this.
+
 Four commands force the relative style for a single run, leaving the setting alone - the replacement for **Convert all link paths to relative** and its siblings from [Consistent Attachments and Links](https://github.com/mnaoumov/obsidian-consistent-attachments-and-links):
 
 - **`Better Markdown Links`: Convert link paths to relative in current selection**
