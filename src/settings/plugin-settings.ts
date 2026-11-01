@@ -60,6 +60,7 @@ export class PluginSettings {
   public shouldIncludeAttachmentExtensionToEmbedAlias = false;
   public shouldNormalizeFileLinks = true;
   public shouldResolveGitHubHeadingAnchors = true;
+  public shouldResolveLinksStrictly = false;
   public shouldResolveLinksViaAliases = false;
   public shouldUseAngleBrackets = true;
   public shouldUseGitHubHeadingAnchors = false;

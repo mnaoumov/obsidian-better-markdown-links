@@ -24,6 +24,7 @@ describe('PluginSettings', () => {
       expect(settings.shouldIncludeAttachmentExtensionToEmbedAlias).toBe(false);
       expect(settings.shouldNormalizeFileLinks).toBe(true);
       expect(settings.shouldResolveGitHubHeadingAnchors).toBe(true);
+      expect(settings.shouldResolveLinksStrictly).toBe(false);
       expect(settings.shouldUseAngleBrackets).toBe(true);
       expect(settings.shouldUseGitHubHeadingAnchors).toBe(false);
       expect(settings.shouldUseLeadingDotForRelativePaths).toBe(true);

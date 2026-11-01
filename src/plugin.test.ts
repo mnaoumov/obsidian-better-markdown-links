@@ -36,6 +36,11 @@ vi.mock('./settings/plugin-settings-component.ts', () => ({
       // eslint-disable-next-line typescript-dev-toolkit/prefer-noop-async -- a vi.mock factory cannot reach a top-level import.
       return Promise.resolve();
     }
+
+    // The strict relative link resolution listens for `saveSettings`; nothing here saves, so it never fires.
+    public on(): object {
+      return { asyncEventSource: { offref: (): void => undefined } };
+    }
   }
 }));
 
@@ -201,6 +206,9 @@ beforeEach(() => {
 
   // The GitHub heading anchor resolution patches getEmbedCreator, which obsidian-test-mocks does not model.
   seedOnRawTarget(app, 'embedRegistry', { getEmbedCreator: vi.fn().mockReturnValue(null) });
+
+  // The strict relative link resolution patches getLinkpathDest, which obsidian-test-mocks does not model.
+  seedOnRawTarget(app.metadataCache, 'getLinkpathDest', vi.fn().mockReturnValue([]));
 
   // Expose the app as the global instance so obsidian-lib helpers that resolve shared state without an explicit app argument read/write the same seeded holder.
   castTo<AppGlobal>(window).app = app;

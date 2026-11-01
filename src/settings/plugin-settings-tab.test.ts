@@ -47,6 +47,7 @@ const EXPECTED_BOUND_PROPERTIES = [
   'shouldConvertFrontmatterWikilinksToMarkdown',
   'shouldUseGitHubHeadingAnchors',
   'shouldResolveGitHubHeadingAnchors',
+  'shouldResolveLinksStrictly',
   'linkPathStyleMode',
   'shouldAppendFileNameWhenDemotingEmbeds',
   'shouldResolveLinksViaAliases',
