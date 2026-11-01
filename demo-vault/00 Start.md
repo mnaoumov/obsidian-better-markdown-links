@@ -17,6 +17,7 @@ No setup is needed: the notes and folders these steps use ship in `Materials/`, 
 - [03 Convert links](<./03 Convert links.md>)
 - [04 Demote embeds](<./04 Demote embeds.md>)
 - [05 Settings](<./05 Settings.md>)
+- [06 GitHub heading anchors](<./06 GitHub heading anchors.md>)
 
 ## Materials
 

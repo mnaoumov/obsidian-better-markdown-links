@@ -45,6 +45,8 @@ const EXPECTED_BOUND_PROPERTIES = [
   'shouldIncludeAttachmentExtensionToEmbedAlias',
   'linkStyleMode',
   'shouldConvertFrontmatterWikilinksToMarkdown',
+  'shouldUseGitHubHeadingAnchors',
+  'shouldResolveGitHubHeadingAnchors',
   'linkPathStyleMode',
   'shouldAppendFileNameWhenDemotingEmbeds',
   'shouldResolveLinksViaAliases',

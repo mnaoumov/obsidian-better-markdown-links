@@ -62,6 +62,10 @@ vi.mock('../conversion/link-target-exclusion.ts', () => ({
   getLinkTargetExclusionPredicate: vi.fn()
 }));
 
+vi.mock('../github-heading-anchors/github-heading-anchor-link.ts', () => ({
+  toGitHubHeadingAnchorLink: vi.fn()
+}));
+
 vi.mock('@mnaoumov/obsidian-lib/metadata-cache', () => ({
   getReferences: vi.fn(),
   parseMetadata: vi.fn()
@@ -84,6 +88,8 @@ import { handleSilentError } from '@mnaoumov/typescript-lib/async';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { getLinkTargetExclusionPredicate } from '../conversion/link-target-exclusion.ts';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { toGitHubHeadingAnchorLink } from '../github-heading-anchors/github-heading-anchor-link.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { BetterMarkdownLinksComponent } from './better-markdown-links-component.ts';
 
@@ -108,6 +114,7 @@ interface CreateContextOptions {
   readonly generatedLinkPathStyle?: LinkPathStyle;
   readonly generatedLinkStyle?: LinkStyle;
   readonly shouldNormalizeFileLinks?: boolean;
+  readonly shouldUseGitHubHeadingAnchors?: boolean;
 }
 
 interface DeletedHolder {
@@ -193,6 +200,7 @@ function createContext(files: ConfiguredFiles = {}, options: CreateContextOption
     shouldIncludeAttachmentExtensionToEmbedAlias: true,
     shouldNormalizeFileLinks: options.shouldNormalizeFileLinks ?? true,
     shouldUseAngleBrackets: false,
+    shouldUseGitHubHeadingAnchors: options.shouldUseGitHubHeadingAnchors ?? false,
     shouldUseLeadingDotForRelativePaths: false,
     shouldUseLeadingSlashForAbsolutePaths: true
   });
@@ -484,6 +492,27 @@ describe('BetterMarkdownLinksComponent', () => {
       expect(context.convertLinksInFile).toHaveBeenCalledOnce();
       expect(context.convertLinksInFile.mock.calls[0]?.[0].file).toBe(file);
       expect(getProcessFileAbortControllers(context.component).has(file.path)).toBe(false);
+    });
+
+    it('should convert when the only pending change is a GitHub heading anchor', async () => {
+      const context = createContext({}, { shouldUseGitHubHeadingAnchors: true });
+      vi.mocked(getReferences).mockReturnValue([castTo<Reference>({ link: 'missing.md#Heading', original: 'converted' })]);
+      vi.mocked(toGitHubHeadingAnchorLink).mockReturnValue('[x](target.md#anchor)');
+
+      await handleModify(context.component, makeTFile('note.md'));
+
+      expect(vi.mocked(toGitHubHeadingAnchorLink)).toHaveBeenCalledWith(expect.objectContaining({ linkText: 'converted', targetFile: null }));
+      expect(context.convertLinksInFile).toHaveBeenCalledOnce();
+    });
+
+    it('should not convert when every link already carries its GitHub heading anchor', async () => {
+      const context = createContext({}, { shouldUseGitHubHeadingAnchors: true });
+      vi.mocked(getReferences).mockReturnValue([castTo<Reference>({ link: 'missing.md#Heading', original: 'converted' })]);
+      vi.mocked(toGitHubHeadingAnchorLink).mockImplementation(({ linkText }) => linkText);
+
+      await handleModify(context.component, makeTFile('note.md'));
+
+      expect(context.convertLinksInFile).not.toHaveBeenCalled();
     });
 
     it('should convert when the only pending change is a body file:// link normalization', async () => {

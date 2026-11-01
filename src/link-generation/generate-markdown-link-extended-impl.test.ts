@@ -26,14 +26,20 @@ vi.mock('@mnaoumov/obsidian-lib/link', async (importOriginal) => ({
 import { generateMarkdownLink } from '@mnaoumov/obsidian-lib/link';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import type { PluginSettingsComponent } from '../settings/plugin-settings-component.ts';
+
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { PluginSettings } from '../settings/plugin-settings.ts';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { GenerateMarkdownLinkPatchComponent } from './generate-markdown-link-extended-impl.ts';
 
 type PatchedGenerateMarkdownLink = GenerateMarkdownLinkNativeFunction & Partial<Record<'extended', unknown>>;
 
-function loadPatched(app: AppOriginal): PatchedGenerateMarkdownLink {
+function loadPatched(app: AppOriginal, settings = new PluginSettings()): PatchedGenerateMarkdownLink {
   const component = new GenerateMarkdownLinkPatchComponent({
     app,
-    fileManager: app.fileManager
+    fileManager: app.fileManager,
+    pluginSettingsComponent: strictProxy<PluginSettingsComponent>({ settings })
   });
   component.load();
   return castTo<PatchedGenerateMarkdownLink>(app.fileManager.generateMarkdownLink);
@@ -54,7 +60,8 @@ describe('GenerateMarkdownLinkPatchComponent', () => {
     const original = app.fileManager.generateMarkdownLink;
     const component = new GenerateMarkdownLinkPatchComponent({
       app,
-      fileManager: app.fileManager
+      fileManager: app.fileManager,
+      pluginSettingsComponent: strictProxy<PluginSettingsComponent>({ settings: new PluginSettings() })
     });
     component.load();
 
@@ -78,6 +85,19 @@ describe('GenerateMarkdownLinkPatchComponent', () => {
         subpath: '#heading',
         targetPathOrFile: file
       });
+    });
+
+    it('should write the heading subpath as a GitHub anchor when the setting is on', () => {
+      vi.mocked(generateMarkdownLink).mockReturnValue('[generated](<target.md#My Heading>)');
+      const targetFile = strictProxy<TFileOriginal>({ extension: 'md', path: 'target.md' });
+      vi.spyOn(app.metadataCache, 'getFileCache').mockReturnValue({
+        headings: [{ heading: 'My Heading', level: 1, position: { end: { col: 12, line: 0, offset: 12 }, start: { col: 0, line: 0, offset: 0 } } }]
+      });
+      const settings = new PluginSettings();
+      settings.shouldUseGitHubHeadingAnchors = true;
+      const patched = loadPatched(app, settings);
+
+      expect(patched(targetFile, 'source.md', '#My Heading')).toBe('[generated](<target.md#my-heading>)');
     });
 
     it('should omit undefined optional arguments', () => {

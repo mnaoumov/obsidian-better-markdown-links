@@ -34,6 +34,8 @@ vi.mock('@mnaoumov/obsidian-lib/file-system', () => ({
 }));
 
 vi.mock('@mnaoumov/obsidian-lib/link', () => ({
+  editReferences: vi.fn(),
+  extractReferenceFile: vi.fn(),
   // `LinkPathStyle` and `LinkStyle` are real value imports in the converter now, so the mock has to carry
   // them.
   LinkPathStyle: {
@@ -50,6 +52,10 @@ vi.mock('@mnaoumov/obsidian-lib/link', () => ({
   },
   updateFileUrlLinksInFile: vi.fn(),
   updateReferencesInFile: vi.fn()
+}));
+
+vi.mock('../github-heading-anchors/github-heading-anchor-link.ts', () => ({
+  toGitHubHeadingAnchorLink: vi.fn()
 }));
 
 vi.mock('./frontmatter-wikilink-style.ts', () => ({
@@ -80,6 +86,8 @@ vi.mock('./unresolved-link-resolver.ts', () => ({
 import { getMarkdownFiles } from '@mnaoumov/obsidian-lib/file-system';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
+  editReferences,
+  extractReferenceFile,
   updateFileUrlLinksInFile,
   updateReferencesInFile
 } from '@mnaoumov/obsidian-lib/link';
@@ -92,6 +100,8 @@ import { readSafe } from '@mnaoumov/obsidian-lib/vault';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { abortSignalAny } from '@mnaoumov/typescript-lib/abort-controller';
 
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import { toGitHubHeadingAnchorLink } from '../github-heading-anchors/github-heading-anchor-link.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { getLinkStyleForReference } from './frontmatter-wikilink-style.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
@@ -108,6 +118,7 @@ interface CreateConverterOptions {
   readonly shouldCreateMissingNotes?: boolean;
   readonly shouldNormalizeFileLinks?: boolean;
   readonly shouldResolveLinksViaAliases?: boolean;
+  readonly shouldUseGitHubHeadingAnchors?: boolean;
 }
 
 interface CreateConverterResult {
@@ -148,7 +159,8 @@ function createConverter(options: CreateConverterOptions = {}): CreateConverterR
     shouldCreateMissingNotes: options.shouldCreateMissingNotes ?? false,
     shouldNormalizeFileLinks: options.shouldNormalizeFileLinks ?? true,
     shouldResolveLinksViaAliases: options.shouldResolveLinksViaAliases ?? false,
-    shouldUseAngleBrackets: true
+    shouldUseAngleBrackets: true,
+    shouldUseGitHubHeadingAnchors: options.shouldUseGitHubHeadingAnchors ?? false
   });
   const pluginSettingsComponent = strictProxy<PluginSettingsComponent>({ settings });
   const pluginNoticeComponent = strictProxy<PluginNoticeComponent>({});
@@ -185,6 +197,7 @@ beforeEach(() => {
   vi.mocked(abortSignalAny).mockImplementation((...signals) => signals[0] ?? new AbortController().signal);
   vi.mocked(updateReferencesInFile).mockResolvedValue(undefined);
   vi.mocked(updateFileUrlLinksInFile).mockResolvedValue(undefined);
+  vi.mocked(editReferences).mockResolvedValue(undefined);
   vi.mocked(loop).mockResolvedValue(undefined);
   vi.mocked(getMarkdownFiles).mockReturnValue([]);
   vi.mocked(resolveUnresolvedLinksInFile).mockResolvedValue(undefined);
@@ -554,6 +567,51 @@ describe('LinkConverter', () => {
         await context.converter.convertLinksInFolder({ folder });
 
         expect(vi.mocked(resolveUnresolvedLinksInFile)).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('GitHub heading anchors', () => {
+      it('should not run the anchor pass while the setting is off', async () => {
+        const context = createConverter();
+
+        await context.converter.convertLinksInFile({ file: createFile('note.md') });
+
+        expect(vi.mocked(editReferences)).not.toHaveBeenCalled();
+      });
+
+      it('should rewrite heading subpaths as anchors after the style pass, skipping links in headings', async () => {
+        const context = createConverter({ shouldUseGitHubHeadingAnchors: true });
+        const file = createFile('note.md');
+        const targetFile = createFile('target.md');
+        vi.mocked(extractReferenceFile).mockReturnValue(targetFile);
+        vi.mocked(toGitHubHeadingAnchorLink).mockImplementation(({ linkText }) => linkText === '[x](<target.md#My Heading>)' ? '[x](<target.md#my-heading>)' : linkText);
+
+        await context.converter.convertLinksInFile({ file });
+
+        const params = vi.mocked(editReferences).mock.calls[0]?.[0];
+        expect(params).toMatchObject({
+          app: context.app,
+          pathOrFile: file,
+          shouldSkipReference: null,
+          shouldSkipReferencesInHeadings: true
+        });
+        expect(vi.mocked(updateReferencesInFile).mock.invocationCallOrder[0])
+          .toBeLessThan(vi.mocked(editReferences).mock.invocationCallOrder[0] ?? 0);
+
+        const changedReference = strictProxy<Reference>({ link: 'target.md#My Heading', original: '[x](<target.md#My Heading>)' });
+        const unchangedReference = strictProxy<Reference>({ link: 'target.md', original: '[x](target.md)' });
+        expect(params?.referenceConverter(changedReference)).toBe('[x](<target.md#my-heading>)');
+        expect(params?.referenceConverter(unchangedReference)).toBeUndefined();
+        expect(vi.mocked(toGitHubHeadingAnchorLink)).toHaveBeenCalledWith({
+          app: context.app,
+          linkText: '[x](<target.md#My Heading>)',
+          targetFile
+        });
+        expect(vi.mocked(extractReferenceFile)).toHaveBeenCalledWith({
+          app: context.app,
+          reference: changedReference,
+          sourcePathOrFile: file
+        });
       });
     });
   });

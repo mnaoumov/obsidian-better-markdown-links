@@ -12,7 +12,10 @@ import type {
 
 import { GenerateMarkdownLinkDefaultParamsComponent } from '@mnaoumov/obsidian-lib/components/generate-markdown-link-default-params-component';
 import { LayoutReadyComponent } from '@mnaoumov/obsidian-lib/components/layout-ready-component';
-import { convertLink } from '@mnaoumov/obsidian-lib/link';
+import {
+  convertLink,
+  extractReferenceFile
+} from '@mnaoumov/obsidian-lib/link';
 import {
   getReferences,
   parseMetadata
@@ -35,6 +38,7 @@ import type { PluginSettingsComponent } from '../settings/plugin-settings-compon
 
 import { getLinkStyleForReference } from '../conversion/frontmatter-wikilink-style.ts';
 import { getLinkTargetExclusionPredicate } from '../conversion/link-target-exclusion.ts';
+import { toGitHubHeadingAnchorLink } from '../github-heading-anchors/github-heading-anchor-link.ts';
 import { GenerateMarkdownLinkPatchComponent } from '../link-generation/generate-markdown-link-extended-impl.ts';
 import { EditorSaveFileCommandPatchComponent } from './patches/editor-save-file-command-patch-component.ts';
 import { TextFileViewSavePatchComponent } from './patches/text-file-view-save-patch-component.ts';
@@ -94,7 +98,8 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
     this.addChild(
       new GenerateMarkdownLinkPatchComponent({
         app: this.app,
-        fileManager: this.app.fileManager
+        fileManager: this.app.fileManager,
+        pluginSettingsComponent: this.pluginSettingsComponent
       })
     );
     this.addChild(
@@ -217,21 +222,32 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
       // `LinkConverter` skips it. A probe that counted it would report a change the converter then declines,
       // and re-run a no-op conversion on every save.
       const shouldSkipReference = getLinkTargetExclusionPredicate({ app: this.app, settings, sourceFile: file });
-      const needsInternalConversion = links.some((link) =>
-        !isReferenceInHeading(link, cache)
-        && !shouldSkipReference?.(link)
-        && link.original !== convertLink(normalizeOptionalProperties<ConvertLinkParams>({
-            app: this.app,
-            linkStyle: getLinkStyleForReference({
-              linkStyle: settings.getLinkStyle(),
-              reference: link,
-              shouldConvertFrontmatterWikilinksToMarkdown: settings.shouldConvertFrontmatterWikilinksToMarkdown
-            }),
-            newSourcePathOrFile: file,
+      const needsInternalConversion = links.some((link) => {
+        if (isReferenceInHeading(link, cache) || shouldSkipReference?.(link)) {
+          return false;
+        }
+
+        const convertedLink = convertLink(normalizeOptionalProperties<ConvertLinkParams>({
+          app: this.app,
+          linkStyle: getLinkStyleForReference({
+            linkStyle: settings.getLinkStyle(),
             reference: link,
-            ...linkPathStyleParams
-          }))
-      );
+            shouldConvertFrontmatterWikilinksToMarkdown: settings.shouldConvertFrontmatterWikilinksToMarkdown
+          }),
+          newSourcePathOrFile: file,
+          reference: link,
+          ...linkPathStyleParams
+        }));
+        // The heading-anchor pass LinkConverter runs after the style pass, applied to that pass's answer.
+        const expectedLink = settings.shouldUseGitHubHeadingAnchors
+          ? toGitHubHeadingAnchorLink({
+            app: this.app,
+            linkText: convertedLink,
+            targetFile: extractReferenceFile({ app: this.app, reference: link, sourcePathOrFile: file })
+          })
+          : convertedLink;
+        return link.original !== expectedLink;
+      });
       const needsFileUrlNormalization = shouldNormalizeFileLinks && this.hasFileUrlLink(cache, shouldSkipReference);
       if (needsInternalConversion || needsFileUrlNormalization) {
         await this.linkConverter.convertLinksInFile({

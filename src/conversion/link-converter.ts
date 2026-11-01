@@ -1,6 +1,7 @@
 import type { AbortSignalComponent } from '@mnaoumov/obsidian-lib/components/abort-signal-component';
 import type { PluginNoticeComponent } from '@mnaoumov/obsidian-lib/components/plugin-notice-component';
 import type {
+  EditReferencesParams,
   UpdateFileUrlLinksInFileParams,
   UpdateReferencesInFileParams
 } from '@mnaoumov/obsidian-lib/link';
@@ -14,6 +15,8 @@ import type {
 
 import { getMarkdownFiles } from '@mnaoumov/obsidian-lib/file-system';
 import {
+  editReferences,
+  extractReferenceFile,
   LinkPathStyle,
   LinkStyle,
   updateFileUrlLinksInFile,
@@ -28,6 +31,7 @@ import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-uti
 import type { PluginSettingsComponent } from '../settings/plugin-settings-component.ts';
 import type { ResolveUnresolvedLinksInFileParams } from './unresolved-link-resolver.ts';
 
+import { toGitHubHeadingAnchorLink } from '../github-heading-anchors/github-heading-anchor-link.ts';
 import { getLinkStyleForReference } from './frontmatter-wikilink-style.ts';
 import { getLinkTargetExclusionPredicate } from './link-target-exclusion.ts';
 import { resolveUnresolvedLinksInFile } from './unresolved-link-resolver.ts';
@@ -214,6 +218,28 @@ export class LinkConverter {
         params.shouldForceRelativeLinkPathStyle ? LinkPathStyle.RelativePathToTheSource : settings.getLinkPathStyle()
       )
     }));
+
+    if (settings.shouldUseGitHubHeadingAnchors) {
+      await carryOffsetRange();
+      await editReferences(normalizeOptionalProperties<EditReferencesParams>({
+        abortSignal,
+        app: this.app,
+        offsetRange,
+        pathOrFile: params.file,
+        pluginNoticeComponent: this.pluginNoticeComponent,
+        referenceConverter: (reference) => {
+          const anchorLink = toGitHubHeadingAnchorLink({
+            app: this.app,
+            linkText: reference.original,
+            targetFile: extractReferenceFile({ app: this.app, reference, sourcePathOrFile: params.file })
+          });
+          return anchorLink === reference.original ? undefined : anchorLink;
+        },
+        resourceLockComponent: this.resourceLockComponent,
+        shouldSkipReference,
+        shouldSkipReferencesInHeadings: true
+      }));
+    }
 
     if (!settings.shouldNormalizeFileLinks) {
       return;

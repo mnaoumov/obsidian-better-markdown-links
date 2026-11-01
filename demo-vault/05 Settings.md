@@ -18,6 +18,10 @@ Open **Settings -> Community plugins -> `Better Markdown Links`** to configure t
   - which link path style to write: `ObsidianSettingsDefault` follows Obsidian's **New link format** setting, while `RelativePathToTheSource`, `ShortestPathWhenPossible` and `AbsolutePathInVault` each override it. Outside the default, the two settings above are applied as written rather than copied from the link being replaced (see [03 Convert links](<./03 Convert links.md>)).
 - `shouldNormalizeFileLinks`
   - tidy external `file://` links (decode and use forward slashes) while converting (see [03 Convert links](<./03 Convert links.md>)).
+- `shouldUseGitHubHeadingAnchors`
+  - write a markdown link's heading part as the anchor GitHub gives that heading, `#my-heading` rather than `#My Heading`, both for new links and when converting. Off by default; wikilinks keep Obsidian's form (see [06 GitHub heading anchors](<./06 GitHub heading anchors.md>)).
+- `shouldResolveGitHubHeadingAnchors`
+  - follow, embed and preview a link whose heading part is a GitHub anchor when Obsidian itself finds no heading by that text. On by default, and always on while `shouldUseGitHubHeadingAnchors` is (see [06 GitHub heading anchors](<./06 GitHub heading anchors.md>)).
 
 ## Conversion
 

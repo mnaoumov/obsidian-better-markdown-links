@@ -199,6 +199,9 @@ beforeEach(() => {
   // that one is seeded.
   seedOnRawTarget(app.plugins, 'manifests', {});
 
+  // The GitHub heading anchor resolution patches getEmbedCreator, which obsidian-test-mocks does not model.
+  seedOnRawTarget(app, 'embedRegistry', { getEmbedCreator: vi.fn().mockReturnValue(null) });
+
   // Expose the app as the global instance so obsidian-lib helpers that resolve shared state without an explicit app argument read/write the same seeded holder.
   castTo<AppGlobal>(window).app = app;
 });
