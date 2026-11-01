@@ -29,6 +29,7 @@ interface DemoSettingsPatch {
   shouldNormalizeFileLinks?: boolean;
   shouldResolveLinksViaAliases?: boolean;
   shouldUseAngleBrackets?: boolean;
+  shouldUseGitHubHeadingAnchors?: boolean;
   shouldUseLeadingDotForRelativePaths?: boolean;
   shouldUseLeadingSlashForAbsolutePaths?: boolean;
 }
@@ -465,6 +466,48 @@ async function writeGeneratedLinksNote(
 
   await openDemoNote(app, folderPath, notePath, [heading, '', ...links.map((link) => `- ${link.markdown}`), ''].join('\n'));
   return links;
+}
+
+const HEADING_ANCHOR_FOLDER_PATH = 'Materials/06 GitHub heading anchors';
+const HEADING_ANCHOR_NOTE_PATH = `${HEADING_ANCHOR_FOLDER_PATH}/Fresh heading links.md`;
+const GUIDE_PATH = `${HEADING_ANCHOR_FOLDER_PATH}/Guide.md`;
+
+// Each heading of the guide, as Obsidian names it in a link, beside the anchor GitHub gives it.
+const GUIDE_HEADINGS = [
+  { anchor: '#guide', subpath: '#Guide' },
+  { anchor: '#installation', subpath: '#Installation' },
+  { anchor: '#options', subpath: '#Installation#Options' },
+  { anchor: '#upgrading', subpath: '#Upgrading' },
+  { anchor: '#options-1', subpath: '#Upgrading#Options' }
+] as const;
+
+/**
+ * Writes a note holding a link to each heading of the guide, each generated the way Obsidian generates a
+ * link you type, and opens it. Fails loudly when a link does not end in its heading's GitHub anchor.
+ *
+ * Switches **Link style** to Markdown as well, for the same reason as {@link writeAngleBracketLinks}.
+ *
+ * Manual equivalent: set **Link style** to **Markdown** and turn on **Should use GitHub heading anchors**
+ * in **Settings -> Community plugins -> Better Markdown Links**, then type `[[Guide#` in any note.
+ */
+export async function writeHeadingAnchorLinks(app: App): Promise<void> {
+  await configureCommunityPlugin({ app, pluginId: PLUGIN_ID, settings: { linkStyleMode: 'Markdown', shouldUseGitHubHeadingAnchors: true } });
+  const guide = app.vault.getFileByPath(GUIDE_PATH);
+  if (!guide) {
+    throw new Error(`The demo target ${GUIDE_PATH} is missing`);
+  }
+
+  const links = GUIDE_HEADINGS.map(({ anchor, subpath }) => {
+    const markdown = app.fileManager.generateMarkdownLink(guide, HEADING_ANCHOR_NOTE_PATH, subpath);
+    if (!markdown.replace(/>?\)$/, '').endsWith(anchor)) {
+      throw new Error(`Expected ${markdown} to end in the GitHub anchor ${anchor}`);
+    }
+
+    return markdown;
+  });
+
+  await openDemoNote(app, HEADING_ANCHOR_FOLDER_PATH, HEADING_ANCHOR_NOTE_PATH, ['# Fresh heading links', '', ...links.map((link) => `- ${link}`), ''].join('\n'));
+  new Notice('Fresh heading links written as GitHub anchors. Click one to follow it.');
 }
 
 function joinVaultPath(folderPath: string, relativePath: string): string {

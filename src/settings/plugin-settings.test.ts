@@ -23,13 +23,26 @@ describe('PluginSettings', () => {
       expect(settings.shouldConvertFrontmatterWikilinksToMarkdown).toBe(false);
       expect(settings.shouldIncludeAttachmentExtensionToEmbedAlias).toBe(false);
       expect(settings.shouldNormalizeFileLinks).toBe(true);
+      expect(settings.shouldResolveGitHubHeadingAnchors).toBe(true);
       expect(settings.shouldUseAngleBrackets).toBe(true);
+      expect(settings.shouldUseGitHubHeadingAnchors).toBe(false);
       expect(settings.shouldUseLeadingDotForRelativePaths).toBe(true);
       expect(settings.shouldUseLeadingSlashForAbsolutePaths).toBe(true);
     });
 
     // A fresh install has nothing to hand to `Advanced Rename and Delete Handler`, and must never be told it
     // has a migration waiting — only a legacy converter puts a value here.
+    it('should resolve GitHub heading anchors while either setting asks for it', () => {
+      const settings = new PluginSettings();
+      expect(settings.isGitHubHeadingAnchorResolutionEnabled()).toBe(true);
+
+      settings.shouldResolveGitHubHeadingAnchors = false;
+      expect(settings.isGitHubHeadingAnchorResolutionEnabled()).toBe(false);
+
+      settings.shouldUseGitHubHeadingAnchors = true;
+      expect(settings.isGitHubHeadingAnchorResolutionEnabled()).toBe(true);
+    });
+
     it('should have no pending rename-handling migration', () => {
       const settings = new PluginSettings();
 

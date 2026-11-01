@@ -240,6 +240,42 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
       }),
       this.settingEx({
         desc: createFragment((f) => {
+          f.appendText('Whether a markdown link to a heading is written with the anchor GitHub gives that heading, such as ');
+          appendCodeBlock(f, '[x](note.md#my-heading)');
+          f.appendText(' rather than ');
+          appendCodeBlock(f, '[x](<note.md#My Heading>)');
+          f.appendText(', so the vault\'s heading links also work on GitHub.');
+          f.createEl('br');
+          f.appendText('Applies to new links and to every conversion. Wikilinks keep Obsidian\'s own form.');
+          f.createEl('br');
+          f.appendText('Turning this on also turns on resolving GitHub heading anchors, since Obsidian cannot follow these links by itself.');
+        }),
+        name: 'Should use GitHub heading anchors',
+        render: (setting) => {
+          setting.addToggle((toggle) => {
+            this.bind({ propertyName: 'shouldUseGitHubHeadingAnchors', valueComponent: toggle });
+          });
+        }
+      }),
+      this.settingEx({
+        desc: createFragment((f) => {
+          f.appendText('Whether a link whose heading part is a GitHub anchor, such as ');
+          appendCodeBlock(f, '[x](note.md#my-heading)');
+          f.appendText(', opens, embeds and previews the heading it names, when Obsidian itself finds no heading by that text.');
+          f.createEl('br');
+          f.appendText('Always on while ');
+          appendCodeBlock(f, 'Should use GitHub heading anchors');
+          f.appendText(' is on.');
+        }),
+        name: 'Should resolve GitHub heading anchors',
+        render: (setting) => {
+          setting.addToggle((toggle) => {
+            this.bind({ propertyName: 'shouldResolveGitHubHeadingAnchors', valueComponent: toggle });
+          });
+        }
+      }),
+      this.settingEx({
+        desc: createFragment((f) => {
           f.appendText('Which link path style to write.');
           f.createEl('br');
           appendCodeBlock(f, 'Obsidian settings default');

@@ -33,6 +33,7 @@ import { DemoteEmbedsInFolderCommandHandler } from './commands/demote-embeds/dem
 import { DemoteEmbedsInSelectionCommandHandler } from './commands/demote-embeds/demote-embeds-in-selection-command-handler.ts';
 import { EmbedDemoter } from './conversion/embed-demoter.ts';
 import { LinkConverter } from './conversion/link-converter.ts';
+import { GitHubHeadingAnchorResolutionComponent } from './github-heading-anchors/github-heading-anchor-resolution-component.ts';
 import { PluginApiImpl } from './link-generation/plugin-api-impl.ts';
 import {
   PLUGIN_API_CONTRACT,
@@ -134,6 +135,13 @@ export class Plugin extends PluginBase {
         app: this.app,
         consoleDebugComponent: this.consoleDebugComponent,
         linkConverter,
+        pluginSettingsComponent
+      })
+    );
+
+    this.addChild(
+      new GitHubHeadingAnchorResolutionComponent({
+        app: this.app,
         pluginSettingsComponent
       })
     );

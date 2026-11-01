@@ -59,8 +59,10 @@ export class PluginSettings {
   public shouldCreateMissingNotes = false;
   public shouldIncludeAttachmentExtensionToEmbedAlias = false;
   public shouldNormalizeFileLinks = true;
+  public shouldResolveGitHubHeadingAnchors = true;
   public shouldResolveLinksViaAliases = false;
   public shouldUseAngleBrackets = true;
+  public shouldUseGitHubHeadingAnchors = false;
   public shouldUseLeadingDotForRelativePaths = true;
   public shouldUseLeadingSlashForAbsolutePaths = true;
 
@@ -177,6 +179,15 @@ export class PluginSettings {
     }
 
     return this.linkStyleMode === LinkStyleMode.PreserveExisting ? LinkStyle.PreserveExisting : LinkStyle.ObsidianSettingsDefault;
+  }
+
+  /**
+   * Whether a heading subpath core cannot resolve is looked up as a GitHub anchor. Always on while
+   * {@link shouldUseGitHubHeadingAnchors} is, because the links that setting writes would otherwise lead
+   * nowhere in Obsidian.
+   */
+  public isGitHubHeadingAnchorResolutionEnabled(): boolean {
+    return this.shouldResolveGitHubHeadingAnchors || this.shouldUseGitHubHeadingAnchors;
   }
 
   /**
