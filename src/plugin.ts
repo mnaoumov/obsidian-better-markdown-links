@@ -46,6 +46,7 @@ import {
 } from './rename-delete-handover/advanced-rename-and-delete-handler.ts';
 import { PluginSettingsComponent } from './settings/plugin-settings-component.ts';
 import { PluginSettingsTab } from './settings/plugin-settings-tab.ts';
+import { StrictRelativeLinkResolutionComponent } from './strict-relative-links/strict-relative-link-resolution-component.ts';
 
 export class Plugin extends PluginBase {
   private pluginApi: null | PluginApiImpl = null;
@@ -141,6 +142,13 @@ export class Plugin extends PluginBase {
 
     this.addChild(
       new GitHubHeadingAnchorResolutionComponent({
+        app: this.app,
+        pluginSettingsComponent
+      })
+    );
+
+    this.addChild(
+      new StrictRelativeLinkResolutionComponent({
         app: this.app,
         pluginSettingsComponent
       })

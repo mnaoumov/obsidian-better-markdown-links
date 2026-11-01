@@ -27,6 +27,7 @@ interface DemoSettingsPatch {
   shouldAppendFileNameWhenDemotingEmbeds?: boolean;
   shouldCreateMissingNotes?: boolean;
   shouldNormalizeFileLinks?: boolean;
+  shouldResolveLinksStrictly?: boolean;
   shouldResolveLinksViaAliases?: boolean;
   shouldUseAngleBrackets?: boolean;
   shouldUseGitHubHeadingAnchors?: boolean;

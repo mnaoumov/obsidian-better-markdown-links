@@ -276,6 +276,33 @@ export class PluginSettingsTab extends PluginSettingsTabBase<PluginSettings> {
       }),
       this.settingEx({
         desc: createFragment((f) => {
+          f.appendText('Whether a link resolves only relative to the note it is in, or as an exact path from the vault root, and never to a same-named note elsewhere in the vault.');
+          f.createEl('br');
+          f.appendText('With this on, ');
+          appendCodeBlock(f, '[[issues]]');
+          f.appendText(' in ');
+          appendCodeBlock(f, 'projects/a/note.md');
+          f.appendText(' leads to ');
+          appendCodeBlock(f, 'projects/a/issues.md');
+          f.appendText(' or ');
+          appendCodeBlock(f, 'issues.md');
+          f.appendText(' at the vault root, and is unresolved otherwise. With it off, Obsidian picks any ');
+          appendCodeBlock(f, 'issues.md');
+          f.appendText(' in the vault.');
+          f.createEl('br');
+          f.appendText('Applies everywhere Obsidian follows a link: opening, embeds, previews, backlinks and the graph. Links written as the shortest path to a note in another folder stop resolving, so convert them first with ');
+          appendCodeBlock(f, 'Convert link paths to relative in entire vault');
+          f.appendText('.');
+        }),
+        name: 'Should resolve links strictly',
+        render: (setting) => {
+          setting.addToggle((toggle) => {
+            this.bind({ propertyName: 'shouldResolveLinksStrictly', valueComponent: toggle });
+          });
+        }
+      }),
+      this.settingEx({
+        desc: createFragment((f) => {
           f.appendText('Which link path style to write.');
           f.createEl('br');
           appendCodeBlock(f, 'Obsidian settings default');

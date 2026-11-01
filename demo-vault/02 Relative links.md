@@ -54,3 +54,28 @@ await require('/demoSetup.ts').changeSettings(app, { linkPathStyleMode: 'Obsidia
 ```
 
 Manual equivalent: set **Link style** and **Link path style** back to **Obsidian settings default**, and turn both leading-character settings back on.
+
+## Strict resolution
+
+Writing links relative is half of it. The other half is how Obsidian *reads* them: `[[Simple note]]` reaches `Simple note.md` wherever it is in the vault, so a link can quietly lead to a different note than the one beside it. **Should resolve links strictly** (default off) makes Obsidian resolve a link only relative to the note it is in, or as an exact path from the vault root.
+
+- `[[Simple note]]`, typed into this note, resolves today, through Obsidian's vault-wide name match. With strict resolution on it shows as unresolved, because `Simple note.md` is neither beside this note nor at the vault root.
+- [Simple note](<./Materials/02 Relative links/Targets/Simple note.md>) - resolves either way, because it names the path relative to this note.
+
+```code-button
+---
+caption: Turn strict resolution on
+---
+await require('/demoSetup.ts').changeSettings(app, { shouldResolveLinksStrictly: true });
+```
+
+```code-button
+---
+caption: Turn strict resolution off
+---
+await require('/demoSetup.ts').changeSettings(app, { shouldResolveLinksStrictly: false });
+```
+
+The change applies everywhere Obsidian follows a link: opening, embeds, hover previews, backlinks and the graph. Links written as a bare name to a note in another folder stop resolving, so run **Convert link paths to relative in entire vault** from [03 Convert links](<./03 Convert links.md>) before turning it on in a real vault.
+
+Manual equivalent: toggle **Should resolve links strictly** in **Settings -> Community plugins -> `Better Markdown Links`**.
