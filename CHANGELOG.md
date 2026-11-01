@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 6.4.0
+
+- docs(readme): point bug reports at the Report a bug command
+- docs: add issue-filing instructions for AI agents
+- feat: add a Report a bug command
+- chore(github): give the bug form the field ids bug-report links prefill
+- docs(settings): say what a markdown link in a property still lacks since Obsidian 1.11
+- build(deps): override re2js to ^2.9.1 for GHSA-gg6h-894w-4m9c
+- feat: record folder and vault command runs as git commits that a revert undoes
+- refactor(link-target-exclusion): return null instead of undefined when nothing is excluded
+- test: pin file-link normalization of a note changed from outside
+
 ## 6.3.1
 
 - fix: stop file-link normalization wrapping bare file: words and code-fence labels
