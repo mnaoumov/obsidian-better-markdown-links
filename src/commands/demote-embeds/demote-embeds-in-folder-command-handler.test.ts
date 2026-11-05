@@ -81,7 +81,7 @@ describe('DemoteEmbedsInFolderCommandHandler', () => {
   });
 
   it('should always add to the folder menu', () => {
-    const folder = createFolder('some/folder');
+    const folder = createFolder();
     const addItem = vi.fn();
     const menu = strictProxy<MenuOriginal>({
       addItem,
@@ -94,7 +94,7 @@ describe('DemoteEmbedsInFolderCommandHandler', () => {
   });
 
   it('should always allow executing for a folder', () => {
-    const folder = createFolder('some/folder');
+    const folder = createFolder();
     const addItem = vi.fn();
     const menu = strictProxy<MenuOriginal>({
       addItem,
@@ -108,7 +108,7 @@ describe('DemoteEmbedsInFolderCommandHandler', () => {
   });
 
   it('should demote embeds in the folder on executeFolder', async () => {
-    const folder = createFolder('some/folder');
+    const folder = createFolder();
     const menu = strictProxy<MenuOriginal>({ setSectionSubmenu: vi.fn() });
     const addItem = vi.fn((callback: (item: unknown) => void) => {
       const item = {
@@ -133,7 +133,7 @@ describe('DemoteEmbedsInFolderCommandHandler', () => {
     });
   });
 
-  function createFolder(path: string): TFolderOriginal {
-    return TFolder.create__(castTo(app.vault), path).asOriginalType2__();
+  function createFolder(): TFolderOriginal {
+    return TFolder.create__(castTo(app.vault), 'some/folder').asOriginalType2__();
   }
 });
