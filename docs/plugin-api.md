@@ -10,7 +10,7 @@ The types are in [`api.d.ts`](../api.d.ts) at the root of this repository. Copy 
 
 Beside `api.d.ts`, [`api-contract.ts`](../api-contract.ts) holds the API's contract, `BETTER_MARKDOWN_LINKS_API_CONTRACT`: for every method, a schema over its arguments and a schema over what it returns. It is the constant this plugin publishes with the API, so copy it next to `api.d.ts` and pass it as the `contract`, and both sides check the same definition.
 
-Its schemas are [Standard Schema](https://standardschema.dev) objects built with [`@mnaoumov/typescript-lib/api-contract`](https://www.npmjs.com/package/@mnaoumov/typescript-lib), which carries the generic half (the contract types, the schema builders and the guard builders), and its path-or-file guard comes from [`@mnaoumov/obsidian-lib`](https://www.npmjs.com/package/@mnaoumov/obsidian-lib). So copying it means adding both packages (`npm install @mnaoumov/typescript-lib @mnaoumov/obsidian-lib`, typescript-lib `1.5.0` or later). Apart from those two, the file imports only `obsidian` and `./api.d.ts`.
+Its schemas are [Standard Schema](https://standardschema.dev) objects built with [`@mnaoumov/typescript-lib/api-contract`](https://www.npmjs.com/package/@mnaoumov/typescript-lib), which carries the generic half (the contract types, the schema builders and the guard builders), and its path-or-file guard comes from [`@mnaoumov/obsidian-lib`](https://www.npmjs.com/package/@mnaoumov/obsidian-lib). So copying it means adding both packages (`npm install @mnaoumov/typescript-lib @mnaoumov/obsidian-lib`, `typescript-lib` `1.5.0` or later). Apart from those two, the file imports only `obsidian` and `./api.d.ts`.
 
 It is not named `api.ts`, because TypeScript would read `api.d.ts` as that file's own declarations.
 

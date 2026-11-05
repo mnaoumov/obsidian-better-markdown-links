@@ -31,8 +31,6 @@ interface CreateComponentResult {
 
 type ResolveLinkPath = (linkPath: string, sourcePath: string) => TFileOriginal[];
 
-type SaveSettingsCallback = (newState: SettingsState, oldState: SettingsState) => void;
-
 interface SettingsState {
   readonly effectiveValues: PluginSettings;
 }
@@ -40,6 +38,7 @@ interface SettingsState {
 const loadedComponents: StrictRelativeLinkResolutionComponent[] = [];
 
 function createComponent(settings = new PluginSettings()): CreateComponentResult {
+  type SaveSettingsCallback = (newState: SettingsState, oldState: SettingsState) => void;
   const files = new Map<string, TFileOriginal>();
   const vault = strictProxy<App['vault']>({
     getAbstractFileByPathInsensitive: (): null => null,

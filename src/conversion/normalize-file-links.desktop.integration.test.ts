@@ -20,8 +20,7 @@
 
 import type {
   MarkdownView,
-  SettingTab,
-  TFile
+  SettingTab
 } from 'obsidian';
 
 import {
@@ -289,7 +288,7 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
 
       if (writesThroughVault) {
         await app.vault.modify(sourceFile, content);
-        return waitForSettledContent(sourceFile);
+        return waitForSettledContent();
       }
 
       const leaf = app.workspace.getLeaf(false);
@@ -301,7 +300,7 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
 
       app.commands.executeCommandById('editor:save-file');
 
-      return waitForSettledContent(sourceFile);
+      return waitForSettledContent();
 
       async function waitForMarkdownView(): Promise<MarkdownView> {
         for (let attempt = 0; attempt < EDITOR_WAIT_ATTEMPTS; attempt++) {
@@ -319,11 +318,11 @@ async function runScenario(params: RunScenarioParams): Promise<string> {
       // Returns as soon as the links are normalized (no pending marker remains); otherwise waits the
       // full timeout so the write has flushed and any (absent) normalization has had time to happen, then
       // returns the on-disk content.
-      async function waitForSettledContent(file: TFile): Promise<string> {
+      async function waitForSettledContent(): Promise<string> {
         const start = performance.now();
-        let fileContent = await app.vault.read(file);
+        let fileContent = await app.vault.read(sourceFile);
         while (performance.now() - start < SETTLE_TIMEOUT_IN_MILLISECONDS) {
-          fileContent = await app.vault.read(file);
+          fileContent = await app.vault.read(sourceFile);
           if (!fileContent.includes(pendingMarker)) {
             return fileContent;
           }

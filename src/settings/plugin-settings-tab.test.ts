@@ -185,14 +185,14 @@ describe('PluginSettingsTab', () => {
   it('should show the bulk operation commits row on desktop only', () => {
     const tab = createTab();
     const definition = ensureNonNullable(tab.getSettingDefinitions()[settingNames(tab).indexOf('Should commit bulk operations')]);
-    const visible = castTo<VisibleDefinition>(definition).visible;
+    const isVisible = castTo<VisibleDefinition>(definition).visible;
     const isDesktop = Platform.isDesktop;
 
     try {
       Platform.isDesktop = true;
-      expect(visible()).toBe(true);
+      expect(isVisible()).toBe(true);
       Platform.isDesktop = false;
-      expect(visible()).toBe(false);
+      expect(isVisible()).toBe(false);
     } finally {
       Platform.isDesktop = isDesktop;
     }
@@ -217,8 +217,8 @@ describe('PluginSettingsTab', () => {
  * @returns Whether the row would be rendered.
  */
 function isBannerRowVisible(tab: PluginSettingsTab): boolean {
-  const visible = castTo<VisibleDefinition>(ensureNonNullable(tab.getSettingDefinitions()[0])).visible;
-  return visible();
+  const isVisible = castTo<VisibleDefinition>(ensureNonNullable(tab.getSettingDefinitions()[0])).visible;
+  return isVisible();
 }
 
 /**

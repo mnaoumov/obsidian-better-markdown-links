@@ -19,9 +19,9 @@ Open **Settings -> Community plugins -> `Better Markdown Links`** to configure t
 - `shouldNormalizeFileLinks`
   - tidy external `file://` links (decode and use forward slashes) while converting (see [03 Convert links](<./03 Convert links.md>)).
 - `shouldUseGitHubHeadingAnchors`
-  - write a markdown link's heading part as the anchor GitHub gives that heading, `#my-heading` rather than `#My Heading`, both for new links and when converting. Off by default; wikilinks keep Obsidian's form (see [06 GitHub heading anchors](<./06 GitHub heading anchors.md>)).
+  - write a markdown link's heading part as the anchor `GitHub` gives that heading, `#my-heading` rather than `#My Heading`, both for new links and when converting. Off by default; wikilinks keep Obsidian's form (see [06 GitHub heading anchors](<./06 GitHub heading anchors.md>)).
 - `shouldResolveGitHubHeadingAnchors`
-  - follow, embed and preview a link whose heading part is a GitHub anchor when Obsidian itself finds no heading by that text. On by default, and always on while `shouldUseGitHubHeadingAnchors` is (see [06 GitHub heading anchors](<./06 GitHub heading anchors.md>)).
+  - follow, embed and preview a link whose heading part is a `GitHub` anchor when Obsidian itself finds no heading by that text. On by default, and always on while `shouldUseGitHubHeadingAnchors` is (see [06 GitHub heading anchors](<./06 GitHub heading anchors.md>)).
 - `shouldResolveLinksStrictly`
   - resolve a link only relative to the note it is in, or as an exact path from the vault root, never to a same-named note in another folder. Off by default; applies everywhere Obsidian follows a link, backlinks and the graph included (see [02 Relative links](<./02 Relative links.md#strict-resolution>)).
 
@@ -46,7 +46,7 @@ Open **Settings -> Community plugins -> `Better Markdown Links`** to configure t
 ## Undo with git
 
 - `shouldCommitBulkOperations`
-  - desktop only, off by default. When the vault is inside a git repository, every in-folder and entire-vault command run (convert links, convert links to Markdown, convert link paths to relative, demote embeds) is recorded as two commits: `chore: before OP<n>` with whatever was pending, then `OP<n>: <command> in <folder>` with the run's own changes. The **`Better Markdown Links`: Undo a bulk operation...** command lists those runs and reverts the one you pick with `git revert`; a conflict is left for you to resolve. It uses the system `git`, so the repository's own config, hooks and filters apply.
+  - desktop only, off by default. When the vault is inside a `git` repository, every in-folder and entire-vault command run (convert links, convert links to Markdown, convert link paths to relative, demote embeds) is recorded as two commits: `chore: before OP<n>` with whatever was pending, then `OP<n>: <command> in <folder>` with the run's own changes. The **`Better Markdown Links`: Undo a bulk operation...** command lists those runs and reverts the one you pick with `git revert`; a conflict is left for you to resolve. It uses the system `git`, so the repository's own config, hooks and filters apply.
 
 ## Renames moved to another plugin
 

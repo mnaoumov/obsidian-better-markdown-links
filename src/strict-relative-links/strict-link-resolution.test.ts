@@ -38,8 +38,8 @@ function createVault(paths: readonly string[] = PATHS): Vault {
   return vault;
 }
 
-function resolvePath(linkPath: string, sourcePath: string, vault = createVault()): null | string[] {
-  return resolveLinkPathStrictly(vault, linkPath, sourcePath)?.map((file) => file.path) ?? null;
+function resolvePath(linkPath: string, sourcePath: string): null | string[] {
+  return resolveLinkPathStrictly(createVault(), linkPath, sourcePath)?.map((file) => file.path) ?? null;
 }
 
 describe('resolveLinkPathStrictly', () => {

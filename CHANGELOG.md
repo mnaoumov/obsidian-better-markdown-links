@@ -8,7 +8,7 @@
 - chore(github): give the bug form the field ids bug-report links prefill
 - docs(settings): say what a markdown link in a property still lacks since Obsidian 1.11
 - build(deps): override re2js to ^2.9.1 for GHSA-gg6h-894w-4m9c
-- feat: record folder and vault command runs as git commits that a revert undoes
+- feat: record folder and vault command runs as `git` commits that a revert undoes
 - refactor(link-target-exclusion): return null instead of undefined when nothing is excluded
 - test: pin file-link normalization of a note changed from outside
 
@@ -20,7 +20,7 @@
 
 - feat: re #45
 - build(deps): bump @mnaoumov/obsidian-lib to ^10.1.0 and adopt its Reference API names
-- build(deps): bump typescript-dev-toolkit to ^5.2.0
+- build(deps): bump `typescript-dev-toolkit` to ^5.2.0
 
 ## 6.2.3
 
@@ -41,12 +41,12 @@
 ## 6.2.1
 
 - test(demo-vault): floor `CodeScript Toolkit` at 15.0.0
-- build(deps): move to obsidian-lib 6 and off the dropped obsidian-dev-utils names
-- docs: name obsidian-lib where comments said dev-utils
-- docs: point leftover obsidian-dev-utils mentions at @mnaoumov/obsidian-lib
+- build(deps): move to `obsidian-lib` 6 and off the dropped `obsidian-dev-utils` names
+- docs: name `obsidian-lib` where comments said dev-utils
+- docs: point leftover `obsidian-dev-utils` mentions at @mnaoumov/obsidian-lib
 - fix: drop the plugin name from notice text
 - docs: shorten the debugging section
-- docs(changelog): escape the issue-title tags so markdownlint and cspell pass
+- docs(changelog): escape the issue-title tags so `markdownlint` and `cspell` pass
 - docs(changelog): name the issue each released entry resolved
 - fix(demo-vault): load the demo setup helpers from @mnaoumov/obsidian-lib
 - docs(readme): lead the Debugging section with `Advanced Debug Mode`
@@ -60,22 +60,22 @@
 ## 6.1.0
 
 - docs(api-contract): refresh the copied `Advanced Rename and Delete Handler` debug-switch line
-- docs(api-contract): merge saying the payload check follows obsidian-lib's validation debug switch
-- refactor(link-converter): merge deciding the frontmatter link style through obsidian-lib's linkStyleProvider
+- docs(api-contract): merge saying the payload check follows `obsidian-lib`'s validation debug switch
+- refactor(link-converter): merge deciding the frontmatter link style through `obsidian-lib`'s linkStyleProvider
 - refactor(api-contract): build the options guard with objectTypeGuard's exactOptionalKeys
 - refactor(api): merge refreshing the copied `Advanced Rename and Delete Handler` contract
 - docs(demo-vault): merge the fresh-link buttons for the angle-bracket and relative-links notes
 - chore(github): merge linking Discussions from the new-issue page
-- refactor(api-contract): merge building the contract guards from typescript-lib and obsidian-lib
+- refactor(api-contract): merge building the contract guards from `typescript-lib` and `obsidian-lib`
 - fix(links): merge keeping wikilinks in properties when converting to markdown
 - ci: merge attesting release assets through the toolkit's reusable workflow
 - feat(ui): merge rendering plugin names in the suggestion reason and progress bar titles as code
-- refactor(deps): merge moving off obsidian-dev-utils onto the @mnaoumov packages
+- refactor(deps): merge moving off `obsidian-dev-utils` onto the @mnaoumov packages
 - refactor(api): merge building the API contract on @mnaoumov/typescript-lib/api-contract
 - feat(api): merge taking `Advanced Rename and Delete Handler`'s own migration contract
 - feat(api): merge the copyable api-contract.ts with full schemas
 - docs: merge marking plugin names as code in markdown and comments
-- test: merge the capture suites' switch to obsidian-typings' declarations
+- test: merge the capture suites' switch to `obsidian-typings`' declarations
 - docs(changelog): name the API method that replaces generateMarkdownLink.extended
 
 ## 6.0.0
@@ -89,13 +89,13 @@
 
 ## 5.2.0
 
-- refactor: merge the switch to obsidian-dev-utils' normalizeLinkName
+- refactor: merge the switch to `obsidian-dev-utils`' normalizeLinkName
 - test(screenshots): merge the reproducible desktop capture without the suggestion notice
-- chore(deps): merge the obsidian-dev-utils 107 and obsidian-integration-testing 17 float (re #42 - \[BUG\] "Convert links in entire vault" progress bar disappears before completion)
+- chore(deps): merge the `obsidian-dev-utils` 107 and `obsidian-integration-testing` 17 float (re #42 - \[BUG\] "Convert links in entire vault" progress bar disappears before completion)
 
 ## 5.1.0
 
-- chore(deps): merge the obsidian-test-mocks 7.0.0 float
+- chore(deps): merge the `obsidian-test-mocks` 7.0.0 float
 - test(resolve): prove and document the `Advanced Metadata Cache` alias fast path
 - feat(commands): merge the selection scope for every link command
 - fix(test): merge the headless demo-vault toolkit install
@@ -106,25 +106,25 @@
 - fix: stop the on-save probe flushing the editor, which blanked another plugin's inserted properties (re #40 - \[BUG\] Conflict with Linter Save (Ctrl+S))
 - feat: add a forced link path style and a convert-paths-to-relative command triad
 - fix(deps): float devalue to 5.9.4, clearing GHSA-9rgm-9g3h-6x36
-- build(markdownlint): forbid hard-wrapped markdown paragraphs
+- build(`markdownlint`): forbid hard-wrapped markdown paragraphs
 - chore(deps): drop the dead markdown-it override
 - chore(deps): drop the dead js-yaml override
 - style(comments): stop capitalizing the middle of a wrapped comment
 - docs: replace the private rule-id citations with what they assert
-- docs(changelog): name obsidian-dev-utils by its package name
+- docs(changelog): name `obsidian-dev-utils` by its package name
 - docs: replace the private tracker references with what they pointed at
-- chore(deps): move to obsidian-dev-utils 103
+- chore(deps): move to `obsidian-dev-utils` 103
 - test(integration): take the palette frame with the soft keyboard up
 
 ## 5.0.1
 
 - refactor: replace the hand-rolled settings-migration copy with the shared component
-- chore: adopt the npm run gate branch gate
+- chore: adopt the `npm` run gate branch gate
 - docs: say where the debug command is run
 - test: bring the in-closure wait ceiling under the transport's per-eval cap
 - docs: name the unversioned demo-vault asset and the folder it unzips into
 - chore: make the LICENSE copyright line lintable and guard it against the year roll-over
-- fix(deps): move onto obsidian-dev-utils 101, and drop the hand-rolled app.plugins seed
+- fix(deps): move onto `obsidian-dev-utils` 101, and drop the hand-rolled app.plugins seed
 - feat: force Markdown links, as a style setting and its own command triad
 - docs: rename the file:// example path off the word "todo"
 - feat: demote embeds to links, and resolve wikilinks that do not resolve
@@ -137,20 +137,20 @@
 ## 4.2.5
 
 - chore(deps): sweep caret-ranged dependencies to latest
-- fix(deps): move to obsidian-integration-testing 11 and obsidian-dev-utils 96.5.2
+- fix(deps): move to `obsidian-integration-testing` 11 and `obsidian-dev-utils` 96.5.2
 - fix(deps): drop the brace-expansion file: override that breaks a clean install
 - docs: point plugin-directory links at community.obsidian.md
 
 ## 4.2.4
 
 - docs(demo-vault): unwrap the notes so Obsidian stops rendering a break per line
-- docs(readme): render the same in Obsidian's plugin page as on GitHub
+- docs(readme): render the same in Obsidian's plugin page as on `GitHub`
 - chore: update libs
-- chore: update obsidian-dev-utils to 94.6.1
-- chore: update obsidian-dev-utils to 94.6.0
+- chore: update `obsidian-dev-utils` to 94.6.1
+- chore: update `obsidian-dev-utils` to 94.6.0
 - fix: override deepmerge-ts to clear GHSA-ggr8-5vv4-36mx
 - test: gate the demo vault by clicking every code button
-- chore: teach cspell the advisory wording
+- chore: teach `cspell` the advisory wording
 - chore: update libs
 - docs(demo-vault): give the demo vault its code buttons
 - docs: capture the community-store screenshot set
@@ -158,24 +158,24 @@
 ## 4.2.3
 
 - docs: make the demo vault the documentation, in the standard layout
-- feat(demo-vault): migrate to obsidian-dev-utils 93.3.1 and adopt the authoring convention
+- feat(demo-vault): migrate to `obsidian-dev-utils` 93.3.1 and adopt the authoring convention
 
 ## 4.2.2
 
-- chore: update libs and adopt obsidian-integration-testing 10
+- chore: update libs and adopt `obsidian-integration-testing` 10
 
 ## 4.2.1
 
 - chore: update libs
 - refactor(test): collapse the shared integration suites into one cross-platform file each
 - chore: update libs
-- chore(vitest): adopt the shared Obsidian plugin vitest configuration
+- chore(`vitest`): adopt the shared Obsidian plugin `vitest` configuration
 
 ## 4.2.0
 
 - test(link-converter): expect the pluginNoticeComponent the converter passes
 - refactor(settings): move the settings tab onto the declarative settings API
-- chore: update libs and clear the npm audit
+- chore: update libs and clear the `npm` audit
 - docs: fix the demo vault download instructions
 
 ## 4.1.6
@@ -204,7 +204,7 @@
 ## 4.1.1
 
 - docs: standardize demo-vault README
-- docs: drop per-plugin demo-vault setup notes (bootstrap covered by the obsidian-dev-utils harness)
+- docs: drop per-plugin demo-vault setup notes (bootstrap covered by the `obsidian-dev-utils` harness)
 - docs: unnumber demo-vault setup notes
 - docs(demo-vault): create the `Better Markdown Links` demo vault
 - chore: update libs
@@ -362,7 +362,7 @@
 ## 3.1.5
 
 - chore: update libs
-- chore: enable markdownlint
+- chore: enable `markdownlint`
 
 ## 3.1.4
 
@@ -765,7 +765,7 @@
 
 ## 2.3.0
 
-- Switch to obsidian-dev-utils
+- Switch to `obsidian-dev-utils`
 - Refactor generateMarkdownLink
 
 ## 2.2.0

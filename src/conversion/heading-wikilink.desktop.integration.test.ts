@@ -29,6 +29,7 @@ import {
 import type { PluginSettings } from '../settings/plugin-settings.ts';
 
 import { LinkConversionMode } from '../settings/link-conversion-mode.ts';
+import { LinkStyleMode } from '../settings/link-style-mode.ts';
 
 /**
  * What the scenario observed after the save settled.
@@ -96,7 +97,7 @@ ${CONVERTED_BODY_LINK}
  */
 async function runScenario(): Promise<ScenarioResult> {
   return evalInObsidian({
-    async callback({ app, convertedBodyLink, inboundPath, mode, obsidianModule, pluginId, sourcePath, targetPath, unconvertedContent }): Promise<ScenarioResult> {
+    async callback({ app, convertedBodyLink, inboundPath, linkStyleMode, mode, obsidianModule, pluginId, sourcePath, targetPath, unconvertedContent }): Promise<ScenarioResult> {
       const EDITOR_WAIT_ATTEMPTS = 50;
       const EDITOR_WAIT_INTERVAL_IN_MILLISECONDS = 50;
       const SETTLE_TIMEOUT_IN_MILLISECONDS = 5000;
@@ -112,6 +113,9 @@ async function runScenario(): Promise<ScenarioResult> {
 
       await (settingTab as TestableSettingsTab).pluginSettingsComponent.editAndSave((settings) => {
         settings.linkConversionMode = mode;
+        // Pinned, because the converted body link is asserted as markdown and an earlier suite may have left the
+        // link style on preserving the wikilink.
+        settings.linkStyleMode = linkStyleMode;
         settings.shouldUseAngleBrackets = true;
         // Pinned, because the converted body link is asserted with its dot and an earlier suite may have
         // switched it off.
@@ -150,17 +154,17 @@ async function runScenario(): Promise<ScenarioResult> {
       return {
         content,
         inboundResolvedHeading: inboundLink && inboundTarget === sourceFile
-          ? resolveHeading(sourceCache, inboundLink.link)
+          ? resolveHeading(inboundLink.link)
           : null,
-        localResolvedHeading: localLink ? resolveHeading(sourceCache, localLink.link) : null
+        localResolvedHeading: localLink ? resolveHeading(localLink.link) : null
       };
 
-      function resolveHeading(cache: null | ReturnType<typeof app.metadataCache.getFileCache>, link: string): null | string {
-        if (!cache) {
+      function resolveHeading(link: string): null | string {
+        if (!sourceCache) {
           return null;
         }
 
-        const resolved = obsidianModule.resolveSubpath(cache, obsidianModule.parseLinktext(link).subpath);
+        const resolved = obsidianModule.resolveSubpath(sourceCache, obsidianModule.parseLinktext(link).subpath);
         return resolved?.type === 'heading' ? resolved.current.heading : null;
       }
 
@@ -212,6 +216,7 @@ async function runScenario(): Promise<ScenarioResult> {
     input: {
       convertedBodyLink: CONVERTED_BODY_LINK,
       inboundPath: INBOUND_PATH,
+      linkStyleMode: LinkStyleMode.ObsidianSettingsDefault,
       mode: LinkConversionMode.OnSaveCommand,
       pluginId: PLUGIN_ID,
       sourcePath: SOURCE_PATH,

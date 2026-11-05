@@ -14,4 +14,4 @@ What changes between versions.
 
 ### Options
 
-The options an upgrade adds. On GitHub this heading's anchor is `#options-1`, because the first `### Options` already took `#options`.
+The options an upgrade adds. On `GitHub` this heading's anchor is `#options-1`, because the first `### Options` already took `#options`.

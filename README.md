@@ -29,7 +29,7 @@ This plugin makes Obsidian generate the readable, unambiguous form instead: angl
 
 **The documentation is a demo vault.** Every feature has a note that explains what it does and why you would want it, with awkward paths already in place to try it against.
 
-**[Start reading here](<./demo-vault/00 Start.md>)** — it is plain markdown, so it works on GitHub with nothing installed.
+**[Start reading here](<./demo-vault/00 Start.md>)** — it is plain markdown, so it works on `GitHub` with nothing installed.
 
 A copy of the vault ships with every release. You can access it via any of the following:
 
@@ -47,9 +47,9 @@ A copy of the vault ships with every release. You can access it via any of the f
 - **Force a link path style** — relative, shortest or vault-absolute, whatever Obsidian's **New link format** setting says: [03 Convert links](<./demo-vault/03 Convert links.md>).
 - **Demote embeds to links** — strip the `!` off every embed in a selection, a note, a folder or the vault: [04 Demote embeds](<./demo-vault/04 Demote embeds.md>).
 - **Links that do not resolve** — point an alias-only wikilink at the note carrying the alias, or create the note: [03 Convert links](<./demo-vault/03 Convert links.md>).
-- **Undo a folder or vault run with git** — in a vault kept in git, each in-folder or entire-vault run becomes one commit that the **Undo a bulk operation...** command reverts: [05 Settings](<./demo-vault/05 Settings.md#undo-with-git>).
+- **Undo a folder or vault run with `git`** — in a vault kept in `git`, each in-folder or entire-vault run becomes one commit that the **Undo a bulk operation...** command reverts: [05 Settings](<./demo-vault/05 Settings.md#undo-with-git>).
 - **Strict link resolution** — resolve a link only relative to its note or as a vault path, never to a same-named note in another folder: [02 Relative links](<./demo-vault/02 Relative links.md#strict-resolution>).
-- **GitHub heading anchors** — follow `[x](note.md#my-heading)` the way GitHub does, and optionally write heading links that way too: [06 GitHub heading anchors](<./demo-vault/06 GitHub heading anchors.md>).
+- **`GitHub` heading anchors** — follow `[x](note.md#my-heading)` the way `GitHub` does, and optionally write heading links that way too: [06 GitHub heading anchors](<./demo-vault/06 GitHub heading anchors.md>).
 - **Leave chosen links alone** — keep links to matching targets, such as `![[file.base]]` embeds, exactly as written while converting the rest: [03 Convert links](<./demo-vault/03 Convert links.md>).
 
 ## Integration with other plugins
