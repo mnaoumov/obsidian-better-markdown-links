@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 6.5.0
+
+This release has 2 new features and 2 documentation changes. 3 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### New
+
+- resolve links strictly relative to their note
+- `GitHub` heading anchors, emitted and resolved
+
+### Documentation
+
+- make issue attachments optional and strongly encouraged
+- link to the Obsidian resources page
+
 ## 6.4.0
 
 - docs(readme): point bug reports at the Report a bug command
