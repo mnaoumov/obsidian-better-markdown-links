@@ -16,81 +16,108 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 6.4.0
 
-- docs(readme): point bug reports at the Report a bug command
-- docs: add issue-filing instructions for AI agents
-- feat: add a Report a bug command
-- chore(github): give the bug form the field ids bug-report links prefill
-- docs(settings): say what a markdown link in a property still lacks since Obsidian 1.11
-- build(deps): override re2js to ^2.9.1 for GHSA-gg6h-894w-4m9c
-- feat: record folder and vault command runs as `git` commits that a revert undoes
-- refactor(link-target-exclusion): return null instead of undefined when nothing is excluded
-- test: pin file-link normalization of a note changed from outside
+This release has 2 new features and 3 documentation changes. 4 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### New
+
+- add a Report a bug command
+- record folder and vault command runs as `git` commits that a revert undoes
+
+### Documentation
+
+- **readme:** point bug reports at the Report a bug command
+- add issue-filing instructions for AI agents
+- **settings:** say what a markdown link in a property still lacks since Obsidian 1.11
 
 ## 6.3.1
 
-- fix: stop file-link normalization wrapping bare file: words and code-fence labels
+This release has 1 fix.
+
+### Fixed
+
+- stop file-link normalization wrapping bare file: words and code-fence labels
 
 ## 6.3.0
 
-- feat: re #45
-- build(deps): bump @mnaoumov/obsidian-lib to ^10.1.0 and adopt its Reference API names
-- build(deps): bump `typescript-dev-toolkit` to ^5.2.0
+This release has 1 new feature. 2 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### New
+
+- \[FR\] Exclude links by target path or extension from conversion (#45)
 
 ## 6.2.3
 
-- test: pin Obsidian's link settings in the demote-and-resolve suite
-- fix: re #44
-- build(deps): bump @mnaoumov/typescript-dev-toolkit to ^5.1.0
+This release has 1 fix. 2 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Fixed
+
+- \[BUG\] Converting a note rewrites a wikilink inside a heading, changing the heading's text and breaking links to it (#44)
 
 ## 6.2.2
 
-- fix: re #43
-- chore(deps): update vulnerable development dependencies
-- chore: adopt readonly interface members
-- docs(readme): combine related resources and plugin comparisons
-- refactor: group the source and command files into folders by subject
-- docs(readme): cut the README to a landing page
-- docs(readme): add a Similar plugins section
+This release has 1 fix and 3 documentation changes. 3 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Fixed
+
+- \[BUG\] Converting a link to a heading containing < or > produces a link that no longer parses (#43)
+
+### Documentation
+
+- **readme:** combine related resources and plugin comparisons
+- **readme:** cut the README to a landing page
+- **readme:** add a Similar plugins section
 
 ## 6.2.1
 
-- test(demo-vault): floor `CodeScript Toolkit` at 15.0.0
-- build(deps): move to `obsidian-lib` 6 and off the dropped `obsidian-dev-utils` names
-- docs: name `obsidian-lib` where comments said dev-utils
-- docs: point leftover `obsidian-dev-utils` mentions at @mnaoumov/obsidian-lib
-- fix: drop the plugin name from notice text
-- docs: shorten the debugging section
-- docs(changelog): escape the issue-title tags so `markdownlint` and `cspell` pass
-- docs(changelog): name the issue each released entry resolved
-- fix(demo-vault): load the demo setup helpers from @mnaoumov/obsidian-lib
-- docs(readme): lead the Debugging section with `Advanced Debug Mode`
+This release has 2 fixes and 6 documentation changes. 2 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Fixed
+
+- drop the plugin name from notice text
+- **demo-vault:** load the demo setup helpers from @mnaoumov/obsidian-lib
+
+### Documentation
+
+- name `obsidian-lib` where comments said dev-utils
+- point leftover `obsidian-dev-utils` mentions at @mnaoumov/obsidian-lib
+- shorten the debugging section
+- **changelog:** escape the issue-title tags so `markdownlint` and `cspell` pass
+- **changelog:** name the issue each released entry resolved
+- **readme:** lead the Debugging section with `Advanced Debug Mode`
 
 ## 6.2.0
 
-- build(deps): clear the brace-expansion, sharp and fast-uri advisories
-- feat(settings): merge matching include and exclude paths case-insensitively with globs
-- docs: mark plugin names as code
+This release has 1 new feature and 1 documentation change. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
+
+### New
+
+- **settings:** merge matching include and exclude paths case-insensitively with globs
+
+### Documentation
+
+- mark plugin names as code
 
 ## 6.1.0
 
-- docs(api-contract): refresh the copied `Advanced Rename and Delete Handler` debug-switch line
-- docs(api-contract): merge saying the payload check follows `obsidian-lib`'s validation debug switch
-- refactor(link-converter): merge deciding the frontmatter link style through `obsidian-lib`'s linkStyleProvider
-- refactor(api-contract): build the options guard with objectTypeGuard's exactOptionalKeys
-- refactor(api): merge refreshing the copied `Advanced Rename and Delete Handler` contract
-- docs(demo-vault): merge the fresh-link buttons for the angle-bracket and relative-links notes
-- chore(github): merge linking Discussions from the new-issue page
-- refactor(api-contract): merge building the contract guards from `typescript-lib` and `obsidian-lib`
-- fix(links): merge keeping wikilinks in properties when converting to markdown
-- ci: merge attesting release assets through the toolkit's reusable workflow
-- feat(ui): merge rendering plugin names in the suggestion reason and progress bar titles as code
-- refactor(deps): merge moving off `obsidian-dev-utils` onto the @mnaoumov packages
-- refactor(api): merge building the API contract on @mnaoumov/typescript-lib/api-contract
-- feat(api): merge taking `Advanced Rename and Delete Handler`'s own migration contract
-- feat(api): merge the copyable api-contract.ts with full schemas
-- docs: merge marking plugin names as code in markdown and comments
-- test: merge the capture suites' switch to `obsidian-typings`' declarations
-- docs(changelog): name the API method that replaces generateMarkdownLink.extended
+This release has 3 new features, 1 fix and 5 documentation changes. 9 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### New
+
+- **ui:** merge rendering plugin names in the suggestion reason and progress bar titles as code
+- **api:** merge taking `Advanced Rename and Delete Handler`'s own migration contract
+- **api:** merge the copyable api-contract.ts with full schemas
+
+### Fixed
+
+- **links:** merge keeping wikilinks in properties when converting to markdown
+
+### Documentation
+
+- **api-contract:** refresh the copied `Advanced Rename and Delete Handler` debug-switch line
+- **api-contract:** merge saying the payload check follows `obsidian-lib`'s validation debug switch
+- **demo-vault:** merge the fresh-link buttons for the angle-bracket and relative-links notes
+- merge marking plugin names as code in markdown and comments
+- **changelog:** name the API method that replaces generateMarkdownLink.extended
 
 ## 6.0.0
 
@@ -99,189 +126,230 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 5.2.1
 
-- test(screenshots): move the desktop capture onto applyObsidianTheme
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 5.2.0
 
-- refactor: merge the switch to `obsidian-dev-utils`' normalizeLinkName
-- test(screenshots): merge the reproducible desktop capture without the suggestion notice
-- chore(deps): merge the `obsidian-dev-utils` 107 and `obsidian-integration-testing` 17 float (re #42 - \[BUG\] "Convert links in entire vault" progress bar disappears before completion)
+This release has maintenance changes only. 3 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
 
 ## 5.1.0
 
-- chore(deps): merge the `obsidian-test-mocks` 7.0.0 float
-- test(resolve): prove and document the `Advanced Metadata Cache` alias fast path
-- feat(commands): merge the selection scope for every link command
-- fix(test): merge the headless demo-vault toolkit install
-- fix(deps): restore the lockfile's missing resolved and integrity fields
-- fix: leave an alias-only wikilink alone when several notes answer to the name
-- refactor: publish the extended declaration as the root api.d.ts
-- perf: answer the alias lookup from the name index when one is installed
-- fix: stop the on-save probe flushing the editor, which blanked another plugin's inserted properties (re #40 - \[BUG\] Conflict with Linter Save (Ctrl+S))
-- feat: add a forced link path style and a convert-paths-to-relative command triad
-- fix(deps): float devalue to 5.9.4, clearing GHSA-9rgm-9g3h-6x36
-- build(`markdownlint`): forbid hard-wrapped markdown paragraphs
-- chore(deps): drop the dead markdown-it override
-- chore(deps): drop the dead js-yaml override
-- style(comments): stop capitalizing the middle of a wrapped comment
-- docs: replace the private rule-id citations with what they assert
-- docs(changelog): name `obsidian-dev-utils` by its package name
-- docs: replace the private tracker references with what they pointed at
-- chore(deps): move to `obsidian-dev-utils` 103
-- test(integration): take the palette frame with the soft keyboard up
+This release has 2 new features, 5 fixes, 1 improvement and 3 documentation changes. 9 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### New
+
+- **commands:** merge the selection scope for every link command
+- add a forced link path style and a convert-paths-to-relative command triad
+
+### Fixed
+
+- **test:** merge the headless demo-vault toolkit install
+- **deps:** restore the lockfile's missing resolved and integrity fields
+- leave an alias-only wikilink alone when several notes answer to the name
+- stop the on-save probe flushing the editor, which blanked another plugin's inserted properties (re #40 - \[BUG\] Conflict with Linter Save (Ctrl+S))
+- **deps:** float devalue to 5.9.4, clearing GHSA-9rgm-9g3h-6x36
+
+### Improved
+
+- answer the alias lookup from the name index when one is installed
+
+### Documentation
+
+- replace the private rule-id citations with what they assert
+- **changelog:** name `obsidian-dev-utils` by its package name
+- replace the private tracker references with what they pointed at
 
 ## 5.0.1
 
-- refactor: replace the hand-rolled settings-migration copy with the shared component
-- chore: adopt the `npm` run gate branch gate
-- docs: say where the debug command is run
-- test: bring the in-closure wait ceiling under the transport's per-eval cap
-- docs: name the unversioned demo-vault asset and the folder it unzips into
-- chore: make the LICENSE copyright line lintable and guard it against the year roll-over
-- fix(deps): move onto `obsidian-dev-utils` 101, and drop the hand-rolled app.plugins seed
-- feat: force Markdown links, as a style setting and its own command triad
-- docs: rename the file:// example path off the word "todo"
-- feat: demote embeds to links, and resolve wikilinks that do not resolve
+This release has 2 new features, 1 fix and 3 documentation changes. 4 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### New
+
+- force Markdown links, as a style setting and its own command triad
+- demote embeds to links, and resolve wikilinks that do not resolve
+
+### Fixed
+
+- **deps:** move onto `obsidian-dev-utils` 101, and drop the hand-rolled app.plugins seed
+
+### Documentation
+
+- say where the debug command is run
+- name the unversioned demo-vault asset and the folder it unzips into
+- rename the file:// example path off the word "todo"
 
 ## 5.0.0
 
-- feat!: hand rename/delete over to `Advanced Rename and Delete Handler`
-- fix(build): wire build:compile to buildCompile and drop the duplicate leaf script
+This release has 1 breaking change and 1 fix.
+
+### Breaking changes
+
+- hand rename/delete over to `Advanced Rename and Delete Handler`
+
+### Fixed
+
+- **build:** wire build:compile to buildCompile and drop the duplicate leaf script
 
 ## 4.2.5
 
-- chore(deps): sweep caret-ranged dependencies to latest
-- fix(deps): move to `obsidian-integration-testing` 11 and `obsidian-dev-utils` 96.5.2
-- fix(deps): drop the brace-expansion file: override that breaks a clean install
-- docs: point plugin-directory links at community.obsidian.md
+This release has 2 fixes and 1 documentation change. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
+
+### Fixed
+
+- **deps:** move to `obsidian-integration-testing` 11 and `obsidian-dev-utils` 96.5.2
+- **deps:** drop the brace-expansion file: override that breaks a clean install
+
+### Documentation
+
+- point plugin-directory links at community.obsidian.md
 
 ## 4.2.4
 
-- docs(demo-vault): unwrap the notes so Obsidian stops rendering a break per line
-- docs(readme): render the same in Obsidian's plugin page as on `GitHub`
-- chore: update libs
-- chore: update `obsidian-dev-utils` to 94.6.1
-- chore: update `obsidian-dev-utils` to 94.6.0
-- fix: override deepmerge-ts to clear GHSA-ggr8-5vv4-36mx
-- test: gate the demo vault by clicking every code button
-- chore: teach `cspell` the advisory wording
-- chore: update libs
-- docs(demo-vault): give the demo vault its code buttons
-- docs: capture the community-store screenshot set
+This release has 1 fix and 4 documentation changes. 6 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Fixed
+
+- override deepmerge-ts to clear GHSA-ggr8-5vv4-36mx
+
+### Documentation
+
+- **demo-vault:** unwrap the notes so Obsidian stops rendering a break per line
+- **readme:** render the same in Obsidian's plugin page as on `GitHub`
+- **demo-vault:** give the demo vault its code buttons
+- capture the community-store screenshot set
 
 ## 4.2.3
 
-- docs: make the demo vault the documentation, in the standard layout
-- feat(demo-vault): migrate to `obsidian-dev-utils` 93.3.1 and adopt the authoring convention
+This release has 1 new feature and 1 documentation change.
+
+### New
+
+- **demo-vault:** migrate to `obsidian-dev-utils` 93.3.1 and adopt the authoring convention
+
+### Documentation
+
+- make the demo vault the documentation, in the standard layout
 
 ## 4.2.2
 
-- chore: update libs and adopt `obsidian-integration-testing` 10
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 4.2.1
 
-- chore: update libs
-- refactor(test): collapse the shared integration suites into one cross-platform file each
-- chore: update libs
-- chore(`vitest`): adopt the shared Obsidian plugin `vitest` configuration
+This release has maintenance changes only. 4 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
 
 ## 4.2.0
 
-- test(link-converter): expect the pluginNoticeComponent the converter passes
-- refactor(settings): move the settings tab onto the declarative settings API
-- chore: update libs and clear the `npm` audit
-- docs: fix the demo vault download instructions
+This release has 1 documentation change. 3 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Documentation
+
+- fix the demo vault download instructions
 
 ## 4.1.6
 
-- fix: pass plugin notice component to link update operations
+This release has 1 fix.
+
+### Fixed
+
+- pass plugin notice component to link update operations
 
 ## 4.1.5
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 4.1.4
 
-- chore: update libs
-- chore: update libs
+This release has maintenance changes only. 2 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
 
 ## 4.1.3
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 4.1.2
 
-- chore: update libs
-- chore(demo-vault): drop committed Invocables placeholder
-- fix(demo-vault): export invoke() from startup script; add Invocables folder
+This release has 1 fix. 2 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Fixed
+
+- **demo-vault:** export invoke() from startup script; add Invocables folder
 
 ## 4.1.1
 
-- docs: standardize demo-vault README
-- docs: drop per-plugin demo-vault setup notes (bootstrap covered by the `obsidian-dev-utils` harness)
-- docs: unnumber demo-vault setup notes
-- docs(demo-vault): create the `Better Markdown Links` demo vault
-- chore: update libs
-- docs: update
-- docs: migrate to AGENTS.md
+This release has 6 documentation changes. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
+
+### Documentation
+
+- standardize demo-vault README
+- drop per-plugin demo-vault setup notes (bootstrap covered by the `obsidian-dev-utils` harness)
+- unnumber demo-vault setup notes
+- **demo-vault:** create the `Better Markdown Links` demo vault
+- update
+- migrate to AGENTS.md
 
 ## 4.1.0
 
-- chore: update libs
-- feat: re #35
+This release has 1 new feature. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
+
+### New
+
+- \[FR\] Support file:/// links (#35)
 
 ## 4.0.0
 
-- feat: re #36
+This release has 1 new feature.
+
+### New
+
+- \[FR\] Convert on save (#36)
 
 ## 3.4.13
 
-- fix: apply shouldAllowEmptyEmbedAlias setting to generateMarkdownLink
-- test: wire integration-testing vitest-setup into integration projects
-- chore: update libs
-- chore: sort tsconfig types
+This release has 1 fix. 3 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Fixed
+
+- apply shouldAllowEmptyEmbedAlias setting to generateMarkdownLink
 
 ## 3.4.12
 
-- refactor: new template
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.4.11
 
-- refactor: remove unused
-- chore: update libs
+This release has maintenance changes only. 2 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
 
 ## 3.4.10
 
-- refactor: monkey around
-- chore: unify tsconfig
-- test: reuse real obsidian-dev-utils/obsidian-test-mocks base classes
-- fix: prevent command-handler stack overflow from redundant super calls
-- refactor: monkey around
+This release has 1 fix. 4 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Fixed
+
+- prevent command-handler stack overflow from redundant super calls
 
 ## 3.4.9
 
-- refactor: new template
-- chore: update version script
+This release has maintenance changes only. 2 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
 
 ## 3.4.8
 
-- chore: update manifest
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.4.7
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.4.6
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.4.5
 
-- chore: update template
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.4.4
 
-- chore: update template
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.4.3
 
@@ -293,30 +361,40 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 3.4.1
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.4.0
 
-- fix: remove link update hack
-- feat: add to submenu
-- fix: changed api re #33
-- chore: update libs
+This release has 1 new feature and 2 fixes. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
+
+### New
+
+- add to submenu
+
+### Fixed
+
+- remove link update hack
+- changed api re #33
 
 ## 3.3.1
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.3.0
 
-- refactor: path settings
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.2.4
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.2.3
 
-- feat: show default value for excluded paths
+This release has 1 new feature.
+
+### New
+
+- show default value for excluded paths
 
 ## 3.2.2
 
@@ -326,78 +404,95 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 3.2.1
 
-- chore: update libs
-- fix: suggestion detection in another window re #25
+This release has 1 fix. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
+
+### Fixed
+
+- suggestion detection in another window re #25
 
 ## 3.2.0
 
-- feat: ensure links created on click are converted re #31
-- chore: update libs
+This release has 1 new feature. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
+
+### New
+
+- ensure links created on click are converted re #31
 
 ## 3.1.14
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.1.13
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.1.12
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.1.11
 
-- fix: handling include/exclude paths not ending with /
+This release has 1 fix.
+
+### Fixed
+
+- handling include/exclude paths not ending with /
 
 ## 3.1.10
 
-- chore: format
-- chore: update libs
-- fix: swallow silent error
-- chore: update libs
+This release has 1 fix. 3 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Fixed
+
+- swallow silent error
 
 ## 3.1.9
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.1.8
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.1.7
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.1.6
 
-- chore: update libs
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.1.5
 
-- chore: update libs
-- chore: enable `markdownlint`
+This release has maintenance changes only. 2 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
 
 ## 3.1.4
 
-- refactor: remove unused
-- chore: update libs
+This release has maintenance changes only. 2 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
 
 ## 3.1.3
 
-- chore: reorder commands
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.1.2
 
-- chore: clean empty hook
+This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
 
 ## 3.1.1
 
-- docs: fix example typo
+This release has 1 documentation change.
+
+### Documentation
+
+- fix example typo
 
 ## 3.1.0
 
-- feat: improve docs
+This release has 1 new feature.
+
+### New
+
+- improve docs
 
 ## 3.0.0
 
@@ -458,9 +553,17 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 2.13.10
 
+This release has 1 other change.
+
+### Other changes
+
 - Update libs (#22)
 
 ## 2.13.9
+
+This release has 2 other changes.
+
+### Other changes
 
 - Update libs (#22)
 - Update types
@@ -470,6 +573,10 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 - Minor changes
 
 ## 2.13.7
+
+This release has 1 other change.
+
+### Other changes
 
 - Improve error handling (#21)
 
@@ -499,6 +606,10 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 2.13.0
 
+This release has 3 other changes.
+
+### Other changes
+
 - shouldPreserveExistingLinkStyle
 - Increase include/exclude settings
 - Prevent conflicting updates
@@ -517,9 +628,17 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 2.12.1
 
+This release has 1 other change.
+
+### Other changes
+
 - Pass plugin's abortSignal
 
 ## 2.12.0
+
+This release has 1 other change.
+
+### Other changes
 
 - Pass abortSignal
 
@@ -601,9 +720,17 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 2.11.1
 
+This release has 1 other change.
+
+### Other changes
+
 - New template
 
 ## 2.11.0
+
+This release has 1 other change.
+
+### Other changes
 
 - Show progress bar
 
@@ -616,6 +743,10 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 - Minor changes
 
 ## 2.10.17
+
+This release has 2 other changes.
+
+### Other changes
 
 - Fix build
 - Explicit typescript package
@@ -638,6 +769,10 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 2.10.12
 
+This release has 1 other change.
+
+### Other changes
+
 - Refactor
 
 ## 2.10.11
@@ -646,9 +781,17 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 2.10.10
 
+This release has 1 other change.
+
+### Other changes
+
 - Lint
 
 ## 2.10.9
+
+This release has 1 other change.
+
+### Other changes
 
 - format
 
@@ -657,6 +800,10 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 - Minor changes
 
 ## 2.10.7
+
+This release has 1 other change.
+
+### Other changes
 
 - Refactor
 
@@ -669,6 +816,10 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 - Minor changes
 
 ## 2.10.4
+
+This release has 1 other change.
+
+### Other changes
 
 - Exclude empty paths
 
@@ -686,6 +837,10 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 2.10.0
 
+This release has 1 other change.
+
+### Other changes
+
 - Add include/exclude path settings
 
 ## 2.9.15
@@ -698,6 +853,10 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 2.9.13
 
+This release has 1 other change.
+
+### Other changes
+
 - Refactor to loop
 
 ## 2.9.12
@@ -709,6 +868,10 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 - Minor changes
 
 ## 2.9.10
+
+This release has 1 other change.
+
+### Other changes
 
 - Avoid default exports
 
@@ -758,18 +921,34 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 2.7.1
 
+This release has 1 other change.
+
+### Other changes
+
 - Refactor
 
 ## 2.7.0
+
+This release has 1 other change.
+
+### Other changes
 
 - Stop race condition
 
 ## 2.6.0
 
+This release has 2 other changes.
+
+### Other changes
+
 - Add more settings
 - Fix race condition
 
 ## 2.5.0
+
+This release has 1 other change.
+
+### Other changes
 
 - Refactor generateMarkdownLink
 
@@ -788,33 +967,61 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 2.1.0
 
+This release has 1 other change.
+
+### Other changes
+
 - Fix invalid race condition updates
 
 ## 2.0.0
 
+This release has 4 other changes.
+
+### Other changes
+
 - Fix race condition for backlinks
-- Don't preserve wikilinks if `automaticallyConvertNewLinks`
+- Don't preserve wikilinks if automaticallyConvertNewLinks
 - Fix links even to non-existing files
 - Add support for links without alias
 
 ## 1.5.0
 
+This release has 1 other change.
+
+### Other changes
+
 - Don't convert links while suggestion is shown
 
 ## 1.4.2
+
+This release has 1 other change.
+
+### Other changes
 
 - Improve retry logging. Increase timeout to 30 sec
 
 ## 1.4.1
 
+This release has 1 other change.
+
+### Other changes
+
 - Fix bug with duplicated links
 
 ## 1.4.0
+
+This release has 2 other changes.
+
+### Other changes
 
 - Convert broken links generates by previous version of the plugin
 - Proper calculate relative path
 
 ## 1.3.0
+
+This release has 2 other changes.
+
+### Other changes
 
 - Improve warning notice
 - Calculate relative path regardless of Obsidian settings
@@ -825,25 +1032,49 @@ This release has 2 new features and 2 documentation changes. 3 maintenance commi
 
 ## 1.1.1
 
+This release has 1 other change.
+
+### Other changes
+
 - Update features
 
 ## 1.1.0
+
+This release has 2 other changes.
+
+### Other changes
 
 - Skip if automaticallyConvertNewLinks is not set
 - Add automatically convert new links
 
 ## 1.0.3
 
+This release has 1 other change.
+
+### Other changes
+
 - Encode only special symbols
 
 ## 1.0.2
+
+This release has 1 other change.
+
+### Other changes
 
 - Refactor editing links
 
 ## 1.0.1
 
+This release has 1 other change.
+
+### Other changes
+
 - Rewrite createDocumentFragment without innerHTML
 
 ## 1.0.0
+
+This release has 1 other change.
+
+### Other changes
 
 - Initial implementation
