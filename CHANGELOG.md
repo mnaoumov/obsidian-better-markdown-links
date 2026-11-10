@@ -345,7 +345,11 @@ This release has maintenance changes only. 1 maintenance commit (tests, build, C
 
 ## 3.4.5
 
-This release has maintenance changes only. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
+This release has 1 breaking change. 16 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Breaking changes
+
+- migrate to `obsidian-dev-utils` v2 component architecture
 
 ## 3.4.4
 
