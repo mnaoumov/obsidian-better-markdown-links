@@ -41,6 +41,7 @@ A copy of the vault ships with every release. You can access it via any of the f
 
 - **Angle bracket links** — `[Title](<path with space/note.md>)` instead of `%20` noise: [01 Angle bracket links](<./demo-vault/01 Angle bracket links.md>).
 - **Explicit relative links** — a leading `./`, so a relative path cannot be mistaken for an absolute one: [02 Relative links](<./demo-vault/02 Relative links.md>).
+- **The `[[` autocomplete too** — a link picked from it is written in the configured form as it is inserted, not rewritten afterwards: [01 Angle bracket links](<./demo-vault/01 Angle bracket links.md>).
 - **Convert what you already have** — a selection, a note, a folder or the whole vault, on command or automatically as you save: [03 Convert links](<./demo-vault/03 Convert links.md>).
 - **`file://` normalization** — escaped backslashes in a `file://` link become plain forward slashes: [03 Convert links](<./demo-vault/03 Convert links.md>).
 - **Force Markdown links** — whatever Obsidian's **Use `[[Wikilinks]]`** setting says, permanently or for one run: [03 Convert links](<./demo-vault/03 Convert links.md>).

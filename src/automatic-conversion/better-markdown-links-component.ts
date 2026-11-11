@@ -40,6 +40,7 @@ import { getLinkStyleForReference } from '../conversion/frontmatter-wikilink-sty
 import { getLinkTargetExclusionPredicate } from '../conversion/link-target-exclusion.ts';
 import { toGitHubHeadingAnchorLink } from '../github-heading-anchors/github-heading-anchor-link.ts';
 import { GenerateMarkdownLinkPatchComponent } from '../link-generation/generate-markdown-link-extended-impl.ts';
+import { LinkSuggestionPatchComponent } from '../link-generation/link-suggestion-patch-component.ts';
 import { EditorSaveFileCommandPatchComponent } from './patches/editor-save-file-command-patch-component.ts';
 import { TextFileViewSavePatchComponent } from './patches/text-file-view-save-patch-component.ts';
 import { WorkspaceOpenLinkTextPatchComponent } from './patches/workspace-open-link-text-patch-component.ts';
@@ -120,6 +121,13 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
             shouldUseLeadingSlashForAbsolutePaths: settings.shouldUseLeadingSlashForAbsolutePaths
           }));
         }
+      })
+    );
+
+    this.addChild(
+      new LinkSuggestionPatchComponent({
+        app: this.app,
+        pluginSettingsComponent: this.pluginSettingsComponent
       })
     );
 
