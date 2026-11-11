@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 6.6.0
+
+This release has 1 new feature and 2 documentation changes.
+
+### New
+
+- \[FR\] Format links inserted by `[[` autocomplete with the configured style (angle brackets, leading dot) (#46)
+
+### Documentation
+
+- **changelog:** restore the 3.4.5 entries a dependency update deleted
+- **changelog:** regroup the published release notes for readers
+
 ## 6.5.0
 
 This release has 2 new features and 2 documentation changes. 3 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
