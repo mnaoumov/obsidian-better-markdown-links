@@ -104,6 +104,15 @@ interface CommandsStub {
 
 type ConfiguredFiles = NonNullable<Parameters<typeof AppCls.createConfigured__>[0]>['files'];
 
+interface EditorSuggestHolder {
+  // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- The fixture installs its suggester list after creating the app.
+  editorSuggest: EditorSuggestStub;
+}
+
+interface EditorSuggestStub {
+  readonly suggests: readonly unknown[];
+}
+
 /**
  * The on-disk content of the seeded notes. Its shape is irrelevant — `parseMetadata` is mocked — but it
  * is what the probe is asserted to have passed along, so it must not be empty.
@@ -172,6 +181,9 @@ function createContext(files: ConfiguredFiles = {}, options: CreateContextOption
   castTo<CommandsHolder>(appMock).commands = {
     findCommand: vi.fn().mockReturnValue(undefined)
   };
+  // The real `LinkSuggestionPatchComponent` reads `workspace.editorSuggest.suggests` in `onload`. An empty list keeps
+  // this test focused; that patch has its own dedicated test.
+  castTo<EditorSuggestHolder>(appMock.workspace).editorSuggest = { suggests: [] };
   const app = appMock.asOriginalType__();
 
   const abortSignalComponent = strictProxy<AbortSignalComponent>({
