@@ -45,7 +45,6 @@
     "eslint": "$eslint",
     "katex": "^0.19.1",
     "moment": "^2.31.0",
-    "re2js": "^2.9.1",
     "type-fest": "$type-fest",
     "typescript": "$typescript"
   },
