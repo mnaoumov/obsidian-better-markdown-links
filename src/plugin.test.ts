@@ -148,6 +148,8 @@ interface SettingsMigrationComponentParams {
 const STRICT_PROXY_TARGET_SYMBOL = Symbol.for('strictProxyTarget');
 
 const manifest = strictProxy<PluginManifest>({
+  // eslint-disable-next-line unicorn/name-replacements -- Obsidian's own `PluginManifest` member.
+  dir: 'plugins-root/better-markdown-links',
   id: 'better-markdown-links',
   name: 'Better Markdown Links',
   version: '1.0.0'
