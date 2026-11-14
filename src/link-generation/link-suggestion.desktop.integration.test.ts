@@ -31,6 +31,13 @@ import { LinkStyleMode } from '../settings/link-style-mode.ts';
  */
 interface RunAutocompleteScenarioParams {
   /**
+   * The `type` the suggester's first suggestion must have, for the whole query, before `Enter` is pressed (`none` is
+   * core's "no note matches" entry, which links to a note that does not exist yet). The suggester computes its
+   * suggestions asynchronously, so without it `Enter` can accept a suggestion computed for a prefix of the query.
+   */
+  readonly expectedFirstSuggestionType?: string;
+
+  /**
    * The plugin's link style mode.
    */
   readonly linkStyleMode: LinkStyleMode;
@@ -70,12 +77,15 @@ const PLUGIN_ID = 'better-markdown-links';
 const TARGET_PATH = 'autocomplete/target with space.md';
 const TARGET_CONTENT = '# Section one\n\ntext\n';
 const CURSOR_MARKER = 'X';
+const MISSING_NOTE_NAME = 'unwritten chapter';
+const MISSING_NOTE_PATH = `autocomplete/${MISSING_NOTE_NAME}.md`;
 
 describe('[[ autocomplete link style (Desktop)', () => {
   beforeAll(async () => {
     await evalInObsidian({
       async callback({ app, targetContent, targetPath }) {
         app.vault.setConfig('newLinkFormat', 'relative');
+        app.vault.setConfig('newFileLocation', 'current');
 
         const existing = app.vault.getAbstractFileByPath(targetPath);
         if (existing) {
@@ -126,6 +136,43 @@ describe('[[ autocomplete link style (Desktop)', () => {
 
     expect(content).toBe(`[target with space](<./target with space.md>)${CURSOR_MARKER}`);
   });
+
+  it('should insert a link to a note that does not exist yet as its vault path, which core creates the note from', async () => {
+    await evalInObsidian({
+      async callback({ app, missingNotePath }): Promise<void> {
+        const existing = app.vault.getAbstractFileByPath(missingNotePath);
+        if (existing) {
+          await app.fileManager.trashFile(existing);
+        }
+      },
+      input: { missingNotePath: MISSING_NOTE_PATH },
+      vaultPath: getTemporaryVault().path
+    });
+
+    const content = await runAutocompleteScenario({
+      expectedFirstSuggestionType: 'none',
+      linkStyleMode: LinkStyleMode.ObsidianSettingsDefault,
+      query: MISSING_NOTE_NAME,
+      sourcePath: 'autocomplete/missing.md',
+      useMarkdownLinks: true
+    });
+
+    // The leading slash is the plugin's `shouldUseLeadingSlashForAbsolutePaths`, on by default.
+    expect(content).toBe(`[${MISSING_NOTE_NAME}](</${MISSING_NOTE_PATH}>)${CURSOR_MARKER}`);
+
+    // Follow the inserted link as a click does: core hands the link's URL to `openLinkText`, which creates a missing
+    // note from it.
+    const createdPath = await evalInObsidian({
+      async callback({ app, linkUrl, sourcePath }): Promise<null | string> {
+        await app.workspace.openLinkText(linkUrl, sourcePath);
+        return app.workspace.getActiveFile()?.path ?? null;
+      },
+      input: { linkUrl: `/${MISSING_NOTE_PATH}`, sourcePath: 'autocomplete/missing.md' },
+      vaultPath: getTemporaryVault().path
+    });
+
+    expect(createdPath).toBe(MISSING_NOTE_PATH);
+  });
 });
 
 /**
@@ -140,6 +187,7 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
     async callback({
       app,
       cursorMarker,
+      expectedFirstSuggestionType,
       lib: {
         pressKey,
         typeIntoEditor,
@@ -190,7 +238,12 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
         message: 'the link suggester to offer a suggestion',
         predicate: () => {
           const currentSuggest = app.workspace.editorSuggest.currentSuggest;
-          return (currentSuggest?.isOpen ?? false) && (currentSuggest?.suggestions.values?.length ?? 0) > 0;
+          const values = currentSuggest?.suggestions.values ?? [];
+          const isOpenWithSuggestions = (currentSuggest?.isOpen ?? false) && values.length > 0;
+          const firstSuggestionType = (values[0] as Partial<Record<'type', string>> | undefined)?.type;
+          const isExpectedFirstSuggestion = expectedFirstSuggestionType === null
+            || (firstSuggestionType === expectedFirstSuggestionType && currentSuggest?.context?.query === query);
+          return isOpenWithSuggestions && isExpectedFirstSuggestion;
         }
       });
 
@@ -209,6 +262,7 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
     },
     input: {
       cursorMarker: CURSOR_MARKER,
+      expectedFirstSuggestionType: params.expectedFirstSuggestionType ?? null,
       linkStyleMode: params.linkStyleMode,
       pluginId: PLUGIN_ID,
       query: params.query,

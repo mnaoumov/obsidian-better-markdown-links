@@ -23,7 +23,10 @@ vi.mock('@mnaoumov/obsidian-lib/link', async (importOriginal) => ({
 }));
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
-import { generateMarkdownLink } from '@mnaoumov/obsidian-lib/link';
+import {
+  generateMarkdownLink,
+  LinkPathStyle
+} from '@mnaoumov/obsidian-lib/link';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import type { PluginSettingsComponent } from '../settings/plugin-settings-component.ts';
@@ -32,6 +35,7 @@ import type { PluginSettingsComponent } from '../settings/plugin-settings-compon
 import { PluginSettings } from '../settings/plugin-settings.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
+  getNewNotePath,
   LinkSuggestionPatchComponent,
   rewriteAutocompleteTransaction
 } from './link-suggestion-patch-component.ts';
@@ -188,11 +192,41 @@ describe('rewriteAutocompleteTransaction', () => {
       ['an embed', insertion('![[target with space]]', LINK_START_CH + 22)],
       ['an unfinished link with the cursor inside it', insertion('[[target with space#]]', LINK_START_CH + 20)],
       ['a captioned markdown link with the cursor in its caption', insertion('[x](target%20with%20space.md)', LINK_START_CH + 1)],
-      ['a link to a note that does not exist', insertion('[[missing]]', LINK_START_CH + 11)]
+      ['a link to a missing note through a relative segment', insertion('[](../missing)', LINK_START_CH + 14)]
     ] satisfies [string, EditorTransaction][]
   )('should leave %s untouched', (_name, tx) => {
     expect(rewrite(app, tx)).toBe(tx);
     expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
+  });
+
+  it('should generate a link to a note that does not exist yet as the vault path core would create it at', () => {
+    vi.mocked(generateMarkdownLink).mockReturnValue('[](<folder/missing note.md>)');
+    vi.spyOn(app.fileManager, 'getNewFileParent').mockReturnValue(app.vault.getFolderByPath('folder') ?? app.vault.getRoot());
+    const text = '[](missing%20note)';
+
+    const result = rewrite(app, insertion(text, LINK_START_CH + text.length));
+
+    expect(result.changes?.[0]?.text).toBe('[](<folder/missing note.md>)');
+    expect(result.selection).toEqual({ from: at(LINK_START_CH + 28), to: at(LINK_START_CH + 28) });
+    expect(vi.mocked(generateMarkdownLink)).toHaveBeenCalledExactlyOnceWith({
+      alias: undefined,
+      app,
+      isEmbed: false,
+      isNonExistingFileAllowed: true,
+      linkPathStyle: LinkPathStyle.AbsolutePathInVault,
+      sourcePathOrFile: 'folder/source.md',
+      subpath: '',
+      targetPathOrFile: 'folder/missing note.md'
+    });
+  });
+
+  it('should not write a GitHub heading anchor for a note that does not exist yet', () => {
+    vi.mocked(generateMarkdownLink).mockReturnValue('[[missing#Some heading]]');
+    const text = '[[missing#Some heading]]';
+
+    const result = rewrite(app, insertion(text, LINK_START_CH + text.length), true);
+
+    expect(result.changes?.[0]?.text).toBe('[[missing#Some heading]]');
   });
 
   it('should accept a collapsed selection given by its start alone', () => {
@@ -200,6 +234,35 @@ describe('rewriteAutocompleteTransaction', () => {
     const tx: EditorTransaction = { changes: [{ from: at(LINK_START_CH), text }], selection: { from: at(LINK_START_CH + text.length) } };
 
     expect(rewrite(app, tx)).not.toBe(tx);
+  });
+});
+
+describe('getNewNotePath', () => {
+  let app: AppOriginal;
+
+  beforeEach(() => {
+    app = createApp();
+  });
+
+  it.each([
+    ['a name, into the new-note folder', 'missing', 'folder', 'folder/missing.md'],
+    ['a name, into the vault root', 'missing', '', 'missing.md'],
+    ['a name that already ends with .md', 'missing.MD', '', 'missing.MD'],
+    ['a name with another extension', 'missing.png', '', 'missing.png.md'],
+    ['a path with a folder, from the vault root', 'sub/missing', 'folder', 'sub/missing.md'],
+    ['a name with surrounding spaces', ' missing ', '', 'missing.md']
+  ])('should place %s', (_name, linkPath, parentPath, expected) => {
+    vi.spyOn(app.fileManager, 'getNewFileParent').mockReturnValue(app.vault.getFolderByPath(parentPath) ?? app.vault.getRoot());
+
+    expect(getNewNotePath(app, linkPath, 'folder/source.md')).toBe(expected);
+  });
+
+  it.each([
+    ['an empty path', '  '],
+    ['a leading dot segment', './missing'],
+    ['a parent segment', 'a/../missing']
+  ])('should answer null for %s', (_name, linkPath) => {
+    expect(getNewNotePath(app, linkPath, 'folder/source.md')).toBeNull();
   });
 });
 
