@@ -5,17 +5,24 @@ import type {
   EditorChange,
   EditorSuggest,
   EditorTransaction,
-  TFile
+  TFile,
+  TFolder
 } from 'obsidian';
 
 import {
   around,
   MonkeyAroundComponent
 } from '@mnaoumov/obsidian-lib/components/monkey-around-component';
-import { generateMarkdownLink } from '@mnaoumov/obsidian-lib/link';
+import {
+  generateMarkdownLink,
+  LinkPathStyle
+} from '@mnaoumov/obsidian-lib/link';
 import { parseLink } from '@mnaoumov/obsidian-lib/parse-link';
 import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-utils';
-import { parseLinktext } from 'obsidian';
+import {
+  normalizePath,
+  parseLinktext
+} from 'obsidian';
 
 import type { PluginSettingsComponent } from '../settings/plugin-settings-component.ts';
 
@@ -25,6 +32,8 @@ import { toGitHubHeadingAnchorLink } from '../github-heading-anchors/github-head
  * The origin Obsidian's link suggester passes to the one editor transaction that inserts the chosen link.
  */
 const AUTOCOMPLETE_TRANSACTION_ORIGIN = 'input.autocomplete';
+
+const MARKDOWN_FILE_SUFFIX = '.md';
 
 interface LinkSuggestionPatchComponentConstructorParams {
   readonly app: App;
@@ -63,8 +72,16 @@ interface RewriteAutocompleteTransactionParams {
  *
  * A link is only rewritten once the suggester has FINISHED it — the cursor lands right after it, or inside the empty
  * caption of a markdown block link. The intermediate links the suggester inserts when `#`, `^`, `|` or `Tab` is typed
- * (`[[note#]]`, with the cursor inside, to keep choosing) are left to it, and so is a link whose target does not
- * exist, which has no file to generate a path from.
+ * (`[[note#]]`, with the cursor inside, to keep choosing) are left to it.
+ *
+ * A link to a note that does not exist yet is generated for the path core would create that note at when the link is
+ * followed ({@link getNewNotePath}), always as that note's VAULT path, so `[[new note` + `Enter` in `folder/source.md`
+ * writes `[](</folder/new note.md>)` (the leading slash is `shouldUseLeadingSlashForAbsolutePaths`) rather than core's
+ * `[](new%20note)`. The configured path style is not applied to
+ * it: core 1.15.1's `WorkspaceLeaf.openLinkText` resolves `./` and `../` only for a note that exists, and for a
+ * missing one creates the note from the link path as written, from the vault root, so a relative link to a missing
+ * note creates nothing (`./x.md`) or fails (`../x.md`, "outside the vault"). The vault path is the one form every
+ * path style can follow; once the note exists, link conversion writes the link in the configured style.
  */
 export class LinkSuggestionPatchComponent extends MonkeyAroundComponent {
   private readonly app: App;
@@ -123,6 +140,34 @@ export class LinkSuggestionPatchComponent extends MonkeyAroundComponent {
 }
 
 /**
+ * The path of the note Obsidian creates when a link to a note that does not exist yet is followed, so a link the
+ * suggester inserts for such a note can be generated in the configured style too.
+ *
+ * It mirrors core's `Workspace.openLinkText` and `FileManager.createNewMarkdownFileFromLinktext`: a link path with a
+ * folder separator names a path from the vault root, any other one is placed in the folder the new-note location
+ * setting picks (`getNewFileParent`), and `.md` is appended unless the path already ends with it.
+ *
+ * A path with a `.` or `..` segment answers `null`, leaving the link to core: core would not resolve those segments
+ * when creating the note, so no path this function could answer would match the note core creates.
+ *
+ * @param app - The Obsidian app.
+ * @param linkPath - The link path, decoded, without its subpath.
+ * @param sourcePath - The path of the note the link is inserted into.
+ * @returns The path of the note to link to, or `null` to leave the link to core.
+ */
+export function getNewNotePath(app: App, linkPath: string, sourcePath: string): null | string {
+  const trimmedLinkPath = linkPath.trim();
+  const segments = trimmedLinkPath.split('/');
+  if (trimmedLinkPath === '' || segments.some((segment) => segment === '.' || segment === '..')) {
+    return null;
+  }
+
+  const parentPrefix = trimmedLinkPath.includes('/') ? '' : getParentPrefix(app.fileManager.getNewFileParent(sourcePath, trimmedLinkPath));
+  const notePath = normalizePath(`${parentPrefix}${trimmedLinkPath}`);
+  return notePath.toLowerCase().endsWith(MARKDOWN_FILE_SUFFIX) ? notePath : `${notePath}${MARKDOWN_FILE_SUFFIX}`;
+}
+
+/**
  * Rewrites the link the suggester's transaction inserts, keeping the cursor where the suggester put it relative to the
  * link.
  *
@@ -165,6 +210,10 @@ export function rewriteAutocompleteTransaction(params: RewriteAutocompleteTransa
   };
 }
 
+function getParentPrefix(folder: TFolder): string {
+  return folder.isRoot() ? '' : `${folder.path}/`;
+}
+
 function isFileSuggest(suggest: EditorSuggest<unknown>): suggest is FileSuggest<unknown> {
   return 'suggestManager' in suggest;
 }
@@ -193,7 +242,8 @@ function rewriteAutocompleteChange(params: RewriteAutocompleteChangeParams): nul
 
   const { path: linkPath, subpath } = parseLinktext(parseLinkResult.url);
   const targetFile = resolveTargetFile(app, linkPath, sourcePath);
-  if (!targetFile) {
+  const targetPathOrFile = targetFile ?? getNewNotePath(app, linkPath, sourcePath);
+  if (!targetPathOrFile) {
     return null;
   }
 
@@ -201,11 +251,13 @@ function rewriteAutocompleteChange(params: RewriteAutocompleteChangeParams): nul
     alias: parseLinkResult.alias,
     app,
     isEmbed: false,
+    isNonExistingFileAllowed: targetFile ? undefined : true,
+    linkPathStyle: targetFile ? undefined : LinkPathStyle.AbsolutePathInVault,
     sourcePathOrFile: sourcePath,
     subpath,
-    targetPathOrFile: targetFile
+    targetPathOrFile
   }));
-  const text = params.shouldUseGitHubHeadingAnchors
+  const text = params.shouldUseGitHubHeadingAnchors && targetFile
     ? toGitHubHeadingAnchorLink({ app, linkText: generatedLink, targetFile })
     : generatedLink;
 
