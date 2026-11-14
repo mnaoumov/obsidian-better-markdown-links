@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 6.7.0
+
+This release has 1 new feature and 1 bug fix. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
+
+### New
+
+- \[FR\] Format links inserted by `[[` autocomplete with the configured style (angle brackets, leading dot) (#46): a link to a note that does not exist yet is now formatted too, as the vault path the note will be created at
+
+### Fixed
+
+- load again after an update or Hot Reload instead of failing on an already published API
+
 ## 6.6.0
 
 This release has 1 new feature and 2 documentation changes.
