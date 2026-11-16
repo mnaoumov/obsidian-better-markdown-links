@@ -11,7 +11,10 @@
  * It is named `*.desktop.integration.test.ts` so it runs only in the desktop integration project.
  */
 
-import type { SettingTab } from 'obsidian';
+import type {
+  Editor,
+  SettingTab
+} from 'obsidian';
 
 import { evalInObsidian } from 'obsidian-integration-testing';
 import { getTemporaryVault } from 'obsidian-integration-testing/vitest-global-setup-plugin';
@@ -59,6 +62,46 @@ interface RunAutocompleteScenarioParams {
 }
 
 /**
+ * The parts of a canvas the test drives; `obsidian-typings` declares no canvas internals.
+ */
+interface TestableCanvas {
+  readonly nodes: Map<string, TestableCanvasTextNode>;
+  readonly selectOnly: (node: TestableCanvasTextNode) => void;
+}
+
+/**
+ * The parts of a canvas text card the test drives.
+ */
+interface TestableCanvasTextNode {
+  readonly child: TestableCanvasTextNodeChild;
+  readonly isContentMounted: boolean;
+  readonly startEditing: () => void;
+}
+
+/**
+ * The markdown child of a canvas text card.
+ */
+interface TestableCanvasTextNodeChild {
+  // eslint-disable-next-line typescript-dev-toolkit/readonly-interface-members -- The test sets the flag a double click on an on-screen card checks.
+  editable: boolean;
+  readonly editMode?: TestableCanvasTextNodeEditMode;
+}
+
+/**
+ * The edit mode a canvas text card opens when editing starts.
+ */
+interface TestableCanvasTextNodeEditMode {
+  readonly editor?: Editor;
+}
+
+/**
+ * A canvas view, exposing its canvas.
+ */
+interface TestableCanvasView {
+  readonly canvas: TestableCanvas;
+}
+
+/**
  * The (otherwise protected) settings component exposed for the test, letting it change settings the
  * same way the plugin's own settings UI does.
  */
@@ -77,6 +120,7 @@ const PLUGIN_ID = 'better-markdown-links';
 const TARGET_PATH = 'autocomplete/target with space.md';
 const TARGET_CONTENT = '# Section one\n\ntext\n';
 const CURSOR_MARKER = 'X';
+const CANVAS_NODE_ID = 'card';
 const MISSING_NOTE_NAME = 'unwritten chapter';
 const MISSING_NOTE_PATH = `autocomplete/${MISSING_NOTE_NAME}.md`;
 
@@ -137,6 +181,19 @@ describe('[[ autocomplete link style (Desktop)', () => {
     expect(content).toBe(`[target with space](<./target with space.md>)${CURSOR_MARKER}`);
   });
 
+  it('should insert a link into a canvas text card, relative to the canvas', async () => {
+    // Issue #46 follow-up: the suggester's context carries no file in a canvas text card, and the patch threw on it,
+    // so `Enter` inserted nothing.
+    const content = await runAutocompleteScenario({
+      linkStyleMode: LinkStyleMode.ObsidianSettingsDefault,
+      query: 'target with',
+      sourcePath: 'autocomplete/board.canvas',
+      useMarkdownLinks: true
+    });
+
+    expect(content).toBe(`[target with space](<./target with space.md>)${CURSOR_MARKER}`);
+  });
+
   it('should insert a link to a note that does not exist yet as its vault path, which core creates the note from', async () => {
     await evalInObsidian({
       async callback({ app, missingNotePath }): Promise<void> {
@@ -186,6 +243,7 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
   return evalInObsidian({
     async callback({
       app,
+      canvasNodeId,
       cursorMarker,
       expectedFirstSuggestionType,
       lib: {
@@ -200,6 +258,52 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
       sourcePath,
       useMarkdownLinks
     }): Promise<string> {
+      async function getMarkdownEditor(): Promise<Editor> {
+        await waitUntil({
+          message: 'the markdown editor to open',
+          predicate: () => app.workspace.getActiveViewOfType(obsidianModule.MarkdownView)?.file?.path === sourcePath
+        });
+
+        const view = app.workspace.getActiveViewOfType(obsidianModule.MarkdownView);
+        if (!view) {
+          throw new Error('The markdown editor closed again');
+        }
+
+        return view.editor;
+      }
+
+      async function startEditingCanvasTextCard(): Promise<Editor> {
+        function getCanvas(): TestableCanvas | undefined {
+          return (app.workspace.getActiveViewOfType(obsidianModule.FileView) as null | Partial<TestableCanvasView>)?.canvas;
+        }
+
+        await waitUntil({
+          message: 'the canvas to show its text card',
+          predicate: () => getCanvas()?.nodes.get(canvasNodeId)?.isContentMounted ?? false
+        });
+
+        const canvas = getCanvas();
+        const node = canvas?.nodes.get(canvasNodeId);
+        if (!canvas || !node) {
+          throw new Error('The canvas closed again');
+        }
+
+        // A card is editable once the canvas has rendered it on screen; the harness window is off-screen, so the flag a
+        // double click checks is set here, then the card is opened for editing the way that double click opens it.
+        node.child.editable = true;
+        canvas.selectOnly(node);
+        // Editing opens the card's editor synchronously.
+        node.startEditing();
+
+        const cardEditor = node.child.editMode?.editor;
+        if (!cardEditor) {
+          throw new Error('The text card editor closed again');
+        }
+
+        cardEditor.focus();
+        return cardEditor;
+      }
+
       app.vault.setConfig('useMarkdownLinks', useMarkdownLinks);
 
       const settingTab = app.setting.pluginTabs.find((tab) => tab.id === pluginId);
@@ -218,20 +322,14 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
         await app.fileManager.trashFile(existing);
       }
 
-      const sourceFile = await app.vault.create(sourcePath, '');
+      const isCanvas = sourcePath.endsWith('.canvas');
+      const sourceContent = isCanvas
+        ? JSON.stringify({ edges: [], nodes: [{ height: 200, id: canvasNodeId, text: '', type: 'text', width: 400, x: 0, y: 0 }] })
+        : '';
+      const sourceFile = await app.vault.create(sourcePath, sourceContent);
       await app.workspace.getLeaf(false).openFile(sourceFile);
 
-      await waitUntil({
-        message: 'the markdown editor to open',
-        predicate: () => app.workspace.getActiveViewOfType(obsidianModule.MarkdownView)?.file === sourceFile
-      });
-
-      const view = app.workspace.getActiveViewOfType(obsidianModule.MarkdownView);
-      if (!view) {
-        throw new Error('The markdown editor closed again');
-      }
-
-      const editor = view.editor;
+      const editor = isCanvas ? await startEditingCanvasTextCard() : await getMarkdownEditor();
       await typeIntoEditor({ editor, text: `[[${query}` });
 
       await waitUntil({
@@ -261,6 +359,7 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
       return editor.getValue();
     },
     input: {
+      canvasNodeId: CANVAS_NODE_ID,
       cursorMarker: CURSOR_MARKER,
       expectedFirstSuggestionType: params.expectedFirstSuggestionType ?? null,
       linkStyleMode: params.linkStyleMode,
