@@ -327,6 +327,29 @@ describe('LinkSuggestionPatchComponent', () => {
     expect(transaction).toHaveBeenCalledExactlyOnceWith(insertion('[[target with space]]', LINK_START_CH + 21), 'input');
   });
 
+  it('should rewrite from the active view\'s file when the context names no file, as in a canvas text card', () => {
+    linkSuggest.context = { editor, file: null };
+    const canvasFile = castTo<TFileOriginal>({ path: 'folder/board.canvas' });
+    vi.spyOn(app.workspace, 'getActiveViewOfType').mockReturnValue(castTo({ file: canvasFile }));
+    load();
+
+    linkSuggest.selectSuggestion(null, null);
+
+    expect(transaction).toHaveBeenCalledExactlyOnceWith(insertion('[[./target with space]]', LINK_START_CH + 23), AUTOCOMPLETE);
+    expect(vi.mocked(generateMarkdownLink)).toHaveBeenCalledWith(expect.objectContaining({ sourcePathOrFile: 'folder/board.canvas' }));
+  });
+
+  it('should only call through when neither the context nor the active view names a file', () => {
+    linkSuggest.context = { editor, file: null };
+    vi.spyOn(app.workspace, 'getActiveViewOfType').mockReturnValue(null);
+    load();
+
+    linkSuggest.selectSuggestion(null, null);
+
+    expect(transaction).toHaveBeenCalledExactlyOnceWith(insertion('[[target with space]]', LINK_START_CH + 21), AUTOCOMPLETE);
+    expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
+  });
+
   it('should only call through when the suggester has no context', () => {
     const selectSuggestion = vi.fn();
     linkSuggest.selectSuggestion = selectSuggestion;

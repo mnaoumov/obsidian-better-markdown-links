@@ -20,6 +20,7 @@ import {
 import { parseLink } from '@mnaoumov/obsidian-lib/parse-link';
 import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-utils';
 import {
+  FileView,
   normalizePath,
   parseLinktext
 } from 'obsidian';
@@ -107,12 +108,13 @@ export class LinkSuggestionPatchComponent extends MonkeyAroundComponent {
         originalThis
       }) => {
         const context = originalThis.context;
-        if (!context) {
+        const sourcePath = context ? this.getSourcePath(context.file) : null;
+        if (!context || sourcePath === null) {
           fallback();
           return;
         }
 
-        const uninstall = this.patchAutocompleteTransaction(context.editor, context.file.path);
+        const uninstall = this.patchAutocompleteTransaction(context.editor, sourcePath);
         try {
           fallback();
         } finally {
@@ -120,6 +122,21 @@ export class LinkSuggestionPatchComponent extends MonkeyAroundComponent {
         }
       }
     });
+  }
+
+  /**
+   * The path the inserted link is generated relative to.
+   *
+   * The suggester's context carries no file in an editor that is not a note's own: a canvas text card (issue #46
+   * follow-up) hands it `null`, though `EditorSuggestContext.file` is typed non-null. Links in a card resolve relative to
+   * the canvas that holds it, and the card is edited in the active leaf, so that leaf's file is the source. With no file
+   * there either, the link is left to core.
+   *
+   * @param contextFile - The file the suggester's context names, if any.
+   * @returns The source path, or `null` to leave the link to core.
+   */
+  private getSourcePath(contextFile: null | TFile): null | string {
+    return (contextFile ?? this.app.workspace.getActiveViewOfType(FileView)?.file)?.path ?? null;
   }
 
   private patchAutocompleteTransaction(editor: Editor, sourcePath: string): () => void {
