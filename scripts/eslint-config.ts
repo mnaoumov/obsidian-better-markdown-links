@@ -17,7 +17,10 @@ export const configs: Linter.Config[] = defineEslintConfigs({
           'obsidianmd/ui/sentence-case': [
             'error',
             {
-              brands: ['Backlink Cache']
+              brands: [
+                'Backlink Cache',
+                'Markdown'
+              ]
             }
           ]
         }
