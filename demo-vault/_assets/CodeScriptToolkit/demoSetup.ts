@@ -1,7 +1,7 @@
 import type { App } from 'obsidian';
 
-import { Notice } from 'obsidian';
 import { configureCommunityPlugin } from '@mnaoumov/obsidian-lib/community-plugins';
+import { Notice } from 'obsidian';
 
 const PLUGIN_ID = 'better-markdown-links';
 const MESSY_FOLDER_PATH = 'Materials/03 Convert links';
@@ -20,19 +20,19 @@ const EXCLUDED_TARGET_NOTE_PATH = `${MESSY_FOLDER_PATH}/Excluded targets.md`;
 const EXCLUDED_TARGET_BASE_PATH = `${MESSY_FOLDER_PATH}/Reading list.base`;
 
 interface DemoSettingsPatch {
-  excludeLinkTargetPaths?: string[];
-  linkConversionMode?: string;
-  linkPathStyleMode?: string;
-  linkStyleMode?: string;
-  shouldAppendFileNameWhenDemotingEmbeds?: boolean;
-  shouldCreateMissingNotes?: boolean;
-  shouldNormalizeFileLinks?: boolean;
-  shouldResolveLinksStrictly?: boolean;
-  shouldResolveLinksViaAliases?: boolean;
-  shouldUseAngleBrackets?: boolean;
-  shouldUseGitHubHeadingAnchors?: boolean;
-  shouldUseLeadingDotForRelativePaths?: boolean;
-  shouldUseLeadingSlashForAbsolutePaths?: boolean;
+  readonly excludeLinkTargetPaths?: string[];
+  readonly linkConversionMode?: string;
+  readonly linkPathStyleMode?: string;
+  readonly linkStyleMode?: string;
+  readonly shouldAppendFileNameWhenDemotingEmbeds?: boolean;
+  readonly shouldCreateMissingNotes?: boolean;
+  readonly shouldNormalizeFileLinks?: boolean;
+  readonly shouldResolveLinksStrictly?: boolean;
+  readonly shouldResolveLinksViaAliases?: boolean;
+  readonly shouldUseAngleBrackets?: boolean;
+  readonly shouldUseGitHubHeadingAnchors?: boolean;
+  readonly shouldUseLeadingDotForRelativePaths?: boolean;
+  readonly shouldUseLeadingSlashForAbsolutePaths?: boolean;
 }
 
 // Deliberately written the way Obsidian and older notes write them: percent-encoded spaces, no angle
@@ -53,6 +53,27 @@ const MESSY_CONTENT = [
   '- A percent-encoded file URL: [todo](file:///C:/notes/todo%20list.md)',
   ''
 ].join('\n');
+
+/**
+ * Applies a settings patch, live, through the plugin's own settings component. Re-open the messy note
+ * and convert again to see the difference.
+ *
+ * Manual equivalent: change the same option in
+ * **Settings -> Community plugins -> `Better Markdown Links`**.
+ */
+export async function changeSettings(app: App, patch: DemoSettingsPatch): Promise<void> {
+  await configureCommunityPlugin({ app, pluginId: PLUGIN_ID, settings: patch });
+  new Notice('Applied. Reset the messy note and convert again to compare.');
+}
+
+/**
+ * Runs the convert command on the active note.
+ *
+ * Manual equivalent: **`Better Markdown Links`: Convert links in current file** in the Command Palette.
+ */
+export function convertLinksInCurrentFile(app: App): void {
+  app.commands.executeCommandById(`${PLUGIN_ID}:convert-links-in-current-file`);
+}
 
 /**
  * Creates (or restores) a note full of unconverted links and opens it.
@@ -88,27 +109,6 @@ async function openDemoNote(app: App, folderPath: string, notePath: string, cont
   if (note) {
     await app.workspace.getLeaf(false).openFile(note);
   }
-}
-
-/**
- * Runs the convert command on the active note.
- *
- * Manual equivalent: **Better Markdown Links: Convert links in current file** in the Command Palette.
- */
-export function convertLinksInCurrentFile(app: App): void {
-  app.commands.executeCommandById(`${PLUGIN_ID}:convert-links-in-current-file`);
-}
-
-/**
- * Applies a settings patch, live, through the plugin's own settings component. Re-open the messy note
- * and convert again to see the difference.
- *
- * Manual equivalent: change the same option in **Settings -> Community plugins -> Better Markdown
- * Links**.
- */
-export async function changeSettings(app: App, patch: DemoSettingsPatch): Promise<void> {
-  await configureCommunityPlugin({ app, pluginId: PLUGIN_ID, settings: patch });
-  new Notice('Applied. Reset the messy note and convert again to compare.');
 }
 
 // A note whose every link is an embed - one attachment-style embed of a real note, one with an alias,
@@ -183,6 +183,16 @@ const UNRESOLVED_CONTENT = [
 ].join('\n');
 
 /**
+ * Runs the demote command on the active note.
+ *
+ * Manual equivalent: **`Better Markdown Links`: Demote embeds to links in current file** in the Command
+ * Palette.
+ */
+export function demoteEmbedsInCurrentFile(app: App): void {
+  app.commands.executeCommandById(`${PLUGIN_ID}:demote-embeds-to-links-in-current-file`);
+}
+
+/**
  * Creates (or restores) a note whose links are all embeds and opens it.
  *
  * Manual equivalent: create a note and write some `![...]` embeds in it.
@@ -206,16 +216,6 @@ export async function openUnresolvedNote(app: App): Promise<void> {
   await openDemoNote(app, UNRESOLVED_FOLDER_PATH, SECOND_CONTESTED_NOTE_PATH, SECOND_CONTESTED_CONTENT);
   await openDemoNote(app, UNRESOLVED_FOLDER_PATH, UNRESOLVED_NOTE_PATH, UNRESOLVED_CONTENT);
   new Notice('Unresolved links note ready. Now convert it.');
-}
-
-/**
- * Runs the demote command on the active note.
- *
- * Manual equivalent: **Better Markdown Links: Demote embeds to links in current file** in the Command
- * Palette.
- */
-export function demoteEmbedsInCurrentFile(app: App): void {
-  app.commands.executeCommandById(`${PLUGIN_ID}:demote-embeds-to-links-in-current-file`);
 }
 
 // A note of plain wikilinks. Nothing here is malformed - with Obsidian's `Use [[Wikilinks]]` setting on,
@@ -243,6 +243,16 @@ const WIKILINK_CONTENT = [
 ].join('\n');
 
 /**
+ * Runs the force-Markdown convert command on the active note.
+ *
+ * Manual equivalent: **`Better Markdown Links`: Convert links to Markdown in current file** in the Command
+ * Palette.
+ */
+export function convertLinksToMarkdownInCurrentFile(app: App): void {
+  app.commands.executeCommandById(`${PLUGIN_ID}:convert-links-to-markdown-in-current-file`);
+}
+
+/**
  * Creates (or restores) a note of plain wikilinks and opens it.
  *
  * Manual equivalent: create a note and write some `[[wikilinks]]` in it.
@@ -250,16 +260,6 @@ const WIKILINK_CONTENT = [
 export async function openWikilinkNote(app: App): Promise<void> {
   await openDemoNote(app, MESSY_FOLDER_PATH, WIKILINK_NOTE_PATH, WIKILINK_CONTENT);
   new Notice('Wikilinks note ready. Now force the Markdown style.');
-}
-
-/**
- * Runs the force-Markdown convert command on the active note.
- *
- * Manual equivalent: **Better Markdown Links: Convert links to Markdown in current file** in the Command
- * Palette.
- */
-export function convertLinksToMarkdownInCurrentFile(app: App): void {
-  app.commands.executeCommandById(`${PLUGIN_ID}:convert-links-to-markdown-in-current-file`);
 }
 
 // A note whose links name their targets any way BUT relatively - by bare file name, and from the vault
@@ -278,6 +278,16 @@ const PATH_STYLE_CONTENT = [
 ].join('\n');
 
 /**
+ * Runs the force-relative convert command on the active note.
+ *
+ * Manual equivalent: **`Better Markdown Links`: Convert link paths to relative in current file** in the
+ * Command Palette.
+ */
+export function convertLinkPathsToRelativeInCurrentFile(app: App): void {
+  app.commands.executeCommandById(`${PLUGIN_ID}:convert-link-paths-to-relative-in-current-file`);
+}
+
+/**
  * Creates (or restores) a note whose link paths are anything but relative, and opens it.
  *
  * Manual equivalent: create a note and write some links that name their target by file name alone.
@@ -285,16 +295,6 @@ const PATH_STYLE_CONTENT = [
 export async function openPathStyleNote(app: App): Promise<void> {
   await openDemoNote(app, MESSY_FOLDER_PATH, PATH_STYLE_NOTE_PATH, PATH_STYLE_CONTENT);
   new Notice('Non-relative paths note ready. Now force the relative style.');
-}
-
-/**
- * Runs the force-relative convert command on the active note.
- *
- * Manual equivalent: **Better Markdown Links: Convert link paths to relative in current file** in the
- * Command Palette.
- */
-export function convertLinkPathsToRelativeInCurrentFile(app: App): void {
-  app.commands.executeCommandById(`${PLUGIN_ID}:convert-link-paths-to-relative-in-current-file`);
 }
 
 // A note with one embed of a `.base` file and two ordinary links. With `*.base` in `excludeLinkTargetPaths`,
@@ -349,6 +349,12 @@ interface GeneratedLink {
   readonly markdown: string;
 }
 
+interface LinkPathStylePatch {
+  readonly linkPathStyleMode: 'AbsolutePathInVault' | 'RelativePathToTheSource';
+  readonly shouldUseLeadingDotForRelativePaths?: boolean;
+  readonly shouldUseLeadingSlashForAbsolutePaths?: boolean;
+}
+
 /**
  * Writes a note of links to the angle-bracket demo's targets, each generated the way Obsidian generates a
  * link you type, and opens it. Fails loudly when a link is not in the form the setting promises, or does
@@ -358,11 +364,11 @@ interface GeneratedLink {
  * wikilink has no angle brackets to show. So this switches **Link style** to Markdown first.
  *
  * Manual equivalent: set **Link style** to **Markdown** and toggle **Should use angle brackets** in
- * **Settings -> Community plugins -> Better Markdown Links**, then type a link with `[[` in any note.
+ * **Settings -> Community plugins -> `Better Markdown Links`**, then type a link with `[[` in any note.
  */
 export async function writeAngleBracketLinks(app: App, shouldUseAngleBrackets: boolean): Promise<void> {
   await configureCommunityPlugin({ app, pluginId: PLUGIN_ID, settings: { linkStyleMode: 'Markdown', shouldUseAngleBrackets } });
-  const links = await writeGeneratedLinksNote(app, ANGLE_BRACKET_FOLDER_PATH, ANGLE_BRACKET_NOTE_PATH, '# Fresh links', [
+  const links = await writeGeneratedLinksNote(app, ANGLE_BRACKET_FOLDER_PATH, ANGLE_BRACKET_NOTE_PATH, [
     NOTE_WITH_SPACES_PATH,
     SIMPLE_NOTE_PATH
   ]);
@@ -380,12 +386,6 @@ export async function writeAngleBracketLinks(app: App, shouldUseAngleBrackets: b
   new Notice(shouldUseAngleBrackets ? 'Fresh links written with angle brackets.' : 'Fresh links written percent-encoded.');
 }
 
-interface LinkPathStylePatch {
-  linkPathStyleMode: 'AbsolutePathInVault' | 'RelativePathToTheSource';
-  shouldUseLeadingDotForRelativePaths?: boolean;
-  shouldUseLeadingSlashForAbsolutePaths?: boolean;
-}
-
 /**
  * Writes a note of links to the relative-links demo's targets under a forced link path style, each
  * generated the way Obsidian generates a link you type, and opens it. Fails loudly when the leading `./`
@@ -397,11 +397,11 @@ interface LinkPathStylePatch {
  *
  * Manual equivalent: set **Link style** to **Markdown**, pick the **Link path style**, and toggle
  * **Should use leading dot for relative paths** or **Should use leading slash for absolute paths** in
- * **Settings -> Community plugins -> Better Markdown Links**, then type a link with `[[` in any note.
+ * **Settings -> Community plugins -> `Better Markdown Links`**, then type a link with `[[` in any note.
  */
 export async function writeLinksWithPathStyle(app: App, patch: LinkPathStylePatch): Promise<void> {
   await configureCommunityPlugin({ app, pluginId: PLUGIN_ID, settings: { ...patch, linkStyleMode: 'Markdown' } });
-  const links = await writeGeneratedLinksNote(app, RELATIVE_FOLDER_PATH, RELATIVE_NOTE_PATH, '# Fresh links', [
+  const links = await writeGeneratedLinksNote(app, RELATIVE_FOLDER_PATH, RELATIVE_NOTE_PATH, [
     DEEP_NOTE_PATH,
     SIMPLE_NOTE_PATH,
     NOTE_WITH_SPACES_PATH
@@ -426,6 +426,8 @@ export async function writeLinksWithPathStyle(app: App, patch: LinkPathStylePatc
   new Notice('Fresh links written. Compare their paths with the ones above.');
 }
 
+const FRESH_LINKS_HEADING = '# Fresh links';
+
 /**
  * Writes one note holding a freshly generated link to each target, and opens it. Every link is checked to
  * lead back to its own target, read the way a Markdown editor reads it: a leading `/` from the vault root,
@@ -435,10 +437,9 @@ async function writeGeneratedLinksNote(
   app: App,
   folderPath: string,
   notePath: string,
-  heading: string,
   targetPaths: readonly string[]
 ): Promise<GeneratedLink[]> {
-  await openDemoNote(app, folderPath, notePath, `${heading}\n`);
+  await openDemoNote(app, folderPath, notePath, `${FRESH_LINKS_HEADING}\n`);
 
   const links: GeneratedLink[] = [];
   for (const targetPath of targetPaths) {
@@ -465,7 +466,7 @@ async function writeGeneratedLinksNote(
     links.push({ destination, isAngleBracketed, markdown });
   }
 
-  await openDemoNote(app, folderPath, notePath, [heading, '', ...links.map((link) => `- ${link.markdown}`), ''].join('\n'));
+  await openDemoNote(app, folderPath, notePath, [FRESH_LINKS_HEADING, '', ...links.map((link) => `- ${link.markdown}`), ''].join('\n'));
   return links;
 }
 
@@ -489,7 +490,7 @@ const GUIDE_HEADINGS = [
  * Switches **Link style** to Markdown as well, for the same reason as {@link writeAngleBracketLinks}.
  *
  * Manual equivalent: set **Link style** to **Markdown** and turn on **Should use GitHub heading anchors**
- * in **Settings -> Community plugins -> Better Markdown Links**, then type `[[Guide#` in any note.
+ * in **Settings -> Community plugins -> `Better Markdown Links`**, then type `[[Guide#` in any note.
  */
 export async function writeHeadingAnchorLinks(app: App): Promise<void> {
   await configureCommunityPlugin({ app, pluginId: PLUGIN_ID, settings: { linkStyleMode: 'Markdown', shouldUseGitHubHeadingAnchors: true } });
