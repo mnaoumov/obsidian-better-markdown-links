@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 6.7.1
+
+This release has 1 bug fix.
+
+### Fixed
+
+- \[FR\] Format links inserted by `[[` autocomplete with the configured style (angle brackets, leading dot) (#46): choosing a suggestion in a canvas text card inserts the link again, instead of nothing
+
 ## 6.7.0
 
 This release has 1 new feature and 1 bug fix. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
