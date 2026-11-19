@@ -41,6 +41,7 @@ import { getLinkTargetExclusionPredicate } from '../conversion/link-target-exclu
 import { toGitHubHeadingAnchorLink } from '../github-heading-anchors/github-heading-anchor-link.ts';
 import { GenerateMarkdownLinkPatchComponent } from '../link-generation/generate-markdown-link-extended-impl.ts';
 import { LinkSuggestionPatchComponent } from '../link-generation/link-suggestion-patch-component.ts';
+import { PropertyValueLinkSuggestionPatchComponent } from '../link-generation/property-value-link-suggestion-patch-component.ts';
 import { EditorSaveFileCommandPatchComponent } from './patches/editor-save-file-command-patch-component.ts';
 import { TextFileViewSavePatchComponent } from './patches/text-file-view-save-patch-component.ts';
 import { WorkspaceOpenLinkTextPatchComponent } from './patches/workspace-open-link-text-patch-component.ts';
@@ -126,6 +127,12 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
 
     this.addChild(
       new LinkSuggestionPatchComponent({
+        app: this.app,
+        pluginSettingsComponent: this.pluginSettingsComponent
+      })
+    );
+    this.addChild(
+      new PropertyValueLinkSuggestionPatchComponent({
         app: this.app,
         pluginSettingsComponent: this.pluginSettingsComponent
       })

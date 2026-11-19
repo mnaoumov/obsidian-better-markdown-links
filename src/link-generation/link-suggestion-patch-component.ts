@@ -79,6 +79,20 @@ interface LinkSuggestionPatchComponentConstructorParams {
   readonly pluginSettingsComponent: PluginSettingsComponent;
 }
 
+interface RegenerateInsertedLinkParams {
+  readonly alias: string | undefined;
+  readonly app: App;
+  readonly isWikilinkForced: boolean;
+  readonly isWikilinkInserted: boolean;
+  readonly shouldUseGitHubHeadingAnchors: boolean;
+  readonly sourcePath: string;
+
+  /**
+   * The inserted link's url: its path and subpath, decoded.
+   */
+  readonly url: string;
+}
+
 interface RewriteAutocompleteChangeParams {
   readonly app: App;
   readonly change: EditorChange;
@@ -103,6 +117,22 @@ interface RewriteAutocompleteTransactionParams {
   readonly shouldUseGitHubHeadingAnchors: boolean;
   readonly sourcePath: string;
   readonly tx: EditorTransaction;
+}
+
+interface RewritePropertyValueLinkParams {
+  readonly app: App;
+  readonly shouldConvertFrontmatterWikilinksToMarkdown: boolean;
+  readonly shouldUseGitHubHeadingAnchors: boolean;
+
+  /**
+   * The path of the note whose property is edited.
+   */
+  readonly sourcePath: string;
+
+  /**
+   * The value the suggester commits.
+   */
+  readonly value: string;
 }
 
 /**
@@ -310,6 +340,34 @@ export function rewriteAutocompleteTransaction(params: RewriteAutocompleteTransa
 }
 
 /**
+ * Rewrites the link the Properties panel's value suggester commits as a property value (issue #46 follow-up), the way
+ * the `[[` autocomplete writes a link in the frontmatter in Source mode: a wikilink in the configured path style, or,
+ * with `shouldConvertFrontmatterWikilinksToMarkdown` on, a markdown link. The panel serializes the value to YAML
+ * itself, so no quoting is added.
+ *
+ * @param params - The committed value and how to write it.
+ * @returns The value to commit: the rewritten link, or `value` unchanged when it is not one link the plugin can
+ * regenerate.
+ */
+export function rewritePropertyValueLink(params: RewritePropertyValueLinkParams): string {
+  const { value } = params;
+  const parseLinkResult = parseLink(value);
+  if (parseLinkResult?.raw !== value || parseLinkResult.isExternal || parseLinkResult.isEmbed) {
+    return value;
+  }
+
+  return regenerateInsertedLink({
+    alias: parseLinkResult.alias,
+    app: params.app,
+    isWikilinkForced: !params.shouldConvertFrontmatterWikilinksToMarkdown,
+    isWikilinkInserted: parseLinkResult.isWikilink,
+    shouldUseGitHubHeadingAnchors: params.shouldUseGitHubHeadingAnchors,
+    sourcePath: params.sourcePath,
+    url: parseLinkResult.url
+  }) ?? value;
+}
+
+/**
  * Generates the link that replaces the one the suggester inserted, in the configured style.
  *
  * @param params - The inserted link's parts and how to write it.
@@ -358,6 +416,34 @@ function isFileSuggest(suggest: EditorSuggest<unknown>): suggest is FileSuggest<
   return 'suggestManager' in suggest;
 }
 
+/**
+ * Generates the link that replaces one a link suggester inserted, from the inserted link's url and caption.
+ *
+ * @param params - The inserted link's parts and how to write it.
+ * @returns The link text, or `null` to leave the inserted link as it is.
+ */
+function regenerateInsertedLink(params: RegenerateInsertedLinkParams): null | string {
+  const { app, sourcePath } = params;
+  const { path: linkPath, subpath } = parseLinktext(params.url);
+  const targetFile = resolveTargetFile(app, linkPath, sourcePath);
+  const targetPathOrFile = targetFile ?? getNewNotePath(app, linkPath, sourcePath);
+  if (!targetPathOrFile) {
+    return null;
+  }
+
+  return generateAutocompleteLink({
+    alias: params.alias,
+    app,
+    isWikilinkForced: params.isWikilinkForced,
+    isWikilinkInserted: params.isWikilinkInserted,
+    shouldUseGitHubHeadingAnchors: params.shouldUseGitHubHeadingAnchors,
+    sourcePath,
+    subpath,
+    targetFile,
+    targetPathOrFile
+  });
+}
+
 function resolveTargetFile(app: App, linkPath: string, sourcePath: string): null | TFile {
   return linkPath === '' ? app.vault.getFileByPath(sourcePath) : app.metadataCache.getFirstLinkpathDest(linkPath, sourcePath);
 }
@@ -380,14 +466,7 @@ function rewriteAutocompleteChange(params: RewriteAutocompleteChangeParams): nul
     return null;
   }
 
-  const { path: linkPath, subpath } = parseLinktext(parseLinkResult.url);
-  const targetFile = resolveTargetFile(app, linkPath, sourcePath);
-  const targetPathOrFile = targetFile ?? getNewNotePath(app, linkPath, sourcePath);
-  if (!targetPathOrFile) {
-    return null;
-  }
-
-  const linkText = generateAutocompleteLink({
+  const linkText = regenerateInsertedLink({
     alias: parseLinkResult.alias,
     app,
     // A link in the frontmatter is a wikilink, whatever core inserted (with `Use [[Wikilinks]]` off it inserts a
@@ -396,10 +475,12 @@ function rewriteAutocompleteChange(params: RewriteAutocompleteChangeParams): nul
     isWikilinkInserted: parseLinkResult.isWikilink,
     shouldUseGitHubHeadingAnchors: params.shouldUseGitHubHeadingAnchors,
     sourcePath,
-    subpath,
-    targetFile,
-    targetPathOrFile
+    url: parseLinkResult.url
   });
+  if (linkText === null) {
+    return null;
+  }
+
   const text = frontmatter ? toFrontmatterValueText(linkText, frontmatter.enclosingQuote) : linkText;
   if (text === null) {
     return null;
