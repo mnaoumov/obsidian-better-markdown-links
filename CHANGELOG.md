@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 6.7.3
+
+This release has 1 bug fix. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
+
+### Fixed
+
+- \[FR\] Format links inserted by `[[` autocomplete with the configured style (angle brackets, leading dot) (#46): a link chosen from the autocomplete in the Properties panel now follows the link style and path style settings too, instead of always being saved as a wikilink
+
 ## 6.7.2
 
 This release has 1 bug fix. 2 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
