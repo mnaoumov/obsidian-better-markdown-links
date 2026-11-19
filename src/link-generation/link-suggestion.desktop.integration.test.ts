@@ -30,6 +30,21 @@ import type { PluginSettings } from '../settings/plugin-settings.ts';
 import { LinkStyleMode } from '../settings/link-style-mode.ts';
 
 /**
+ * What {@link runPropertiesPanelScenario} reads back once the chosen link is committed.
+ */
+interface PropertiesPanelScenarioResult {
+  /**
+   * The links Obsidian indexes from the note's frontmatter.
+   */
+  readonly frontmatterLinks: string[];
+
+  /**
+   * The property's value, as Obsidian parses it from the saved frontmatter.
+   */
+  readonly value: string;
+}
+
+/**
  * Parameters for {@link runAutocompleteScenario}.
  */
 interface RunAutocompleteScenarioParams {
@@ -69,6 +84,26 @@ interface RunAutocompleteScenarioParams {
    * Obsidian's own `Use [[Wikilinks]]` setting, inverted.
    */
   readonly useMarkdownLinks: boolean;
+}
+
+/**
+ * Parameters for {@link runPropertiesPanelScenario}.
+ */
+interface RunPropertiesPanelScenarioParams {
+  /**
+   * The text typed after `[[`, before `Enter` accepts the first suggestion.
+   */
+  readonly query: string;
+
+  /**
+   * The `shouldConvertFrontmatterWikilinksToMarkdown` setting.
+   */
+  readonly shouldConvertFrontmatterWikilinksToMarkdown: boolean;
+
+  /**
+   * The note to create and open.
+   */
+  readonly sourcePath: string;
 }
 
 /**
@@ -255,6 +290,24 @@ describe('[[ autocomplete link style (Desktop)', () => {
 
     expect(related).toEqual(['./target with space.md']);
   });
+
+  it.each([
+    [false, '[[./target with space]]', './target with space'],
+    [true, '[target with space](<./target with space.md>)', './target with space.md']
+  ])(
+    'should commit a link chosen in the Properties panel in the configured style (frontmatter wikilinks converted: %s)',
+    async (shouldConvertFrontmatterWikilinksToMarkdown, expectedValue, expectedLink) => {
+      // Issue #46 follow-up: with Source mode off, the Properties panel's own suggester committed `[[target with space]]`
+      // whatever the settings said.
+      const result = await runPropertiesPanelScenario({
+        query: 'target with',
+        shouldConvertFrontmatterWikilinksToMarkdown,
+        sourcePath: `autocomplete/properties-${String(shouldConvertFrontmatterWikilinksToMarkdown)}.md`
+      });
+
+      expect(result).toEqual({ frontmatterLinks: [expectedLink], value: expectedValue });
+    }
+  );
 
   it('should insert a link to a note that does not exist yet as its vault path, which core creates the note from', async () => {
     await evalInObsidian({
@@ -444,6 +497,109 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
       sourceContent: params.sourceContent ?? null,
       sourcePath: params.sourcePath,
       useMarkdownLinks: params.useMarkdownLinks
+    },
+    vaultPath: getTemporaryVault().path
+  });
+}
+
+/**
+ * Opens a fresh note with a `text` property in Live Preview, types `[[` and the query into that property's value in the
+ * Properties panel, accepts the first suggestion with `Enter`, and returns the value committed and the frontmatter
+ * links Obsidian indexes from it.
+ *
+ * @param params - See {@link RunPropertiesPanelScenarioParams}.
+ * @returns The committed value and the indexed frontmatter links.
+ */
+async function runPropertiesPanelScenario(params: RunPropertiesPanelScenarioParams): Promise<PropertiesPanelScenarioResult> {
+  return evalInObsidian({
+    async callback({
+      app,
+      lib: {
+        pressKey,
+        waitUntil
+      },
+      linkStyleMode,
+      obsidianModule,
+      pluginId,
+      propertyKey,
+      query,
+      shouldConvertFrontmatterWikilinksToMarkdown,
+      sourcePath
+    }): Promise<PropertiesPanelScenarioResult> {
+      app.vault.setConfig('useMarkdownLinks', true);
+
+      const settingTab = app.setting.pluginTabs.find((tab) => tab.id === pluginId);
+      if (!settingTab) {
+        throw new Error(`Settings tab not found for plugin: ${pluginId}`);
+      }
+
+      await (settingTab as TestableSettingsTab).pluginSettingsComponent.editAndSave((settings) => {
+        settings.linkStyleMode = linkStyleMode;
+        settings.shouldUseAngleBrackets = true;
+        settings.shouldUseLeadingDotForRelativePaths = true;
+        settings.shouldConvertFrontmatterWikilinksToMarkdown = shouldConvertFrontmatterWikilinksToMarkdown;
+      });
+
+      const existing = app.vault.getAbstractFileByPath(sourcePath);
+      if (existing) {
+        await app.fileManager.trashFile(existing);
+      }
+
+      const sourceFile = await app.vault.create(sourcePath, `---\n${propertyKey}: placeholder\n---\nbody\n`);
+      await app.workspace.getLeaf(false).openFile(sourceFile, { state: { mode: 'source', source: false } });
+
+      function getValueInput(): HTMLElement | null {
+        const view = app.workspace.getActiveViewOfType(obsidianModule.MarkdownView);
+        return view?.file?.path === sourcePath
+          ? view.containerEl.querySelector<HTMLElement>(`.metadata-property[data-property-key="${CSS.escape(propertyKey)}"] .metadata-input-longtext`)
+          : null;
+      }
+
+      await waitUntil({
+        message: 'the Properties panel to show the property',
+        predicate: () => getValueInput() !== null
+      });
+
+      const valueInput = getValueInput();
+      if (!valueInput) {
+        throw new Error('The Properties panel closed again');
+      }
+
+      valueInput.focus();
+      valueInput.win.getSelection()?.selectAllChildren(valueInput);
+      for (const character of `[[${query}`) {
+        await pressKey({ key: character });
+      }
+
+      function getFirstSuggestionText(): string {
+        return activeDocument.body.querySelector(':scope .suggestion-container.mod-property-value .suggestion-item')?.textContent ?? '';
+      }
+
+      await waitUntil({
+        message: 'the property value suggester to offer the target',
+        predicate: () => getFirstSuggestionText().includes('target with space') && valueInput.textContent === `[[${query}`
+      });
+
+      await pressKey({ key: 'Enter' });
+
+      await waitUntil({
+        message: 'the chosen link to be committed and indexed',
+        predicate: () => (app.metadataCache.getFileCache(sourceFile)?.frontmatterLinks?.length ?? 0) > 0
+      });
+
+      const cache = app.metadataCache.getFileCache(sourceFile);
+      return {
+        frontmatterLinks: cache?.frontmatterLinks?.map((link) => link.link) ?? [],
+        value: String(cache?.frontmatter?.[propertyKey])
+      };
+    },
+    input: {
+      linkStyleMode: LinkStyleMode.ObsidianSettingsDefault,
+      pluginId: PLUGIN_ID,
+      propertyKey: 'related',
+      query: params.query,
+      shouldConvertFrontmatterWikilinksToMarkdown: params.shouldConvertFrontmatterWikilinksToMarkdown,
+      sourcePath: params.sourcePath
     },
     vaultPath: getTemporaryVault().path
   });

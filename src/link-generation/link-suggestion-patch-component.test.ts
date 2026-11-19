@@ -41,7 +41,8 @@ import {
   getAutocompleteFrontmatterContext,
   getNewNotePath,
   LinkSuggestionPatchComponent,
-  rewriteAutocompleteTransaction
+  rewriteAutocompleteTransaction,
+  rewritePropertyValueLink
 } from './link-suggestion-patch-component.ts';
 
 interface EditorSuggestHolder {
@@ -339,6 +340,74 @@ describe('rewriteAutocompleteTransaction', () => {
     const tx: EditorTransaction = { changes: [{ from: at(LINK_START_CH), text }], selection: { from: at(LINK_START_CH + text.length) } };
 
     expect(rewrite(app, tx)).not.toBe(tx);
+  });
+});
+
+describe('rewritePropertyValueLink', () => {
+  let app: AppOriginal;
+
+  function rewriteValue(value: string, shouldConvertFrontmatterWikilinksToMarkdown = false, shouldUseGitHubHeadingAnchors = false): string {
+    return rewritePropertyValueLink({
+      app,
+      shouldConvertFrontmatterWikilinksToMarkdown,
+      shouldUseGitHubHeadingAnchors,
+      sourcePath: 'folder/source.md',
+      value
+    });
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    app = createApp();
+  });
+
+  it('should write the link as a wikilink in the configured path style', () => {
+    vi.mocked(generateMarkdownLink).mockReturnValue('[[./target with space]]');
+
+    expect(rewriteValue('[[target with space]]')).toBe('[[./target with space]]');
+    expect(vi.mocked(generateMarkdownLink)).toHaveBeenCalledExactlyOnceWith({
+      app,
+      isEmbed: false,
+      linkStyle: LinkStyle.Wikilink,
+      sourcePathOrFile: 'folder/source.md',
+      subpath: '',
+      targetPathOrFile: app.vault.getFileByPath('folder/target with space.md')
+    });
+  });
+
+  it('should write the link as an unquoted markdown link when the setting converts frontmatter wikilinks', () => {
+    vi.mocked(generateMarkdownLink).mockReturnValue('[target with space](<./target with space.md>)');
+
+    expect(rewriteValue('[[target with space]]', true)).toBe('[target with space](<./target with space.md>)');
+    expect(vi.mocked(generateMarkdownLink)).toHaveBeenCalledWith(expect.not.objectContaining({ linkStyle: expect.anything() as unknown }));
+  });
+
+  it('should keep a caption the suggester inserted', () => {
+    vi.mocked(generateMarkdownLink).mockReturnValue('[[./target with space|Alias]]');
+
+    rewriteValue('[[target with space|Alias]]');
+
+    expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].alias).toBe('Alias');
+  });
+
+  it('should write a GitHub heading anchor when the setting is on', () => {
+    vi.mocked(generateMarkdownLink).mockReturnValue('[Section one](<./target with space.md#Section one>)');
+    vi.spyOn(app.metadataCache, 'getFileCache').mockReturnValue({
+      headings: [{ heading: 'Section one', level: 1, position: { end: { col: 13, line: 0, offset: 13 }, start: { col: 0, line: 0, offset: 0 } } }]
+    });
+
+    expect(rewriteValue('[[target with space#Section one]]', true, true)).toBe('[Section one](<./target with space.md#section-one>)');
+  });
+
+  it.each([
+    ['text that is not a link', 'target with space'],
+    ['text that is more than one link', 'x[[target with space]]'],
+    ['an external link', '[x](https://example.com)'],
+    ['an embed', '![[target with space]]'],
+    ['a link to a missing note through a relative segment', '[[../missing]]']
+  ])('should leave %s untouched', (_name, value) => {
+    expect(rewriteValue(value)).toBe(value);
+    expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
   });
 });
 
