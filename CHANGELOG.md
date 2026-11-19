@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 6.7.2
+
+This release has 1 bug fix. 2 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Fixed
+
+- \[FR\] Format links inserted by `[[` autocomplete with the configured style (angle brackets, leading dot) (#46): a link chosen from the autocomplete as a frontmatter property value in Source mode is inserted as a wikilink, or as a quoted Markdown link when frontmatter wikilinks are converted to Markdown, so the property keeps its link
+
 ## 6.7.1
 
 This release has 1 bug fix.
