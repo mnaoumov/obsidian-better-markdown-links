@@ -25,16 +25,20 @@ vi.mock('@mnaoumov/obsidian-lib/link', async (importOriginal) => ({
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
   generateMarkdownLink,
-  LinkPathStyle
+  LinkPathStyle,
+  LinkStyle
 } from '@mnaoumov/obsidian-lib/link';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import type { PluginSettingsComponent } from '../settings/plugin-settings-component.ts';
+// eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
+import type { AutocompleteFrontmatterContext } from './link-suggestion-patch-component.ts';
 
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import { PluginSettings } from '../settings/plugin-settings.ts';
 // eslint-disable-next-line import-x/first, import-x/imports-first -- vi.mock must precede imports.
 import {
+  getAutocompleteFrontmatterContext,
   getNewNotePath,
   LinkSuggestionPatchComponent,
   rewriteAutocompleteTransaction
@@ -83,6 +87,32 @@ function createApp(): AppOriginal {
   }).asOriginalType__();
 }
 
+/**
+ * The read methods of an editor holding `content`, which the patch reads to tell a link in the frontmatter from one in
+ * the body.
+ *
+ * @param content - The editor's content.
+ * @returns The editor methods.
+ */
+function editorReading(content: string): Pick<Editor, 'getLine' | 'getValue' | 'posToOffset'> {
+  const lines = content.split('\n');
+  return {
+    getLine: (line) => lines[line] ?? '',
+    getValue: () => content,
+    posToOffset: (pos) => lines.slice(0, pos.line).reduce((offset, line) => offset + line.length + 1, 0) + pos.ch
+  };
+}
+
+/**
+ * Note content whose line {@link LINE} holds a property value starting at {@link LINK_START_CH}, after `prefix`.
+ *
+ * @param prefix - The text before the link on that line.
+ * @returns The content.
+ */
+function frontmatterContent(prefix: string): string {
+  return `---\naliases: x\ntags: y\n${prefix}[[target]]\n---\nbody\n`;
+}
+
 function insertion(text: string, cursorCh: number, extraChanges: NonNullable<EditorTransaction['changes']> = []): EditorTransaction {
   return {
     changes: [{ from: at(LINK_START_CH), text, to: at(LINK_START_CH + 5) }, ...extraChanges],
@@ -90,9 +120,16 @@ function insertion(text: string, cursorCh: number, extraChanges: NonNullable<Edi
   };
 }
 
-function rewrite(app: AppOriginal, tx: EditorTransaction, shouldUseGitHubHeadingAnchors = false): EditorTransaction {
-  return rewriteAutocompleteTransaction({ app, shouldUseGitHubHeadingAnchors, sourcePath: 'folder/source.md', tx });
+function rewrite(
+  app: AppOriginal,
+  tx: EditorTransaction,
+  shouldUseGitHubHeadingAnchors = false,
+  frontmatter: AutocompleteFrontmatterContext | null = null
+): EditorTransaction {
+  return rewriteAutocompleteTransaction({ app, frontmatter, shouldUseGitHubHeadingAnchors, sourcePath: 'folder/source.md', tx });
 }
+
+const BODY_CONTENT = 'a\nb\nc\nd [[target]]\n';
 
 describe('rewriteAutocompleteTransaction', () => {
   let app: AppOriginal;
@@ -229,11 +266,109 @@ describe('rewriteAutocompleteTransaction', () => {
     expect(result.changes?.[0]?.text).toBe('[[missing#Some heading]]');
   });
 
+  describe('in the frontmatter', () => {
+    const plain: AutocompleteFrontmatterContext = { enclosingQuote: null, shouldConvertFrontmatterWikilinksToMarkdown: false };
+
+    it.each([
+      ['a wikilink', '[[target with space]]'],
+      ['a markdown link, which core inserts with wikilinks off', '[target with space](target%20with%20space.md)']
+    ])('should write %s as a wikilink, unquoted', (_name, text) => {
+      vi.mocked(generateMarkdownLink).mockReturnValue('[[./target with space]]');
+
+      const result = rewrite(app, insertion(text, LINK_START_CH + text.length), false, plain);
+
+      expect(result.changes?.[0]?.text).toBe('[[./target with space]]');
+      expect(result.selection).toEqual({ from: at(LINK_START_CH + 23), to: at(LINK_START_CH + 23) });
+      expect(vi.mocked(generateMarkdownLink)).toHaveBeenCalledWith(expect.objectContaining({ linkStyle: LinkStyle.Wikilink }));
+    });
+
+    it.each([
+      ['the base name core captions a note link with', '[target with space](target%20with%20space.md)', undefined],
+      ['the heading core captions a heading link with', '[Section one](target%20with%20space.md#Section%20one)', undefined],
+      ['the base name of a note that does not exist yet', '[missing](missing)', undefined],
+      ['a caption the user typed', '[my caption](target%20with%20space.md)', 'my caption']
+    ])('should pass %s as the wikilink alias only when it is not the default', (_name, text, expectedAlias) => {
+      rewrite(app, insertion(text, LINK_START_CH + text.length), false, plain);
+
+      expect(vi.mocked(generateMarkdownLink).mock.calls[0]?.[0].alias).toBe(expectedAlias);
+    });
+
+    it('should write a markdown link as a double-quoted YAML string when the setting converts frontmatter wikilinks', () => {
+      const text = '[[target with space]]';
+
+      const result = rewrite(app, insertion(text, LINK_START_CH + text.length), false, { ...plain, shouldConvertFrontmatterWikilinksToMarkdown: true });
+
+      expect(result.changes?.[0]?.text).toBe('"[target with space](<./target with space.md>)"');
+      expect(result.selection).toEqual({ from: at(LINK_START_CH + 47), to: at(LINK_START_CH + 47) });
+      expect(vi.mocked(generateMarkdownLink)).toHaveBeenCalledWith(expect.not.objectContaining({ linkStyle: expect.anything() as unknown }));
+    });
+
+    it('should quote a markdown block link, keeping the cursor in its empty caption', () => {
+      vi.mocked(generateMarkdownLink).mockReturnValue('[](<./target with space.md#^abc123>)');
+
+      const result = rewrite(app, insertion('[](target%20with%20space.md#^abc123)', LINK_START_CH + 1), false, { ...plain, shouldConvertFrontmatterWikilinksToMarkdown: true });
+
+      expect(result.changes?.[0]?.text).toBe('"[](<./target with space.md#^abc123>)"');
+      expect(result.selection).toEqual({ from: at(LINK_START_CH + 2), to: at(LINK_START_CH + 2) });
+    });
+
+    it('should write a markdown link as is inside a quote the user typed', () => {
+      const text = '[[target with space]]';
+
+      const result = rewrite(app, insertion(text, LINK_START_CH + text.length), false, { enclosingQuote: '"', shouldConvertFrontmatterWikilinksToMarkdown: true });
+
+      expect(result.changes?.[0]?.text).toBe('[target with space](<./target with space.md>)');
+    });
+
+    it.each(
+      [
+        ['a double quote inside double quotes', '"', '[say "hi"](<./hi.md>)'],
+        ['a backslash inside double quotes', '"', '[a\\b](<./a.md>)'],
+        ['a single quote inside single quotes', '\'', '[it\'s](<./its.md>)']
+      ] satisfies [string, '"' | '\'', string][]
+    )('should leave the link to core when it holds %s', (_name, enclosingQuote, generatedLink) => {
+      vi.mocked(generateMarkdownLink).mockReturnValue(generatedLink);
+      const tx = insertion('[[target with space]]', LINK_START_CH + 21);
+
+      expect(rewrite(app, tx, false, { enclosingQuote, shouldConvertFrontmatterWikilinksToMarkdown: true })).toBe(tx);
+    });
+  });
+
   it('should accept a collapsed selection given by its start alone', () => {
     const text = '[[target with space]]';
     const tx: EditorTransaction = { changes: [{ from: at(LINK_START_CH), text }], selection: { from: at(LINK_START_CH + text.length) } };
 
     expect(rewrite(app, tx)).not.toBe(tx);
+  });
+});
+
+describe('getAutocompleteFrontmatterContext', () => {
+  function getContext(content: string, tx: EditorTransaction = insertion('[[target]]', LINK_START_CH + 10)): AutocompleteFrontmatterContext | null {
+    return getAutocompleteFrontmatterContext({
+      editor: castTo<Editor>(editorReading(content)),
+      shouldConvertFrontmatterWikilinksToMarkdown: true,
+      tx
+    });
+  }
+
+  it('should answer null for a note with no frontmatter', () => {
+    expect(getContext(BODY_CONTENT)).toBeNull();
+  });
+
+  it('should answer null for a transaction with no changes', () => {
+    expect(getContext(frontmatterContent('a:'), { selection: { from: at(0) } })).toBeNull();
+  });
+
+  it('should answer null for a link after the frontmatter', () => {
+    expect(getContext('---\na: b\n---\nd:[[target]]\n')).toBeNull();
+  });
+
+  it.each([
+    ['a plain value', 'a:', null],
+    ['a double-quoted value', 'a"', '"'],
+    ['a single-quoted value', 'a\'', '\'']
+  ])('should find %s', (_name, prefix, enclosingQuote) => {
+    expect(getContext(frontmatterContent(prefix))).toEqual({ enclosingQuote, shouldConvertFrontmatterWikilinksToMarkdown: true });
   });
 });
 
@@ -291,7 +426,7 @@ describe('LinkSuggestionPatchComponent', () => {
     insertedText = '[[target with space]]';
     insertedOrigin = AUTOCOMPLETE;
     transaction = vi.fn<(tx: EditorTransaction, origin?: string) => void>();
-    editor = castTo<Editor>({ transaction });
+    editor = castTo<Editor>({ ...editorReading(BODY_CONTENT), transaction });
     linkSuggest = {
       context: { editor, file: app.vault.getFileByPath('folder/source.md') },
       selectSuggestion(): void {
@@ -308,6 +443,17 @@ describe('LinkSuggestionPatchComponent', () => {
 
     expect(transaction).toHaveBeenCalledExactlyOnceWith(insertion('[[./target with space]]', LINK_START_CH + 23), AUTOCOMPLETE);
     expect(vi.mocked(generateMarkdownLink)).toHaveBeenCalledWith(expect.objectContaining({ sourcePathOrFile: 'folder/source.md' }));
+  });
+
+  it('should keep a link the suggester inserts into the frontmatter a wikilink', () => {
+    editor = castTo<Editor>({ ...editorReading(frontmatterContent('a:')), transaction });
+    linkSuggest.context = { editor, file: app.vault.getFileByPath('folder/source.md') };
+    load();
+
+    linkSuggest.selectSuggestion(null, null);
+
+    expect(transaction).toHaveBeenCalledExactlyOnceWith(insertion('[[./target with space]]', LINK_START_CH + 23), AUTOCOMPLETE);
+    expect(vi.mocked(generateMarkdownLink)).toHaveBeenCalledWith(expect.objectContaining({ linkStyle: LinkStyle.Wikilink }));
   });
 
   it('should leave the editor unpatched once the suggestion is chosen', () => {

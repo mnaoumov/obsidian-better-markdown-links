@@ -51,6 +51,16 @@ interface RunAutocompleteScenarioParams {
   readonly query: string;
 
   /**
+   * The `shouldConvertFrontmatterWikilinksToMarkdown` setting; off when absent.
+   */
+  readonly shouldConvertFrontmatterWikilinksToMarkdown?: boolean;
+
+  /**
+   * The note's content, with {@link CURSOR_MARKER} where `[[` is typed; the note is created empty when absent.
+   */
+  readonly sourceContent?: string;
+
+  /**
    * The note to type into; created empty.
    */
   readonly sourcePath: string;
@@ -194,6 +204,58 @@ describe('[[ autocomplete link style (Desktop)', () => {
     expect(content).toBe(`[target with space](<./target with space.md>)${CURSOR_MARKER}`);
   });
 
+  it('should keep a link typed as a frontmatter property value a wikilink, so the property still holds a link', async () => {
+    // Issue #46 follow-up: the patch rewrote it as `[target with space](<./target with space.md>)`, which YAML reads as
+    // a flow sequence, so the property lost its link.
+    const content = await runAutocompleteScenario({
+      expectedFirstSuggestionType: 'file',
+      linkStyleMode: LinkStyleMode.ObsidianSettingsDefault,
+      query: 'target with',
+      sourceContent: `---\nrelated: ${CURSOR_MARKER}\n---\nbody\n`,
+      sourcePath: 'autocomplete/frontmatter.md',
+      useMarkdownLinks: true
+    });
+
+    expect(content).toBe(`---\nrelated: [[./target with space]]${CURSOR_MARKER}\n---\nbody\n`);
+  });
+
+  it('should quote a markdown link typed as a frontmatter property value when frontmatter wikilinks are converted', async () => {
+    const content = await runAutocompleteScenario({
+      expectedFirstSuggestionType: 'file',
+      linkStyleMode: LinkStyleMode.ObsidianSettingsDefault,
+      query: 'target with',
+      shouldConvertFrontmatterWikilinksToMarkdown: true,
+      sourceContent: `---\nrelated: ${CURSOR_MARKER}\n---\nbody\n`,
+      sourcePath: 'autocomplete/frontmatter-markdown.md',
+      useMarkdownLinks: true
+    });
+
+    expect(content).toBe(`---\nrelated: "[target with space](<./target with space.md>)"${CURSOR_MARKER}\n---\nbody\n`);
+
+    const related = await evalInObsidian({
+      async callback({ app, cursorMarker, lib: { waitUntil }, obsidianModule, sourcePath }): Promise<unknown> {
+        const file = app.vault.getFileByPath(sourcePath);
+        const view = app.workspace.getActiveViewOfType(obsidianModule.MarkdownView);
+        if (!file || !view) {
+          throw new Error(`Missing ${sourcePath}`);
+        }
+
+        // The cursor marker after the closing quote is invalid YAML, so it is removed before the note is saved and indexed.
+        view.editor.setValue(view.editor.getValue().replace(cursorMarker, ''));
+        await view.save();
+        await waitUntil({
+          message: 'the frontmatter link to be indexed',
+          predicate: () => (app.metadataCache.getFileCache(file)?.frontmatterLinks?.length ?? 0) > 0
+        });
+        return app.metadataCache.getFileCache(file)?.frontmatterLinks?.map((link) => link.link);
+      },
+      input: { cursorMarker: CURSOR_MARKER, sourcePath: 'autocomplete/frontmatter-markdown.md' },
+      vaultPath: getTemporaryVault().path
+    });
+
+    expect(related).toEqual(['./target with space.md']);
+  });
+
   it('should insert a link to a note that does not exist yet as its vault path, which core creates the note from', async () => {
     await evalInObsidian({
       async callback({ app, missingNotePath }): Promise<void> {
@@ -255,6 +317,8 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
       obsidianModule,
       pluginId,
       query,
+      shouldConvertFrontmatterWikilinksToMarkdown,
+      sourceContent,
       sourcePath,
       useMarkdownLinks
     }): Promise<string> {
@@ -315,6 +379,7 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
         settings.linkStyleMode = linkStyleMode;
         settings.shouldUseAngleBrackets = true;
         settings.shouldUseLeadingDotForRelativePaths = true;
+        settings.shouldConvertFrontmatterWikilinksToMarkdown = shouldConvertFrontmatterWikilinksToMarkdown;
       });
 
       const existing = app.vault.getAbstractFileByPath(sourcePath);
@@ -323,14 +388,24 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
       }
 
       const isCanvas = sourcePath.endsWith('.canvas');
-      const sourceContent = isCanvas
+      const fileContent = isCanvas
         ? JSON.stringify({ edges: [], nodes: [{ height: 200, id: canvasNodeId, text: '', type: 'text', width: 400, x: 0, y: 0 }] })
-        : '';
-      const sourceFile = await app.vault.create(sourcePath, sourceContent);
-      await app.workspace.getLeaf(false).openFile(sourceFile);
+        : (sourceContent ?? '').replace(cursorMarker, '');
+      const sourceFile = await app.vault.create(sourcePath, fileContent);
+      // A frontmatter property is typed into as YAML, which Live Preview shows as a properties widget instead.
+      await app.workspace.getLeaf(false).openFile(sourceFile, sourceContent === null ? {} : { state: { mode: 'source', source: true } });
 
       const editor = isCanvas ? await startEditingCanvasTextCard() : await getMarkdownEditor();
-      await typeIntoEditor({ editor, text: `[[${query}` });
+      if (sourceContent === null) {
+        await typeIntoEditor({ editor, text: `[[${query}` });
+      } else {
+        // `typeIntoEditor` types at the end of the note, so the keys are pressed at the marked position instead.
+        editor.focus();
+        editor.setCursor(editor.offsetToPos(sourceContent.indexOf(cursorMarker)));
+        for (const character of `[[${query}`) {
+          await pressKey({ key: character });
+        }
+      }
 
       await waitUntil({
         message: 'the link suggester to offer a suggestion',
@@ -365,6 +440,8 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
       linkStyleMode: params.linkStyleMode,
       pluginId: PLUGIN_ID,
       query: params.query,
+      shouldConvertFrontmatterWikilinksToMarkdown: params.shouldConvertFrontmatterWikilinksToMarkdown ?? false,
+      sourceContent: params.sourceContent ?? null,
       sourcePath: params.sourcePath,
       useMarkdownLinks: params.useMarkdownLinks
     },

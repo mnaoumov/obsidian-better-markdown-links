@@ -15,12 +15,15 @@ import {
 } from '@mnaoumov/obsidian-lib/components/monkey-around-component';
 import {
   generateMarkdownLink,
-  LinkPathStyle
+  hasWikilinkSyntax,
+  LinkPathStyle,
+  LinkStyle
 } from '@mnaoumov/obsidian-lib/link';
 import { parseLink } from '@mnaoumov/obsidian-lib/parse-link';
 import { normalizeOptionalProperties } from '@mnaoumov/typescript-lib/object-utils';
 import {
   FileView,
+  getFrontMatterInfo,
   normalizePath,
   parseLinktext
 } from 'obsidian';
@@ -36,6 +39,41 @@ const AUTOCOMPLETE_TRANSACTION_ORIGIN = 'input.autocomplete';
 
 const MARKDOWN_FILE_SUFFIX = '.md';
 
+/**
+ * Where in a note's frontmatter the suggester inserts its link, when it inserts it there (issue #46 follow-up).
+ */
+export interface AutocompleteFrontmatterContext {
+  /**
+   * The quote the link is typed inside (`related: "[[x`), or `null` when the link is a plain YAML scalar.
+   */
+  readonly enclosingQuote: FrontmatterQuote | null;
+
+  /**
+   * The `shouldConvertFrontmatterWikilinksToMarkdown` setting.
+   */
+  readonly shouldConvertFrontmatterWikilinksToMarkdown: boolean;
+}
+
+type FrontmatterQuote = '"' | '\'';
+
+interface GenerateAutocompleteLinkParams {
+  readonly alias: string | undefined;
+  readonly app: App;
+  readonly isWikilinkForced: boolean;
+  readonly isWikilinkInserted: boolean;
+  readonly shouldUseGitHubHeadingAnchors: boolean;
+  readonly sourcePath: string;
+  readonly subpath: string;
+  readonly targetFile: null | TFile;
+  readonly targetPathOrFile: string | TFile;
+}
+
+interface GetAutocompleteFrontmatterContextParams {
+  readonly editor: Editor;
+  readonly shouldConvertFrontmatterWikilinksToMarkdown: boolean;
+  readonly tx: EditorTransaction;
+}
+
 interface LinkSuggestionPatchComponentConstructorParams {
   readonly app: App;
   readonly pluginSettingsComponent: PluginSettingsComponent;
@@ -45,6 +83,7 @@ interface RewriteAutocompleteChangeParams {
   readonly app: App;
   readonly change: EditorChange;
   readonly cursorCh: number;
+  readonly frontmatter: AutocompleteFrontmatterContext | null;
   readonly shouldUseGitHubHeadingAnchors: boolean;
   readonly sourcePath: string;
 }
@@ -56,6 +95,11 @@ interface RewriteAutocompleteChangeResult {
 
 interface RewriteAutocompleteTransactionParams {
   readonly app: App;
+
+  /**
+   * Set when the link is inserted into the note's frontmatter; absent or `null` for a link in the body.
+   */
+  readonly frontmatter?: AutocompleteFrontmatterContext | null;
   readonly shouldUseGitHubHeadingAnchors: boolean;
   readonly sourcePath: string;
   readonly tx: EditorTransaction;
@@ -141,19 +185,56 @@ export class LinkSuggestionPatchComponent extends MonkeyAroundComponent {
 
   private patchAutocompleteTransaction(editor: Editor, sourcePath: string): () => void {
     const app = this.app;
-    const shouldUseGitHubHeadingAnchors = this.pluginSettingsComponent.settings.shouldUseGitHubHeadingAnchors;
+    const {
+      shouldConvertFrontmatterWikilinksToMarkdown,
+      shouldUseGitHubHeadingAnchors
+    } = this.pluginSettingsComponent.settings;
 
     return around(editor, {
       transaction: (next) =>
         function transactionPatched(this: Editor, tx: EditorTransaction, origin?: string): void {
           next.call(
             this,
-            origin === AUTOCOMPLETE_TRANSACTION_ORIGIN ? rewriteAutocompleteTransaction({ app, shouldUseGitHubHeadingAnchors, sourcePath, tx }) : tx,
+            origin === AUTOCOMPLETE_TRANSACTION_ORIGIN
+              ? rewriteAutocompleteTransaction({
+                app,
+                frontmatter: getAutocompleteFrontmatterContext({ editor: this, shouldConvertFrontmatterWikilinksToMarkdown, tx }),
+                shouldUseGitHubHeadingAnchors,
+                sourcePath,
+                tx
+              })
+              : tx,
             origin
           );
         }
     });
   }
+}
+
+/**
+ * Tells whether the suggester's transaction inserts its link into the note's frontmatter, and inside which quote.
+ *
+ * @param params - The editor, before the transaction applies, and the transaction.
+ * @returns The frontmatter context, or `null` for a link in the body.
+ */
+export function getAutocompleteFrontmatterContext(params: GetAutocompleteFrontmatterContextParams): AutocompleteFrontmatterContext | null {
+  const { editor, tx } = params;
+  const from = tx.changes?.[0]?.from;
+  if (!from) {
+    return null;
+  }
+
+  const frontmatterInfo = getFrontMatterInfo(editor.getValue());
+  const offset = editor.posToOffset(from);
+  if (!frontmatterInfo.exists || offset < frontmatterInfo.from || offset > frontmatterInfo.to) {
+    return null;
+  }
+
+  const charBefore = editor.getLine(from.line).charAt(from.ch - 1);
+  return {
+    enclosingQuote: charBefore === '"' || charBefore === '\'' ? charBefore : null,
+    shouldConvertFrontmatterWikilinksToMarkdown: params.shouldConvertFrontmatterWikilinksToMarkdown
+  };
 }
 
 /**
@@ -211,6 +292,7 @@ export function rewriteAutocompleteTransaction(params: RewriteAutocompleteTransa
     app: params.app,
     change,
     cursorCh: from.ch,
+    frontmatter: params.frontmatter ?? null,
     shouldUseGitHubHeadingAnchors: params.shouldUseGitHubHeadingAnchors,
     sourcePath: params.sourcePath
   });
@@ -227,6 +309,47 @@ export function rewriteAutocompleteTransaction(params: RewriteAutocompleteTransa
   };
 }
 
+/**
+ * Generates the link that replaces the one the suggester inserted, in the configured style.
+ *
+ * @param params - The inserted link's parts and how to write it.
+ * @returns The link text.
+ */
+function generateAutocompleteLink(params: GenerateAutocompleteLinkParams): string {
+  const { app, targetFile, targetPathOrFile } = params;
+  const targetPath = typeof targetPathOrFile === 'string' ? targetPathOrFile : targetPathOrFile.path;
+  // Core's caption only repeats what a wikilink displays anyway, so it would be a redundant `|alias`.
+  const isDefaultMarkdownCaption = params.isWikilinkForced && !params.isWikilinkInserted
+    && params.alias === getDefaultMarkdownCaption(targetPath, params.subpath);
+  const generatedLink = generateMarkdownLink(normalizeOptionalProperties<Parameters<typeof generateMarkdownLink>[0]>({
+    alias: isDefaultMarkdownCaption ? undefined : params.alias,
+    app,
+    isEmbed: false,
+    isNonExistingFileAllowed: targetFile ? undefined : true,
+    linkPathStyle: targetFile ? undefined : LinkPathStyle.AbsolutePathInVault,
+    linkStyle: params.isWikilinkForced ? LinkStyle.Wikilink : undefined,
+    sourcePathOrFile: params.sourcePath,
+    subpath: params.subpath,
+    targetPathOrFile
+  }));
+  return params.shouldUseGitHubHeadingAnchors && targetFile
+    ? toGitHubHeadingAnchorLink({ app, linkText: generatedLink, targetFile })
+    : generatedLink;
+}
+
+/**
+ * The caption core's link suggester gives a markdown link it inserts: the last heading or block of the subpath, else
+ * the target's base name.
+ *
+ * @param targetPath - The target's path.
+ * @param subpath - The link's subpath, with its leading `#`, or empty.
+ * @returns The caption.
+ */
+function getDefaultMarkdownCaption(targetPath: string, subpath: string): string {
+  const subpathParts = subpath.split('#').filter((part) => part !== '');
+  return subpathParts.at(-1) ?? targetPath.replace(/^.*\//, '').replace(/\.md$/i, '');
+}
+
 function getParentPrefix(folder: TFolder): string {
   return folder.isRoot() ? '' : `${folder.path}/`;
 }
@@ -240,7 +363,7 @@ function resolveTargetFile(app: App, linkPath: string, sourcePath: string): null
 }
 
 function rewriteAutocompleteChange(params: RewriteAutocompleteChangeParams): null | RewriteAutocompleteChangeResult {
-  const { app, change, cursorCh, sourcePath } = params;
+  const { app, change, cursorCh, frontmatter, sourcePath } = params;
   const oldText = change.text;
   const linkStartCh = change.from.ch;
   const linkEndCh = linkStartCh + oldText.length;
@@ -264,23 +387,53 @@ function rewriteAutocompleteChange(params: RewriteAutocompleteChangeParams): nul
     return null;
   }
 
-  const generatedLink = generateMarkdownLink(normalizeOptionalProperties<Parameters<typeof generateMarkdownLink>[0]>({
+  const linkText = generateAutocompleteLink({
     alias: parseLinkResult.alias,
     app,
-    isEmbed: false,
-    isNonExistingFileAllowed: targetFile ? undefined : true,
-    linkPathStyle: targetFile ? undefined : LinkPathStyle.AbsolutePathInVault,
-    sourcePathOrFile: sourcePath,
+    // A link in the frontmatter is a wikilink, whatever core inserted (with `Use [[Wikilinks]]` off it inserts a
+    // markdown link), because Bases reads a markdown link in a property as text; see `getLinkStyleForReference`.
+    isWikilinkForced: frontmatter !== null && !frontmatter.shouldConvertFrontmatterWikilinksToMarkdown,
+    isWikilinkInserted: parseLinkResult.isWikilink,
+    shouldUseGitHubHeadingAnchors: params.shouldUseGitHubHeadingAnchors,
+    sourcePath,
     subpath,
+    targetFile,
     targetPathOrFile
-  }));
-  const text = params.shouldUseGitHubHeadingAnchors && targetFile
-    ? toGitHubHeadingAnchorLink({ app, linkText: generatedLink, targetFile })
-    : generatedLink;
+  });
+  const text = frontmatter ? toFrontmatterValueText(linkText, frontmatter.enclosingQuote) : linkText;
+  if (text === null) {
+    return null;
+  }
 
-  const shouldKeepCursorInCaption = isCursorInEmptyCaption && text.startsWith('[](');
+  // The opening quote `toFrontmatterValueText` added, if any.
+  const quotePrefixLength = text === linkText ? 0 : 1;
+  const shouldKeepCursorInCaption = isCursorInEmptyCaption && text.startsWith('[](', quotePrefixLength);
   return {
-    cursorCh: linkStartCh + (shouldKeepCursorInCaption ? 1 : text.length),
+    cursorCh: linkStartCh + (shouldKeepCursorInCaption ? quotePrefixLength + 1 : text.length),
     text
   };
+}
+
+/**
+ * Makes a generated link safe as a YAML value.
+ *
+ * A wikilink is left as core writes it. A markdown link starts with `[`, which YAML reads as the start of a flow
+ * sequence, so a plain-scalar one is written as a double-quoted string; inside a quote the user typed, it is written as
+ * is, unless it contains a character that would end or escape that quote, in which case the link is left to core.
+ *
+ * @param text - The generated link.
+ * @param enclosingQuote - The quote the link is typed inside, if any.
+ * @returns The YAML-safe text, or `null` to leave the link to core.
+ */
+function toFrontmatterValueText(text: string, enclosingQuote: FrontmatterQuote | null): null | string {
+  if (hasWikilinkSyntax(text)) {
+    return text;
+  }
+
+  if (enclosingQuote === null) {
+    return JSON.stringify(text);
+  }
+
+  const forbiddenCharacters = enclosingQuote === '"' ? ['"', '\\'] : ['\''];
+  return forbiddenCharacters.some((character) => text.includes(character)) ? null : text;
 }
