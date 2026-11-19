@@ -445,7 +445,7 @@ This release has 1 new feature.
 
 - fix: exclude excalidraw/tldraw files by default
   - re <https://github.com/zsviczian/obsidian-excalidraw-plugin/issues/2594>
-  - re <https://github.com/tldraw-in-obsidian/tldraw-in-obsidian/issues/186>
+  - re <https://github.com/tldraw/obsidian-plugin/issues/186>
 
 ## 3.2.1
 
