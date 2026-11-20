@@ -109,13 +109,13 @@ export class BetterMarkdownLinksComponent extends LayoutReadyComponent {
         getDefaultParams: (): Partial<GenerateMarkdownLinkParams> => {
           const settings = this.pluginSettingsComponent.settings;
           // `removeUndefinedProperties`, because outside the forced modes `linkStyle` and `linkPathStyle`
-          // are `undefined` and these params are merged with `Object.assign`: leaving a key in place would
-          // clobber a style another plugin's default-params function had set, instead of standing aside
+          // are absent (their `null` mapped to `undefined`) and these params are merged with `Object.assign`:
+          // leaving a key in place would clobber a style another plugin's default-params function had set, instead of standing aside
           // for it.
           return removeUndefinedProperties(normalizeOptionalProperties<Partial<GenerateMarkdownLinkParams>>({
             isEmptyEmbedAliasAllowed: settings.shouldAllowEmptyEmbedAlias,
-            linkPathStyle: settings.getGeneratedLinkPathStyle(),
-            linkStyle: settings.getGeneratedLinkStyle(),
+            linkPathStyle: settings.getGeneratedLinkPathStyle() ?? undefined,
+            linkStyle: settings.getGeneratedLinkStyle() ?? undefined,
             shouldIncludeAttachmentExtensionToEmbedAlias: settings.shouldIncludeAttachmentExtensionToEmbedAlias,
             shouldUseAngleBrackets: settings.shouldUseAngleBrackets,
             shouldUseLeadingDotForRelativePaths: settings.shouldUseLeadingDotForRelativePaths,

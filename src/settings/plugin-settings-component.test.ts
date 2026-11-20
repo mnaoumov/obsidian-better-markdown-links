@@ -23,6 +23,7 @@ interface CreateComponentOptions {
 function createComponent(options?: CreateComponentOptions): PluginSettingsComponent {
   const dataHandler = strictProxy<DataHandler>({
     loadData: vi.fn<() => Promise<null | Record<string, unknown>>>().mockResolvedValue(options?.loadDataReturnValue ?? null),
+    recoveryStore: null,
     saveData: vi.fn<(data: unknown) => Promise<void>>().mockResolvedValue(undefined)
   });
   const pluginEventSource = strictProxy<PluginEventSource>({

@@ -137,12 +137,12 @@ export class EmbedDemoter {
           alias: link.displayText ?? '',
           app: this.app,
           isEmbed: false,
-          // `undefined` for every body reference, which leaves the style to the inference described above.
+          // `null` for every body reference, which leaves the style to the inference described above.
           linkStyle: getLinkStyleForReference({
-            linkStyle: undefined,
+            linkStyle: null,
             reference: link,
             shouldConvertFrontmatterWikilinksToMarkdown: settings.shouldConvertFrontmatterWikilinksToMarkdown
-          }),
+          }) ?? undefined,
           originalLink: link.original,
           sourcePathOrFile: file,
           targetPathOrFile: linkFile

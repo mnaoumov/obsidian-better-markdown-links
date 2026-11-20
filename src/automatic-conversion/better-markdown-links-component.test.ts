@@ -199,8 +199,8 @@ function createContext(files: ConfiguredFiles = {}, options: CreateContextOption
     // The decoration half belongs to `PluginSettings` and is pinned in its own suite; what this one cares
     // about is that whatever comes back reaches the `convertLink` probe.
     buildLinkPathStyleParams: vi.fn((linkPathStyle: LinkPathStyle) => ({ linkPathStyle })),
-    getGeneratedLinkPathStyle: vi.fn().mockReturnValue(options.generatedLinkPathStyle),
-    getGeneratedLinkStyle: vi.fn().mockReturnValue(options.generatedLinkStyle),
+    getGeneratedLinkPathStyle: vi.fn().mockReturnValue(options.generatedLinkPathStyle ?? null),
+    getGeneratedLinkStyle: vi.fn().mockReturnValue(options.generatedLinkStyle ?? null),
     getLinkPathStyle: vi.fn().mockReturnValue('ObsidianSettingsDefault'),
     getLinkStyle: vi.fn().mockReturnValue('ObsidianSettingsDefault'),
     isPathIgnored,

@@ -164,7 +164,7 @@ describe('PluginSettings', () => {
       const settings = new PluginSettings();
 
       settings.linkPathStyleMode = LinkPathStyleMode.ObsidianSettingsDefault;
-      expect(settings.getGeneratedLinkPathStyle()).toBeUndefined();
+      expect(settings.getGeneratedLinkPathStyle()).toBeNull();
     });
   });
 
@@ -182,9 +182,9 @@ describe('PluginSettings', () => {
       const settings = new PluginSettings();
 
       settings.linkStyleMode = LinkStyleMode.PreserveExisting;
-      expect(settings.getGeneratedLinkStyle()).toBeUndefined();
+      expect(settings.getGeneratedLinkStyle()).toBeNull();
       settings.linkStyleMode = LinkStyleMode.ObsidianSettingsDefault;
-      expect(settings.getGeneratedLinkStyle()).toBeUndefined();
+      expect(settings.getGeneratedLinkStyle()).toBeNull();
     });
   });
 

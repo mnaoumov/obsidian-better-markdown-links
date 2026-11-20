@@ -167,9 +167,9 @@ function createLink(original: string, displayText?: string): Reference {
  * Runs the converter callback the resolver handed to `editReferences` against one link, the way `editReferences`
  * itself would.
  */
-async function runLinkConverter(link: Reference): Promise<string | undefined> {
+async function runLinkConverter(link: Reference): Promise<null | string> {
   const editLinksParams = vi.mocked(editReferences).mock.calls[0]?.[0];
-  return await editLinksParams?.referenceConverter(link) as string | undefined;
+  return await editLinksParams?.referenceConverter(link) ?? null;
 }
 
 beforeEach(() => {
@@ -269,7 +269,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
       const result = await runLinkConverter(createLink('[Some Alias](<Some Alias.md>)'));
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(context.getFirstLinkpathDestination).not.toHaveBeenCalled();
     });
 
@@ -280,7 +280,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
       const result = await runLinkConverter(createLink('[[#heading]]'));
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(context.getFirstLinkpathDestination).not.toHaveBeenCalled();
     });
 
@@ -291,7 +291,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
       const result = await runLinkConverter(createLink('[[Some Alias]]'));
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
     });
 
@@ -301,7 +301,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
       const result = await runLinkConverter(createLink('[[Some Alias]]'));
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
     });
 
@@ -357,7 +357,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
       // The walk used to stop at the first match and rewrite the link to it. It now has to see the
       // whole vault to know the name is unique, and declines to guess when it is not.
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
     });
 
@@ -371,7 +371,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
       const result = await runLinkConverter(createLink('[[Some Alias]]'));
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
     });
 
@@ -396,7 +396,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
       const result = await runLinkConverter(createLink('[[Some Alias]]'));
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(context.create).not.toHaveBeenCalled();
     });
 
@@ -427,7 +427,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
         const result = await runLinkConverter(createLink('[[Some Alias]]'));
 
-        expect(result).toBeUndefined();
+        expect(result).toBeNull();
         expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
       });
 
@@ -447,7 +447,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
         // An ambiguous name is not a missing one. Creating a third note that answers to it would be
         // strictly worse than the arbitrary pick this behavior replaced.
-        expect(result).toBeUndefined();
+        expect(result).toBeNull();
         expect(context.create).not.toHaveBeenCalled();
       });
 
@@ -488,7 +488,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
         const result = await runLinkConverter(createLink('[[Some Alias]]'));
 
-        expect(result).toBeUndefined();
+        expect(result).toBeNull();
         expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
       });
 
@@ -536,7 +536,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
       const result = await runLinkConverter(createLink('[[Some Alias]]'));
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(context.create).not.toHaveBeenCalled();
     });
 
@@ -607,7 +607,7 @@ describe('resolveUnresolvedLinksInFile', () => {
 
       const result = await runLinkConverter(createLink('[[???]]'));
 
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(context.create).not.toHaveBeenCalled();
     });
 

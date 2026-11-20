@@ -128,9 +128,9 @@ function createLink(original: string, displayText?: string): Reference {
  * Runs the converter callback the demoter handed to `editReferences` against one link, the way `editReferences`
  * itself would.
  */
-async function runLinkConverter(link: Reference): Promise<string | undefined> {
+async function runLinkConverter(link: Reference): Promise<null | string> {
   const editLinksParams = vi.mocked(editReferences).mock.calls[0]?.[0];
-  return await editLinksParams?.referenceConverter(link) as string | undefined;
+  return await editLinksParams?.referenceConverter(link) ?? null;
 }
 
 beforeEach(() => {
@@ -254,7 +254,7 @@ describe('EmbedDemoter', () => {
 
         const result = await runLinkConverter(createLink('[[Materials/Diagram.png]]'));
 
-        expect(result).toBeUndefined();
+        expect(result).toBeNull();
         expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
       });
 
@@ -265,7 +265,7 @@ describe('EmbedDemoter', () => {
 
         const result = await runLinkConverter(createLink('![[missing.png]]'));
 
-        expect(result).toBeUndefined();
+        expect(result).toBeNull();
         expect(vi.mocked(generateMarkdownLink)).not.toHaveBeenCalled();
       });
 

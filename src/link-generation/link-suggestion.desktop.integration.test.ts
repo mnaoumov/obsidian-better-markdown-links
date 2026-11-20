@@ -390,8 +390,8 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
       }
 
       async function startEditingCanvasTextCard(): Promise<Editor> {
-        function getCanvas(): TestableCanvas | undefined {
-          return (app.workspace.getActiveViewOfType(obsidianModule.FileView) as null | Partial<TestableCanvasView>)?.canvas;
+        function getCanvas(): null | TestableCanvas {
+          return (app.workspace.getActiveViewOfType(obsidianModule.FileView) as null | Partial<TestableCanvasView>)?.canvas ?? null;
         }
 
         await waitUntil({
