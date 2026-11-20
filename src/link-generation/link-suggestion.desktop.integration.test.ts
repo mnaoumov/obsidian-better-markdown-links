@@ -205,7 +205,10 @@ describe('[[ autocomplete link style (Desktop)', () => {
   });
 
   it('should insert a heading link with angle brackets and no percent-encoding', async () => {
+    // Stated, so `Enter` waits for the heading suggestions of the whole query: under load it could accept a suggestion
+    // computed for a prefix of it.
     const content = await runAutocompleteScenario({
+      expectedFirstSuggestionType: 'heading',
       linkStyleMode: LinkStyleMode.ObsidianSettingsDefault,
       query: 'target with space#Section',
       sourcePath: 'autocomplete/heading.md',
