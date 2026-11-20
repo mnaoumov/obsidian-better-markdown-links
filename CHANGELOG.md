@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 6.7.4
+
+This release has 1 fix and 1 documentation change. 3 maintenance commits (tests, build, CI, refactoring, dependencies) are not listed.
+
+### Fixed
+
+- **link-generation:** keep the alias an earlier generateMarkdownLink patch chose
+
+### Documentation
+
+- **changelog:** rewrite the raw 6.0.0 and 3.0.0 entries
+
 ## 6.7.3
 
 This release has 1 bug fix. 1 maintenance commit (tests, build, CI, refactoring, dependencies) is not listed.
