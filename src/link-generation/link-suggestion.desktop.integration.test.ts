@@ -329,7 +329,7 @@ describe('[[ autocomplete link style (Desktop)', () => {
       useMarkdownLinks: true
     });
 
-    // The leading slash is the plugin's `shouldUseLeadingSlashForAbsolutePaths`, on by default.
+    // The leading slash is the plugin's `shouldUseLeadingSlashForAbsolutePaths`, which the scenario turns on.
     expect(content).toBe(`[${MISSING_NOTE_NAME}](</${MISSING_NOTE_PATH}>)${CURSOR_MARKER}`);
 
     // Follow the inserted link as a click does: core hands the link's URL to `openLinkText`, which creates a missing
@@ -432,6 +432,8 @@ async function runAutocompleteScenario(params: RunAutocompleteScenarioParams): P
         settings.linkStyleMode = linkStyleMode;
         settings.shouldUseAngleBrackets = true;
         settings.shouldUseLeadingDotForRelativePaths = true;
+        // Stated, not assumed: an earlier suite in the shared instance may have saved it off.
+        settings.shouldUseLeadingSlashForAbsolutePaths = true;
         settings.shouldConvertFrontmatterWikilinksToMarkdown = shouldConvertFrontmatterWikilinksToMarkdown;
       });
 
@@ -537,6 +539,8 @@ async function runPropertiesPanelScenario(params: RunPropertiesPanelScenarioPara
         settings.linkStyleMode = linkStyleMode;
         settings.shouldUseAngleBrackets = true;
         settings.shouldUseLeadingDotForRelativePaths = true;
+        // Stated, not assumed: an earlier suite in the shared instance may have saved it off.
+        settings.shouldUseLeadingSlashForAbsolutePaths = true;
         settings.shouldConvertFrontmatterWikilinksToMarkdown = shouldConvertFrontmatterWikilinksToMarkdown;
       });
 
