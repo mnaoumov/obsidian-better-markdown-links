@@ -7,7 +7,7 @@ import {
 } from 'eslint/config';
 
 export const configs: Linter.Config[] = defineEslintConfigs({
-  customConfigs() {
+  customConfigs(context) {
     return defineConfig([
       // A verbatim copy of the provider's hand-written `api.d.ts`, refreshed from its repository rather than edited,
       // so its style is the provider's to keep.
@@ -23,6 +23,21 @@ export const configs: Linter.Config[] = defineEslintConfigs({
               ]
             }
           ]
+        }
+      },
+      {
+        // `evalInObsidian` closures run in the Obsidian renderer, where `window` and `document` always exist, but the
+        // rule reads these files' Node test globals, which declare neither. Drop once the shared config exempts them.
+        files: ['src/**/*.integration.test.ts'],
+        rules: {
+          'unicorn/no-optional-chaining-on-undeclared-variable': 'off'
+        }
+      },
+      {
+        // Scoped like the toolkit's own in-house block, the only one that loads the `typescript-dev-toolkit` plugin.
+        files: context.allFiles(),
+        rules: {
+          'typescript-dev-toolkit/no-undefined-return-type': 'error'
         }
       }
     ]);

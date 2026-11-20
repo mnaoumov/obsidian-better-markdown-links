@@ -9,12 +9,14 @@ import { isFrontmatterLinkCache } from '@obsidian-typings/obsidian-public-latest
 
 /**
  * Params for {@link getLinkStyleForReference}.
+ *
+ * @typeParam TLinkStyle - The run's style: `null` only where the run leaves the style to the inference.
  */
-export interface GetLinkStyleForReferenceParams {
+export interface GetLinkStyleForReferenceParams<TLinkStyle extends LinkStyle | null = LinkStyle | null> {
   /**
-   * The style the run would write, or `undefined` for `@mnaoumov/obsidian-lib`' own inference.
+   * The style the run would write, or `null` for `@mnaoumov/obsidian-lib`' own inference.
    */
-  readonly linkStyle: LinkStyle | undefined;
+  readonly linkStyle: TLinkStyle;
 
   /**
    * The reference about to be rewritten.
@@ -40,10 +42,13 @@ export interface GetLinkStyleForReferenceParams {
  * Every surface that rewrites an existing reference goes through this — the converter, the
  * automatic-conversion probe and the embed demoter — so they cannot disagree.
  *
+ * @typeParam TLinkStyle - The run's style, so a run with a style always gets one back.
  * @param params - See {@link GetLinkStyleForReferenceParams}.
- * @returns The style to write for this reference.
+ * @returns The style to write for this reference, or `null` to leave it to `@mnaoumov/obsidian-lib`' own inference.
  */
-export function getLinkStyleForReference(params: GetLinkStyleForReferenceParams): LinkStyle | undefined {
+export function getLinkStyleForReference<TLinkStyle extends LinkStyle | null>(
+  params: GetLinkStyleForReferenceParams<TLinkStyle>
+): LinkStyle | TLinkStyle {
   const { linkStyle, reference } = params;
   if (params.shouldConvertFrontmatterWikilinksToMarkdown || !isFrontmatterLinkCache(reference) || isCanvasReference(reference)) {
     return linkStyle;

@@ -129,7 +129,7 @@ export class PluginSettings {
   }
 
   /**
-   * The path style to force on a link this plugin GENERATES. `undefined` in the
+   * The path style to force on a link this plugin GENERATES. `null` in the
    * {@link LinkPathStyleMode.ObsidianSettingsDefault} mode, which is the same answer
    * `@mnaoumov/obsidian-lib` reaches for an absent value.
    *
@@ -138,15 +138,15 @@ export class PluginSettings {
    * It is the merge: these params are merged with `Object.assign`, so a key left in place would clobber a
    * path style another plugin's default-params function had set, instead of standing aside for it.
    *
-   * @returns The style to force, or `undefined` to leave the default alone.
+   * @returns The style to force, or `null` to leave the default alone.
    */
-  public getGeneratedLinkPathStyle(): LinkPathStyle | undefined {
-    return this.linkPathStyleMode === LinkPathStyleMode.ObsidianSettingsDefault ? undefined : this.getLinkPathStyle();
+  public getGeneratedLinkPathStyle(): LinkPathStyle | null {
+    return this.linkPathStyleMode === LinkPathStyleMode.ObsidianSettingsDefault ? null : this.getLinkPathStyle();
   }
 
   /**
    * The style to force on a link this plugin GENERATES — a brand new one, or the plain link an embed is
-   * demoted to. `undefined` leaves `@mnaoumov/obsidian-lib`' own inference in place, which resolves an absent
+   * demoted to. `null` leaves `@mnaoumov/obsidian-lib`' own inference in place, which resolves an absent
    * style to `PreserveExisting`: for a link with no original that means Obsidian's `Use [[Wikilinks]]`
    * setting, and for a rewritten one it means the style the link already had.
    *
@@ -154,10 +154,10 @@ export class PluginSettings {
    * returning a style for them would be worse than returning nothing: it would beat the `originalLink`
    * inference `EmbedDemoter` relies on to keep an embed's existing style.
    *
-   * @returns The style to force, or `undefined` to leave the inference alone.
+   * @returns The style to force, or `null` to leave the inference alone.
    */
-  public getGeneratedLinkStyle(): LinkStyle | undefined {
-    return this.linkStyleMode === LinkStyleMode.Markdown ? LinkStyle.Markdown : undefined;
+  public getGeneratedLinkStyle(): LinkStyle | null {
+    return this.linkStyleMode === LinkStyleMode.Markdown ? LinkStyle.Markdown : null;
   }
 
   /**

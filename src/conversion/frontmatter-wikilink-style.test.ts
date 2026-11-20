@@ -33,7 +33,7 @@ describe('getLinkStyleForReference', () => {
       shouldConvertFrontmatterWikilinksToMarkdown: false
     })).toBe(LinkStyle.Wikilink);
     expect(getLinkStyleForReference({
-      linkStyle: undefined,
+      linkStyle: null,
       reference: FRONTMATTER_WIKILINK,
       shouldConvertFrontmatterWikilinksToMarkdown: false
     })).toBe(LinkStyle.Wikilink);
@@ -57,9 +57,9 @@ describe('getLinkStyleForReference', () => {
     }
 
     expect(getLinkStyleForReference({
-      linkStyle: undefined,
+      linkStyle: null,
       reference: FRONTMATTER_MARKDOWN_LINK,
       shouldConvertFrontmatterWikilinksToMarkdown: false
-    })).toBeUndefined();
+    })).toBeNull();
   });
 });
